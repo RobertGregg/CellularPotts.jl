@@ -11,6 +11,7 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+Makie = "0.11"
 StatsBase = "0.33"
 julia = "1"
 
