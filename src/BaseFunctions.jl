@@ -1,3 +1,6 @@
+#This file contains functions that are pervasive throughout this package
+
+
 #The mod1 function always returns a number between 1 and n
 #0 gets mapped to n
 #n+1 gets mapped to 1
@@ -115,4 +118,30 @@ function MHStep!(CPM::CellPotts)
     end
 
     return nothing
+end
+
+#This is very ugly and maybe one day I'll make it better
+#This function takes in the length of a square grid and returns pairs of all adjacent squares (wraps around)
+# ╔═══╤═══╗
+# ║ 1 │ 3 ║
+# ╠═══╪═══╣
+# ║ 2 │ 4 ║
+# ╚═══╧═══╝
+# Edge2Grid(2) = [[2, 1], [4, 3], [1, 2], [3, 4], [2, 1], [4, 3], [2, 4], [1, 3], [4, 2], [3, 1], [2, 4], [1, 3]]
+
+function Edge2Grid(gridSize::Real)
+    gridIndices = 1:gridSize^2
+
+    x1 = reverse(reshape(gridIndices,gridSize,gridSize),dims=1)'[:]
+    x2 = circshift(x1,gridSize)
+
+    y1 = reverse(reshape(reverse(gridIndices),gridSize,gridSize),dims=2)[:]
+    y2 = circshift(y1,gridSize)
+
+    append!(x1,x1[1:gridSize])
+    append!(x2,x2[1:gridSize])
+    append!(y1,y1[1:gridSize])
+    append!(y2,y2[1:gridSize])
+
+    return [[id1,id2] for (id1,id2) in zip([x1;y1],[x2;y2])]
 end
