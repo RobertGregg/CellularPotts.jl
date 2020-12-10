@@ -12,10 +12,20 @@ using AbstractPlotting.MakieLayout #Is this needed?
 using Colors
 
 outer_padding = 30
-scene, layout = layoutscene(outer_padding, resolution = (1200, 700), backgroundcolor = RGB(0.98, 0.98, 0.98))
+scene, layout = layoutscene(outer_padding, resolution = (700, 700), backgroundcolor = RGB(0.98, 0.98, 0.98))
 
-ax1 = layout[1, 1] = LAxis(scene, title = "Simulation")
-#playpause = layout[1,2] = LButton(scene, label = "▶",width = 30)
+axSim = layout[1, 1] = LAxis(scene, title = "Simulation")
+layout[2,1] = axButtons = GridLayout(tellwidth = false,halign = :left)
+
+buttonsLabels = ["▶","■"]
+axButtons[1,1:length(buttonsLabels)] = [LButton(
+    scene,
+    label = lab,
+    width = 70,
+    buttoncolor = :grey) for lab in buttonsLabels] 
+
+#Set the buttons to individual variables
+playpause, stop = contents(axButtons)
 
 #Create a number simulation
 testModel = CellPotts()
@@ -30,13 +40,13 @@ heatmap_node = @lift begin
     testModel.grid
 end
 
-heatmap!(ax1,
+heatmap!(axSim,
          heatmap_node,
          show_axis = false,
          colormap = :Greys_3)
 
-tightlimits!.(ax1)
-hidedecorations!.(ax1)
+tightlimits!.(axSim)
+hidedecorations!.(axSim)
 
 
 #Generate all the adjacent squares in the grid
@@ -68,15 +78,41 @@ lineColors_node = @lift begin
 end
 
 linesegments!(
-    ax1,
+    axSim,
     points,
     color = lineColors_node,
     linewidth = 2
 )
 
-for i=1:1_000
-    time[] = i
-    sleep(1e-3)
+
+lift(playpause.clicks) do clicks
+    if isodd(clicks)
+        playpause.label = "𝅛𝅛"
+    else
+        playpause.label = "▶"
+    end
+end
+
+
+#display the scene in a new window
+scene
+
+runsim = true
+stop.clicks[] = 0
+while runsim
+
+    #Is the pause button pushed?
+    if playpause.label[] == "▶"
+        time[] += 1
+    end
+
+    #Has the stop button been pushed?
+    if  stop.clicks[] == 1
+        runsim = false
+    end
+
+    sleep(eps())
+
 end
 
 #############################################
