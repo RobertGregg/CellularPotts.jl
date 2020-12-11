@@ -14,9 +14,11 @@ using Colors
 outer_padding = 30
 scene, layout = layoutscene(outer_padding, resolution = (700, 700), backgroundcolor = RGB(0.98, 0.98, 0.98))
 
+#--------Simulation Screen--------
 axSim = layout[1, 1] = LAxis(scene, title = "Simulation")
-layout[2,1] = axButtons = GridLayout(tellwidth = false,halign = :left)
 
+#--------Buttons--------
+layout[2,1] = axButtons = GridLayout(tellwidth = false,halign = :left)
 buttonsLabels = ["▶","■"]
 axButtons[1,1:length(buttonsLabels)] = [LButton(
     scene,
@@ -27,14 +29,37 @@ axButtons[1,1:length(buttonsLabels)] = [LButton(
 #Set the buttons to individual variables
 playpause, stop = contents(axButtons)
 
-#Create a number simulation
-testModel = CellPotts()
+#--------Sliders--------
+
+slideLabels = ["Temperature (β):","Volume\nRestriction (λ)"]
+slideRanges = [1:0.01:4, 0.5:0.01:1.5]
+
+sliderSublayout = GridLayout(valign = :top)
+layout[1:length(slideLabels), 2] = sliderSublayout
+
+sliders = [labelslider!(scene, 
+                          sl,
+                          sr;
+                          format = x -> "$(x)") for (sl, sr) in zip(slideLabels, slideRanges)]
+
+sliderAxes = layout[1:2,2] = getfield.(sliders, :layout)
+
+sliderSublayout[:v] = sliderAxes
+
+#supertitle = layout[0, 2] = LText(scene, "Parameters")
+#--------Update Simulation Screen with Model--------
+
+#Create a new simulation
+    #number of cells and individual volumes
+    σ=100
+    Vd=vcat(0,rand(40:55,σ-1))
+testModel = CellPotts(σ=σ,Vd=Vd)
 
 time = Node(0)
 
 heatmap_node = @lift begin
     currentTime = $time
-    for t in 1:10_000
+    for t in 1:50_000
         MHStep!(testModel)
     end
     testModel.grid
@@ -43,7 +68,7 @@ end
 heatmap!(axSim,
          heatmap_node,
          show_axis = false,
-         colormap = :Greys_3)
+         colormap = :Purples) #:Greys_3
 
 tightlimits!.(axSim)
 hidedecorations!.(axSim)
@@ -93,6 +118,10 @@ lift(playpause.clicks) do clicks
     end
 end
 
+#Temperature
+lift(sliders[1][:slider].value) do val
+    testModel.β = val
+end
 
 #display the scene in a new window
 scene
@@ -114,72 +143,3 @@ while runsim
     sleep(eps())
 
 end
-
-#############################################
-xx = 0:0.2:4pi
-line1 = lines!(ax1, sin.(xx), xx, color = :red)
-scat1 = scatter!(ax1, sin.(xx) .+ 0.2 .* randn.(), xx,
-    color = (:red, 0.5), markersize = 15px, marker = '■')
-
-
-ax2 = layout[1, 2] = LAxis(scene, title = "Shifted Cosine")
-
-line2 = lines!(ax2, cos.(xx), pi .+ xx, color = :blue)
-scat2 = scatter!(ax2, cos.(xx) .+ 0.2 .* randn.(), pi .+ xx,
-    color = (:blue, 0.5), markersize = 15px, marker = '▲')
-
-
-linkaxes!(ax1, ax2)
-
-hideydecorations!(ax2, grid = false)
-
-ax1.xlabel = "Amplitude"
-ax2.xlabel = "Amplitude"
-ax1.ylabel = "Time [ms]"
-
-leg = layout[1, end+1] = LLegend(scene,
-    [line1, scat1, line2, scat2],
-    ["True", "Measured", "True", "Measured"])
-
-layout[2, 1:2] = leg
-
-trim!(layout)
-leg.tellheight = true
-leg.orientation = :horizontal
-
-
-
-hm_axes = layout[1:2, 3] = [LAxis(scene, title = t) for t in ["Low Activity", "High Activity"]]
-heatmaps = [heatmap!(ax, i .+ rand(100, 100)) for (i, ax) in enumerate(hm_axes)]
-
-hm_sublayout = GridLayout()
-layout[1:2, 3] = hm_sublayout
-
-# there is another shortcut for filling a GridLayout vertically with
-# a vector of content
-hm_sublayout[:v] = hm_axes
-
-tightlimits!.(hm_axes)
-hidedecorations!.(hm_axes)
-
-for hm in heatmaps
-    hm.colorrange = (1, 3)
-end
-
-cbar = hm_sublayout[:, 2] = LColorbar(scene, heatmaps[1], label = "Activity Level")
-cbar.width = 30
-cbar.height = Relative(2/3)
-
-supertitle = layout[0, :] = LText(scene, "Plotting with MakieLayout",
-    textsize = 30, font = "Noto Sans Bold", color = (:black, 0.25))
-
-
-    scene, layout = layoutscene(resolution = (1200, 900))
-
-    ax = layout[1, 1] = LAxis(scene)
-    
-    toggles = [LToggle(scene, active = ac) for ac in [true, false]]
-    labels = [LText(scene, lift(x -> x ? "active" : "inactive", t.active))
-        for t in toggles]
-    
-    layout[1, 2] = grid!(hcat(toggles, labels), tellheight = false)
