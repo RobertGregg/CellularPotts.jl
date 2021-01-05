@@ -87,7 +87,7 @@ function Propose!(CPM::CellPotts,loc::CartesianIndex{2},id::Int64)
     Vpropose[id] += 1 #increase the porposed volume id
 
     for (λ,Vd,Vc,Vp) in zip(CPM.λ, CPM.Vd,CPM.Vc,Vpropose)
-        ΔH += λ*((Vp - Vd)^2 - (Vc - Vd)^2)
+        ΔH += λ*((Vp - Vd)^2 - (Vc - Vd)^2) #This might be wrong
     end
 
     return ΔH
