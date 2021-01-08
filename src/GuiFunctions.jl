@@ -12,8 +12,9 @@ using AbstractPlotting.MakieLayout #Is this needed?
 using Colors
 
 
-function CellGUI(n,cellNumber,cellSize)
+function CellGUI(CPM)
 
+    #Create a blank scene with some padding
     outer_padding = 30
     scene, layout = layoutscene(outer_padding, resolution = (700, 700), backgroundcolor = RGB(0.98, 0.98, 0.98))
 
@@ -21,8 +22,11 @@ function CellGUI(n,cellNumber,cellSize)
     axSim = layout[1, 1] = LAxis(scene, title = "Simulation")
 
     #--------Buttons--------
+    #Currently 2 buttons: a play/pause and a stop button
+    #Place the buttons below the simulation and align to the left
     layout[2,1] = axButtons = GridLayout(tellwidth = false,halign = :left)
     buttonsLabels = ["▶","■"]
+    #Loop through and assign button labels, width, and color
     axButtons[1,1:length(buttonsLabels)] = [LButton(
         scene,
         label = lab,
@@ -33,71 +37,70 @@ function CellGUI(n,cellNumber,cellSize)
     playpause, stop = contents(axButtons)
 
     #--------Sliders--------
-
+    #The first slider controls the inverse temperature (higher temperatures ⟹ accepting higher energy proposals)
+    #The second slider changes volume constraint (lower values ⟹ cells more easily drift from desired volume)
     slideLabels = ["Temperature (β):","Volume\nRestriction (λ)"]
-    slideRanges = [1:0.01:4, 0:10]
+    slideRanges = [1:0.01:4, 1:10]
 
+    #Put the sliders to the right of the simulation (tellheight=false means the slider and simulation heights can differ)
     Sublayout = GridLayout(valign = :top,tellheight=false)
     layout[1, 2] = Sublayout
 
+    #Loop through sliders and assign labels and ranges
     sliders = [labelslider!(scene, 
                             sl,
                             sr;
                             format = x -> "$(x)") for (sl, sr) in zip(slideLabels, slideRanges)]
 
+    #Vertically stack the sliders
     sliderAxes = layout[1:2,2] = getfield.(sliders, :layout)
-
     Sublayout[:v] = sliderAxes
 
-    #supertitle = layout[0, 2] = LText(scene, "Parameters")
     #--------Update Simulation Screen with Model--------
+    timestep = Node(1) #A Node is a variable being observed by the simulation
+    frameskip = 50_000 #The MHStep will often fail b/c of bad random choice to change grid, so nothing will update
 
-    #Create a new simulation
-    #number of cells and individual volumes
-    σ=cellNumber + 1
-    Vd=vcat(0,cellSize)
-    testModel = CellPotts(n=n,σ=σ,Vd=Vd)
-
-    timestep = Node(1)
-    frameskip = 50_000
-
+    #Everytime time is updated, run MHStep until the next frameskip
     heatmap_node = @lift begin
         currentTime = $timestep
         for t in 1:frameskip
-            MHStep!(testModel)
+            MHStep!(CPM)
         end
-        testModel.grid
+        CPM.grid
     end
 
+    #Create a heatmap on the simulation axis (layout 1,1)
     heatmap!(axSim,
             heatmap_node,
             show_axis = false,
             colormap = :Purples) #:Greys_3
-
     tightlimits!.(axSim)
-    hidedecorations!.(axSim)
+    hidedecorations!.(axSim) #removes axis numbers
 
 
     #Generate all the adjacent squares in the grid
-    edgeConnectors = Edge2Grid(testModel.n)
+    edgeConnectors = Edge2Grid(CPM.n)
 
-    #Generate all of the edge Connections
-    horizontal = [Point2f0(x, y) => Point2f0(x+1, y) for x in 0:testModel.n-1, y in 0:testModel.n]
-    vertical = [Point2f0(x, y) => Point2f0(x, y+1) for y in 0:testModel.n-1, x in 0:testModel.n]
+    #Generate all of the edge Connections by putting a point on each cell corner
+    horizontal = [Point2f0(x, y) => Point2f0(x+1, y) for x in 0:CPM.n-1, y in 0:CPM.n]
+    vertical = [Point2f0(x, y) => Point2f0(x, y+1) for y in 0:CPM.n-1, x in 0:CPM.n]
     points = vcat(horizontal[:],vertical[:])
 
     #Determine the transparency of the linesegments
-    gridflip = rotl90(testModel.grid) #https://github.com/JuliaPlots/Makie.jl/issues/205
+    gridflip = rotl90(CPM.grid) #https://github.com/JuliaPlots/Makie.jl/issues/205
 
+    #Cell borders are outlined in black
     black = RGBA{Float64}(0.0,0.0,0.0,1.0);
     clear = RGBA{Float64}(0.0,0.0,0.0,0.0);
-
+    
+    #Loop through all the grid connected and assign the correct color
     currentEdgeColors = [gridflip[edges[1]]==gridflip[edges[2]] ? clear : black for edges in edgeConnectors];
 
+    #For each time update, recolor all of the edges
     lineColors_node = @lift begin
         currentTime = $timestep
         
-        gridflip = rotl90(testModel.grid)
+        gridflip = rotl90(CPM.grid)
 
         for (i,edges) in enumerate(edgeConnectors)
             currentEdgeColors[i] = gridflip[edges[1]]==gridflip[edges[2]] ? clear : black
@@ -106,6 +109,7 @@ function CellGUI(n,cellNumber,cellSize)
         currentEdgeColors
     end
 
+    #Plot all of the line segments onto the simulation
     linesegments!(
         axSim,
         points,
@@ -113,7 +117,7 @@ function CellGUI(n,cellNumber,cellSize)
         linewidth = 2
     )
 
-
+    #If the play/pause button is clicked, change the label
     lift(playpause.clicks) do clicks
         if isodd(clicks)
             playpause.label = "𝅛𝅛"
@@ -122,18 +126,20 @@ function CellGUI(n,cellNumber,cellSize)
         end
     end
 
-    #Temperature
+    #Temperature slider update
     lift(sliders[1][:slider].value) do val
-        testModel.β = val
+        CPM.β = val
     end
 
-    #Lagrange multiplier for volume
+    #VOlume constraint slider update
     lift(sliders[2][:slider].value) do val
-        testModel.λ[2:end] .= val #skip the medium
+        CPM.λ[1:end] .= val #skip the medium (with index zero)
     end
 
+    #Create a window
     display(scene)
 
+    #Keep running the simulation until stopped
     runsim = true
     stop.clicks[] = 0
     while runsim
@@ -151,10 +157,17 @@ function CellGUI(n,cellNumber,cellSize)
         end
 
         sleep(eps())
-        println(testModel.H)
+        println(CPM.H)
 
     end
 end
 
 
-CellGUI(100,50,fill(40,50))
+#Create a new simulation
+CPM = CellPotts(n=100,σ=1,Vd=[400])
+
+for i=1:10_000_000
+    MHStep!(CPM)
+end
+
+CellGUI(CPM)

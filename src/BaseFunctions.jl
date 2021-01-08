@@ -32,24 +32,34 @@ mutable struct CellPotts
     grid::Array{Int64,2} #array of cell ids denoting where cells are located
     β::Float64 #Simulation inverse temperature
     σ::Int64 #Number of unique IDs
-    Vd::Vector{Int64} #desired cell volumes
-    Vc::Vector{Int64} #current cell volumes
-    λ::Vector{Int64} #volume lagrange multiplier
+    Vd::OffsetArray{Int64} #desired cell volumes
+    Vc::OffsetArray{Int64} #current cell volumes
+    λ::OffsetArray{Int64} #volume lagrange multiplier
     H::Int64 #Hamiltonian energy (volume, adhesion)
+
+    #= Note about Offset Arrays
+        The medium (grid square with no cell) is given a value of zero in the grid.
+        Sometimes a grid will attempt to change from a cell to medium (e.g. 4 → 0).
+        It is convenient to use the grid id as an index (grid id of 1 corresponds with the volume vector's 1st index).
+        This means I need an index of 0 to refer to the medium (hence the base 0 offset array)
+    =#
 
     #Inner constructor
     #Loop through each grid point and count the number of different pixels
     #calculate the initial energy
-    function CellPotts(;n=100,β=3.0,σ=20,Vd=vcat(0,rand(40:55,19)))
+    function CellPotts(;n=100,β=3.0,σ=20,Vd=rand(40:55,20))
 
         #Initialize the grid
-        grid = rand(1:σ,n,n)
+        grid = rand(0:σ,n,n)
 
         #lagrange multipliers
-        λ = vcat(0,ones(Int64,σ-1))
+        λ = OffsetVector([0;ones(Int64,σ)],0:σ)
+
+        #Vd (desired volumes)
+        Vd = OffsetVector([0;Vd],0:σ) #the medium get index 0 and cell 1 gets index 1
 
         #Vc (initial current volume)
-        Vc = counts(grid) #first count (0 means no cell on gridpoint)
+        Vc = OffsetVector(counts(grid),0:σ) #(0 means no cell on gridpoint)
 
         #H (adhesion)
         H = 0
@@ -69,7 +79,7 @@ end
 #Make the CellPotts struct print nicely
 function Base.show(io::IO, c::CellPotts) 
     println("Cell Potts Model:")
-    @printf "%d×%d grid with %d unique cell types\n" c.n c.n c.σ
+    @printf "%d×%d grid with %d cells\n" c.n c.n c.σ
     println("Current Energy: ",c.H)
 end
 
@@ -100,7 +110,7 @@ function MHStep!(CPM::CellPotts)
     #make rand output tuple? e.g. CartesianIndex(Tuple(rand(1:10,2))...)
     #The tuple method is slower and causes allocations
     loc = CartesianIndex(rand(1:CPM.n),rand(1:CPM.n))
-    id = rand(1:CPM.σ)
+    id = rand(0:CPM.σ)
 
     ΔH = Propose!(CPM,loc,id)
 

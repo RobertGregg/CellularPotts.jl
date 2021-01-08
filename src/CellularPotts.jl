@@ -1,6 +1,6 @@
 module CellularPotts
 
-using GLMakie, AbstractPlotting, Colors
+using GLMakie, AbstractPlotting, Colors, OffsetArrays
 
 import StatsBase.counts, Printf.@printf
 
