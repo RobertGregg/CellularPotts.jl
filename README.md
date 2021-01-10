@@ -11,11 +11,25 @@ Task List
   - Maybe look to Agents.jl
   - Could use linesegments + heatmap with makie
 - [ ] Introduce cell properties
-  - Division
-  - Death
-  - Active movement 
+  - [ ] Division
+  - [ ] Death
+  - [ ] Active movement
+  - [ ] Movement up gradients
 - [ ] Integrate hybrid modeling schemes
   - [ ] ODE Modeling (intracellular)
   - [ ] PDE Modeling (extracellular)
   - Maybe use [Neural networks](https://github.com/SciML/NeuralPDE.jl) to speed up the PDE computation?
 - [ ] Incorporate SDEs for noise in signaling
+
+
+For cell gradient:
+- visualization of the gradient, can you overlay heatmaps (top one being tranparent?)
+- How do you store the gradient field? as another field in CellPotts?
+- What if you need more than one gradient field?
+- How will the gradient act "inside" a cell? Will it be contant there?
+- How will cells update the gradient? Just at their border?
+
+For cell division
+  - Should the cell age be tracked just like the volume?
+  - Use the center/line split method or the graph partition method?
+  - Need to update a lot of variables (grid, volume, lambda) 

@@ -58,7 +58,7 @@ function CellGUI(CPM)
 
     #--------Update Simulation Screen with Model--------
     timestep = Node(1) #A Node is a variable being observed by the simulation
-    frameskip = 50_000 #The MHStep will often fail b/c of bad random choice to change grid, so nothing will update
+    frameskip = 5_000 #The MHStep will often fail b/c of bad random choice to change grid, so nothing will update
 
     #Everytime time is updated, run MHStep until the next frameskip
     heatmap_node = @lift begin
@@ -131,10 +131,30 @@ function CellGUI(CPM)
         CPM.β = val
     end
 
-    #VOlume constraint slider update
+    #Volume constraint slider update
     lift(sliders[2][:slider].value) do val
         CPM.λ[1:end] .= val #skip the medium (with index zero)
     end
+
+    #Active cell movement (patrol)
+    if CPM.Ma ≠ 0
+        #do I need this?
+        heatmap_Gm = @lift begin
+            currentTime = $timestep
+            CPM.Gm
+        end
+        
+        #transparent colors
+        colmap = RGBA.(colormap("Reds"),0.5)
+
+        #Create a heatmap on the simulation axis (layout 1,1)
+        heatmap!(axSim,
+                heatmap_Gm,
+                show_axis = false,
+                colormap = colmap) #:Greys_3
+        tightlimits!.(axSim)
+        hidedecorations!.(axSim) #removes axis numbers
+    end    
 
     #Create a window
     display(scene)
@@ -164,10 +184,12 @@ end
 
 
 #Create a new simulation
-CPM = CellPotts(n=100,σ=1,Vd=[400])
+CPM = CellPotts(n=50,σ=1,Vd=[400])
 
-for i=1:10_000_000
+for i=1:1_000_000
     MHStep!(CPM)
+    i % 10000 == 0 ? println(i) : nothing
 end
+
 
 CellGUI(CPM)

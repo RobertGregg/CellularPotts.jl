@@ -22,6 +22,8 @@ function Neighbors(loc::CartesianIndex{2}, n::Int64 ;type=8)
         return mod1.([          loc-Δy,
                       loc-Δx,           loc+Δx,
                                 loc+Δy         ],n)
+    else
+        throw(DomainError(type, "type must be 8 or 4"))
     end
 end
 
@@ -32,10 +34,12 @@ mutable struct CellPotts
     grid::Array{Int64,2} #array of cell ids denoting where cells are located
     β::Float64 #Simulation inverse temperature
     σ::Int64 #Number of unique IDs
-    Vd::OffsetArray{Int64} #desired cell volumes
-    Vc::OffsetArray{Int64} #current cell volumes
-    λ::OffsetArray{Int64} #volume lagrange multiplier
-    H::Int64 #Hamiltonian energy (volume, adhesion)
+    Vd::OffsetVector{Int64,Array{Int64,1}} #desired cell volumes
+    Vc::OffsetVector{Int64,Array{Int64,1}} #current cell volumes
+    λ::OffsetVector{Int64,Array{Int64,1}} #volume lagrange multiplier
+    H::Real #Hamiltonian energy (volume, adhesion)
+    Gm::Array{Int64,2} #array to keep track of active cell patrol movement
+    Ma::Int64 #Maximum value for Gm
 
     #= Note about Offset Arrays
         The medium (grid square with no cell) is given a value of zero in the grid.
@@ -47,7 +51,7 @@ mutable struct CellPotts
     #Inner constructor
     #Loop through each grid point and count the number of different pixels
     #calculate the initial energy
-    function CellPotts(;n=100,β=3.0,σ=20,Vd=rand(40:55,20))
+    function CellPotts(;n=100,β=3.0,σ=20,Vd=rand(40:55,20),patrol=true)
 
         #Initialize the grid
         grid = rand(0:σ,n,n)
@@ -61,6 +65,15 @@ mutable struct CellPotts
         #Vc (initial current volume)
         Vc = OffsetVector(counts(grid),0:σ) #(0 means no cell on gridpoint)
 
+        #Active cell memory grid (equal to Ma if grid square contains cell)
+        if patrol
+            Ma = 20
+            Gm = @. Ma*(grid ≠ 0)
+        else
+            Ma = 0
+            Gm = zeros(Int64,size(grid))
+        end
+
         #H (adhesion)
         H = 0
         for I in CartesianIndices(grid)
@@ -70,8 +83,9 @@ mutable struct CellPotts
         #H Volume
         H += sum(@. λ*(Vc - Vd)^2) #difference b/w desired and current volume
 
+
         #Return a new instantiation
-        return new(n,grid,β,σ,Vd,Vc,λ,H)
+        return new(n,grid,β,σ,Vd,Vc,λ,H,Gm,Ma)
     end
 end
 
@@ -114,6 +128,11 @@ function MHStep!(CPM::CellPotts)
 
     ΔH = Propose!(CPM,loc,id)
 
+    if CPM.Ma ≠ 0 #maybe should have a better check for this
+        ΔH_Gm, loc_gm = GmStep!(CPM)
+        ΔH += ΔH_Gm
+    end
+
     acceptRatio = min(1,exp(-ΔH*CPM.β))
 
     if rand()<acceptRatio #If we like the move update grid, else do nothing
@@ -123,11 +142,69 @@ function MHStep!(CPM::CellPotts)
 
         #Update the grid
         CPM.grid[loc] = id
+
+        #Update Gm
+        if CPM.Ma ≠ 0
+            #Update the random proposal
+            CPM.Gm[loc] = id == 0 ? 0 : CPM.Ma
+
+            #Update the active movement
+            CPM.Gm[loc_gm] = CPM.Ma
+
+            #Subtract 1 from all of Gm, except for 0 values
+            @. CPM.Gm -= 1
+            @. CPM.Gm[CPM.Gm < 0] = 0 #replace negative numbers with 0
+        end
+
         #Update H
         CPM.H += ΔH
     end
 
     return nothing
+end
+
+#Based off of this paper: https://doi.org/10.1371/journal.pcbi.1004280
+
+function GmPropose!(CPM::CellPotts,loc::CartesianIndex{2})
+    
+    adjacent = push!(Neighbors(loc,CPM.n),loc) #take location and append neighbors
+
+    #remove neighbors that do not have the same id
+    filter!(x -> CPM.grid[x] == CPM.grid[loc],adjacent)
+
+    return geomean(CPM.Gm[adjacent])
+end
+
+function GmStep!(CPM::CellPotts)
+
+    #Check if random grid point is on the border (if not pick a new grid point)
+    notSureIfBorder = true
+
+    #Pick a random grid point
+    #local variable issue (pre-define before loop) ?
+    loc = CartesianIndex(1,1)
+    proposedLoc = CartesianIndex(1,1)
+
+    while notSureIfBorder
+        
+        #Pick a random location
+        loc = CartesianIndex(rand(1:CPM.n),rand(1:CPM.n))
+
+        #Find neighboring squares that are different
+        neighborhood = Neighbors(loc,CPM.n)
+        outsideCell = findall(x -> CPM.grid[x] ≠ CPM.grid[loc],neighborhood)
+
+        #If there is a different square, mark it to try and extend cell
+        if ~isempty(outsideCell)
+            proposedLoc = rand(neighborhood[outsideCell])
+            notSureIfBorder = false
+        end
+    end
+
+    #Now we have a location and a new location to try and extend to
+    ΔH_Gm = (1.0/CPM.Ma) * (GmPropose!(CPM,loc) - GmPropose!(CPM,proposedLoc)) #assume λact = 1 for Now
+    
+    return (ΔH_Gm,proposedLoc)
 end
 
 #This is very ugly and maybe one day I'll make it better
