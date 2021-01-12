@@ -51,7 +51,7 @@ mutable struct CellPotts
     #Inner constructor
     #Loop through each grid point and count the number of different pixels
     #calculate the initial energy
-    function CellPotts(;n=100,β=3.0,σ=20,Vd=rand(40:55,20),patrol=true)
+    function CellPotts(;n=100,β=3.0,σ=20,Vd=rand(40:55,20),patrol=false)
 
         #Initialize the grid
         grid = rand(0:σ,n,n)
@@ -99,16 +99,20 @@ end
 
 
 #Calculate the change in energy from adhesion
-function Propose!(CPM::CellPotts,loc::CartesianIndex{2},id::Int64)
+function Propose!(CPM::CellPotts,
+                idCurrent::Int64,
+                idPropose::Int64,
+                neighborIndices::Array{CartesianIndex{2},1})
+
+    #Choose a random neighbor ID
+    neighborIDs = CPM.grid[neighborIndices]
 
     #Calculate ΔH from adhesion
-    adjacent = CPM.grid[Neighbors(loc,CPM.n)]
-    ΔH = sum(adjacent .≠ id) - sum(adjacent .≠ CPM.grid[loc])
-
+    ΔH = sum(neighborIDs .≠ idPropose) - sum(neighborIDs .≠ idCurrent)
 
     Vpropose = copy(CPM.Vc) #new proposed volumes
-    Vpropose[CPM.grid[loc]] -= 1 #lower the current volume id
-    Vpropose[id] += 1 #increase the porposed volume id
+    Vpropose[idCurrent] -= 1 #lower the current volume id
+    Vpropose[idPropose] += 1 #increase the porposed volume id
 
     for (λ,Vd,Vc,Vp) in zip(CPM.λ, CPM.Vd,CPM.Vc,Vpropose)
         ΔH += λ*((Vp - Vd)^2 - (Vc - Vd)^2) #This might be wrong
@@ -120,40 +124,46 @@ end
 #Do a metropolis hastings step
 function MHStep!(CPM::CellPotts)
 
-    #Pick a random number and put it in a random spot
+    #Pick a random location and pick a neighboring location to copy from
     #make rand output tuple? e.g. CartesianIndex(Tuple(rand(1:10,2))...)
     #The tuple method is slower and causes allocations
-    loc = CartesianIndex(rand(1:CPM.n),rand(1:CPM.n))
-    id = rand(0:CPM.σ)
+    locCurrent = CartesianIndex(rand(1:CPM.n),rand(1:CPM.n))
+    idCurrent =  CPM.grid[locCurrent]
 
-    ΔH = Propose!(CPM,loc,id)
+    #Determine the neighbors of that random location
+    neighborIndices = Neighbors(locCurrent,CPM.n)
+
+    locPropose = rand(neighborIndices) #pick and random neighbor to get a new id
+    idPropose =  CPM.grid[locPropose]
+
+    ΔH = Propose!(CPM,idCurrent,idPropose,neighborIndices) #adhesive and volume changes
 
     if CPM.Ma ≠ 0 #maybe should have a better check for this
-        ΔH_Gm, loc_gm = GmStep!(CPM)
+        ΔH_Gm = GmStep!(CPM,locCurrent,locPropose)
         ΔH += ΔH_Gm
     end
 
-    acceptRatio = min(1,exp(-ΔH*CPM.β))
+    acceptRatio = min(1.0,exp(-ΔH*CPM.β))
 
-    if rand()<acceptRatio #If we like the move update grid, else do nothing
+    if (rand()<acceptRatio) & (idCurrent ≠ idPropose) #If we like the move update grid, else do nothing
         #Update the current volume
-        CPM.Vc[CPM.grid[loc]] -= 1 #lower the current volume id
-        CPM.Vc[id] += 1 #increase the porposed volume id
+        CPM.Vc[idCurrent] -= 1 #lower the current volume id
+        CPM.Vc[idPropose] += 1 #increase the porposed volume id
 
         #Update the grid
-        CPM.grid[loc] = id
+        CPM.grid[locCurrent] = idPropose
 
         #Update Gm
         if CPM.Ma ≠ 0
-            #Update the random proposal
-            CPM.Gm[loc] = id == 0 ? 0 : CPM.Ma
-
-            #Update the active movement
-            CPM.Gm[loc_gm] = CPM.Ma
+            #Update the random proposal if it's part of a cell
+            CPM.Gm[locCurrent] = idPropose == 0 ? 0 : CPM.Ma
 
             #Subtract 1 from all of Gm, except for 0 values
-            @. CPM.Gm -= 1
-            @. CPM.Gm[CPM.Gm < 0] = 0 #replace negative numbers with 0
+            for I in CartesianIndices(CPM.Gm)
+                if CPM.Gm[I] > 0 
+                    CPM.Gm[I] -= 1
+                end
+            end
         end
 
         #Update H
@@ -175,36 +185,12 @@ function GmPropose!(CPM::CellPotts,loc::CartesianIndex{2})
     return geomean(CPM.Gm[adjacent])
 end
 
-function GmStep!(CPM::CellPotts)
-
-    #Check if random grid point is on the border (if not pick a new grid point)
-    notSureIfBorder = true
-
-    #Pick a random grid point
-    #local variable issue (pre-define before loop) ?
-    loc = CartesianIndex(1,1)
-    proposedLoc = CartesianIndex(1,1)
-
-    while notSureIfBorder
-        
-        #Pick a random location
-        loc = CartesianIndex(rand(1:CPM.n),rand(1:CPM.n))
-
-        #Find neighboring squares that are different
-        neighborhood = Neighbors(loc,CPM.n)
-        outsideCell = findall(x -> CPM.grid[x] ≠ CPM.grid[loc],neighborhood)
-
-        #If there is a different square, mark it to try and extend cell
-        if ~isempty(outsideCell)
-            proposedLoc = rand(neighborhood[outsideCell])
-            notSureIfBorder = false
-        end
-    end
+function GmStep!(CPM::CellPotts,locCurrent::CartesianIndex{2},locPropose::CartesianIndex{2})
 
     #Now we have a location and a new location to try and extend to
-    ΔH_Gm = (1.0/CPM.Ma) * (GmPropose!(CPM,loc) - GmPropose!(CPM,proposedLoc)) #assume λact = 1 for Now
+    ΔH_Gm = (50.0/CPM.Ma) * (GmPropose!(CPM,locPropose) - GmPropose!(CPM,locCurrent)) #assume λact = const for now
     
-    return (ΔH_Gm,proposedLoc)
+    return ΔH_Gm
 end
 
 #This is very ugly and maybe one day I'll make it better

@@ -58,7 +58,7 @@ function CellGUI(CPM)
 
     #--------Update Simulation Screen with Model--------
     timestep = Node(1) #A Node is a variable being observed by the simulation
-    frameskip = 1 #The MHStep will often fail b/c of bad random choice to change grid, so nothing will update
+    frameskip = 5000 #The MHStep will often fail b/c of bad random choice to change grid, so nothing will update
 
     #Everytime time is updated, run MHStep until the next frameskip
     heatmap_node = @lift begin
@@ -177,13 +177,14 @@ function CellGUI(CPM)
         end
 
         sleep(eps())
+        #println(CPM.H)
 
     end
 end
 
 
 #Create a new simulation
-CPM = CellPotts(n=50,σ=1,Vd=[400])
+CPM = CellPotts(n=50,σ=1,Vd=[300],patrol=true)
 
 for i=1:1_000_000
     MHStep!(CPM)

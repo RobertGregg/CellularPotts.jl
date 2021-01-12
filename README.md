@@ -1,7 +1,3 @@
-# NEED TO FIX CELL POTTS MODEL 
-- choose a random lattice site i
-- choose a random neighboring lattice site j to copy its ID into i. (THIS NEEDS TO BE FIXED)
-
 # Cellular Potts Modeling 
 
 The goal of this project to to create a cellular agent-based model in julia that integrates Potts modeling, Intracellular dynamics with ODEs, and cytokine diffusion with PDEs. The hope is to develop a package that can model immune cell signaling in a multi-scale manner.
