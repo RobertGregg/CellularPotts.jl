@@ -39,7 +39,9 @@ function CellGUI(CPM)
     #--------Sliders--------
     #The first slider controls the inverse temperature (higher temperatures ⟹ accepting higher energy proposals)
     #The second slider changes volume constraint (lower values ⟹ cells more easily drift from desired volume)
-    slideLabels = ["Temperature (β):","Volume\nRestriction (λ)"]
+    # slideLabels = ["Temperature (β):","Volume\nRestriction (λᵥ)","Memory\nRestriction (λₐ)","Memory\nLength (Ma)"]
+    # slideRanges = [1:0.01:4, 1:10, 1.0:0.1:10.0, 10:40]
+    slideLabels = ["Temperature (β):","Volume\nRestriction (λᵥ)"]
     slideRanges = [1:0.01:4, 1:10]
 
     #Put the sliders to the right of the simulation (tellheight=false means the slider and simulation heights can differ)
@@ -53,7 +55,7 @@ function CellGUI(CPM)
                             format = x -> "$(x)") for (sl, sr) in zip(slideLabels, slideRanges)]
 
     #Vertically stack the sliders
-    sliderAxes = layout[1:2,2] = getfield.(sliders, :layout)
+    sliderAxes = layout[1:length(slideLabels),2] = getfield.(sliders, :layout)
     Sublayout[:v] = sliderAxes
 
     #--------Update Simulation Screen with Model--------
@@ -73,7 +75,7 @@ function CellGUI(CPM)
     heatmap!(axSim,
             heatmap_node,
             show_axis = false,
-            colormap = :Purples) #:Greys_3
+            colormap = :Greys_3) #:Greys_3
     tightlimits!.(axSim)
     hidedecorations!.(axSim) #removes axis numbers
 
@@ -126,22 +128,32 @@ function CellGUI(CPM)
         end
     end
 
-    #Temperature slider update
-    lift(sliders[1][:slider].value) do val
-        CPM.β = val
-    end
+    #can this be a loop?
+        #Temperature slider update
+        lift(sliders[1][:slider].value) do val
+            CPM.β = val
+        end
 
-    #Volume constraint slider update
-    lift(sliders[2][:slider].value) do val
-        CPM.λ[1:end] .= val #skip the medium (with index zero)
-    end
+        #Volume constraint slider update
+        lift(sliders[2][:slider].value) do val
+            CPM.λᵥ[1:end] .= val #skip the medium (with index zero)
+        end
+
+        # #Memory Restriction
+        # lift(sliders[3][:slider].value) do val
+        #     CPM.pm.λact = val #skip the medium (with index zero)
+        # end
+
+        # lift(sliders[4][:slider].value) do val
+        #     CPM.pm.Ma = val #skip the medium (with index zero)
+        # end
 
     #Active cell movement (patrol)
-    if CPM.Ma ≠ 0
+    if CPM.pm.on #if patrol movement is on
         #do I need this?
         heatmap_Gm = @lift begin
             currentTime = $timestep
-            CPM.Gm
+            CPM.pm.Gm
         end
         
         #transparent colors

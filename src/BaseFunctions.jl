@@ -28,6 +28,14 @@ function Neighbors(loc::CartesianIndex{2}, n::Int64 ;type=8)
 end
 
 
+#Create a structure for patrol movement
+Base.@kwdef mutable struct PatrolMovement # specified default
+    on::Bool = false #Do I want this in the simulation?
+    Ma::Int64 = 20 #Maximum value for Gm
+    λact::Float64 = 1.0 #act model lagrange multiplier
+    Gm::Array{Int64,2} #Array to keep track of active cell patrol movement
+end
+
 #Create a structure to hold the model parameters with default parameters
 mutable struct CellPotts
     n::Int64 #side length of the grid
@@ -36,10 +44,9 @@ mutable struct CellPotts
     σ::Int64 #Number of unique IDs
     Vd::OffsetVector{Int64,Array{Int64,1}} #desired cell volumes
     Vc::OffsetVector{Int64,Array{Int64,1}} #current cell volumes
-    λ::OffsetVector{Int64,Array{Int64,1}} #volume lagrange multiplier
+    λᵥ::OffsetVector{Int64,Array{Int64,1}} #volume lagrange multiplier
     H::Real #Hamiltonian energy (volume, adhesion)
-    Gm::Array{Int64,2} #array to keep track of active cell patrol movement
-    Ma::Int64 #Maximum value for Gm
+    pm::PatrolMovement
 
     #= Note about Offset Arrays
         The medium (grid square with no cell) is given a value of zero in the grid.
@@ -57,7 +64,7 @@ mutable struct CellPotts
         grid = rand(0:σ,n,n)
 
         #lagrange multipliers
-        λ = OffsetVector([0;ones(Int64,σ)],0:σ)
+        λᵥ = OffsetVector([0;ones(Int64,σ)],0:σ)
 
         #Vd (desired volumes)
         Vd = OffsetVector([0;Vd],0:σ) #the medium get index 0 and cell 1 gets index 1
@@ -66,12 +73,11 @@ mutable struct CellPotts
         Vc = OffsetVector(counts(grid),0:σ) #(0 means no cell on gridpoint)
 
         #Active cell memory grid (equal to Ma if grid square contains cell)
+        pm = PatrolMovement(Gm = zeros(size(grid)))
+
         if patrol
-            Ma = 20
-            Gm = @. Ma*(grid ≠ 0)
-        else
-            Ma = 0
-            Gm = zeros(Int64,size(grid))
+            pm.on = patrol #change to true
+            pm.Gm = @. pm.Ma*(grid ≠ 0) # if there is a cell id, replace 0 with Ma in Gm
         end
 
         #H (adhesion)
@@ -81,11 +87,11 @@ mutable struct CellPotts
         end
 
         #H Volume
-        H += sum(@. λ*(Vc - Vd)^2) #difference b/w desired and current volume
+        H += sum(@. λᵥ*(Vc - Vd)^2) #difference b/w desired and current volume
 
 
         #Return a new instantiation
-        return new(n,grid,β,σ,Vd,Vc,λ,H,Gm,Ma)
+        return new(n,grid,β,σ,Vd,Vc,λᵥ,H,pm)
     end
 end
 
@@ -114,7 +120,7 @@ function Propose!(CPM::CellPotts,
     Vpropose[idCurrent] -= 1 #lower the current volume id
     Vpropose[idPropose] += 1 #increase the porposed volume id
 
-    for (λ,Vd,Vc,Vp) in zip(CPM.λ, CPM.Vd,CPM.Vc,Vpropose)
+    for (λ,Vd,Vc,Vp) in zip(CPM.λᵥ, CPM.Vd,CPM.Vc,Vpropose)
         ΔH += λ*((Vp - Vd)^2 - (Vc - Vd)^2) #This might be wrong
     end
 
@@ -138,7 +144,7 @@ function MHStep!(CPM::CellPotts)
 
     ΔH = Propose!(CPM,idCurrent,idPropose,neighborIndices) #adhesive and volume changes
 
-    if CPM.Ma ≠ 0 #maybe should have a better check for this
+    if CPM.pm.on
         ΔH_Gm = GmStep!(CPM,locCurrent,locPropose)
         ΔH += ΔH_Gm
     end
@@ -154,14 +160,14 @@ function MHStep!(CPM::CellPotts)
         CPM.grid[locCurrent] = idPropose
 
         #Update Gm
-        if CPM.Ma ≠ 0
+        if CPM.pm.on
             #Update the random proposal if it's part of a cell
-            CPM.Gm[locCurrent] = idPropose == 0 ? 0 : CPM.Ma
+            CPM.pm.Gm[locCurrent] = idPropose == 0 ? 0 : CPM.pm.Ma
 
             #Subtract 1 from all of Gm, except for 0 values
-            for I in CartesianIndices(CPM.Gm)
-                if CPM.Gm[I] > 0 
-                    CPM.Gm[I] -= 1
+            for I in CartesianIndices(CPM.pm.Gm)
+                if CPM.pm.Gm[I] > 0 
+                    CPM.pm.Gm[I] -= 1
                 end
             end
         end
@@ -177,18 +183,18 @@ end
 
 function GmPropose!(CPM::CellPotts,loc::CartesianIndex{2})
     
-    adjacent = push!(Neighbors(loc,CPM.n),loc) #take location and append neighbors
+    neighborIndices = push!(Neighbors(loc,CPM.n),loc) #take location and append neighbors
 
     #remove neighbors that do not have the same id
-    filter!(x -> CPM.grid[x] == CPM.grid[loc],adjacent)
+    filter!(x -> CPM.grid[x] == CPM.grid[loc],neighborIndices)
 
-    return geomean(CPM.Gm[adjacent])
+    return geomean(CPM.pm.Gm[neighborIndices])
 end
 
 function GmStep!(CPM::CellPotts,locCurrent::CartesianIndex{2},locPropose::CartesianIndex{2})
 
     #Now we have a location and a new location to try and extend to
-    ΔH_Gm = (50.0/CPM.Ma) * (GmPropose!(CPM,locPropose) - GmPropose!(CPM,locCurrent)) #assume λact = const for now
+    ΔH_Gm = (CPM.pm.λact / CPM.pm.Ma) * (GmPropose!(CPM,locPropose) - GmPropose!(CPM,locCurrent))
     
     return ΔH_Gm
 end
