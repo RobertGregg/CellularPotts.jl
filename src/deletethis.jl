@@ -19,3 +19,6 @@ c2 = RGBA(1,0,0,1.0);
 cm = range(c1, stop=c2, length=100);
 
 heatmap!(as,bs,cs,colormap = cm)
+
+
+#Just a test for wsl
