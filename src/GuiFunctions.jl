@@ -7,8 +7,7 @@
 =#
 
 using CellularPotts
-using AbstractPlotting
-using AbstractPlotting.MakieLayout #Is this needed?
+using GLMakie
 using Colors
 
 
@@ -19,7 +18,7 @@ function CellGUI(CPM)
     scene, layout = layoutscene(outer_padding, resolution = (700, 700), backgroundcolor = RGB(0.98, 0.98, 0.98))
 
     #--------Simulation Screen--------
-    axSim = layout[1, 1] = LAxis(scene, title = "Simulation")
+    axSim = layout[1, 1] = Axis(scene, title = "Simulation")
 
     #--------Buttons--------
     #Currently 2 buttons: a play/pause and a stop button
@@ -27,7 +26,7 @@ function CellGUI(CPM)
     layout[2,1] = axButtons = GridLayout(tellwidth = false,halign = :left)
     buttonsLabels = ["▶","■"]
     #Loop through and assign button labels, width, and color
-    axButtons[1,1:length(buttonsLabels)] = [LButton(
+    axButtons[1,1:length(buttonsLabels)] = [Button(
         scene,
         label = lab,
         width = 70,
@@ -75,7 +74,7 @@ function CellGUI(CPM)
     heatmap!(axSim,
             heatmap_node,
             show_axis = false,
-            colormap = :Greys_3) #:Greys_3
+            colormap = :Purples) #:Greys_3
     tightlimits!.(axSim)
     hidedecorations!.(axSim) #removes axis numbers
 
@@ -185,7 +184,7 @@ function CellGUI(CPM)
         
         if  stop.clicks[] == 1
             runsim = false
-            #GLMakie.destroy!(GLMakie.global_gl_screen()) #this might work to close window when stop is pressed?
+            GLMakie.destroy!(GLMakie.global_gl_screen()) #close the window
         end
 
         sleep(eps())
@@ -197,6 +196,8 @@ end
 
 #Create a new simulation
 CPM = CellPotts(n=50,σ=1,Vd=[300],patrol=true)
+CPM = CellPotts(n=150,σ=500,Vd=rand(35:45,500),patrol=false)
+
 
 for i=1:1_000_000
     MHStep!(CPM)
