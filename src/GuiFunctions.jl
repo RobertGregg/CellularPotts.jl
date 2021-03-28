@@ -24,7 +24,7 @@ function CellGUI(CPM)
     #Currently 2 buttons: a play/pause and a stop button
     #Place the buttons below the simulation and align to the left
     layout[2,1] = axButtons = GridLayout(tellwidth = false,halign = :left)
-    buttonsLabels = ["▶","■"]
+    buttonsLabels = ["▶","■","Divide!"]
     #Loop through and assign button labels, width, and color
     axButtons[1,1:length(buttonsLabels)] = [Button(
         scene,
@@ -33,7 +33,7 @@ function CellGUI(CPM)
         buttoncolor = :grey) for lab in buttonsLabels] 
 
     #Set the buttons to individual variables
-    playpause, stop = contents(axButtons)
+    playpause, stop, cellDivideButton = contents(axButtons)
 
     #--------Sliders--------
     #The first slider controls the inverse temperature (higher temperatures ⟹ accepting higher energy proposals)
@@ -127,6 +127,11 @@ function CellGUI(CPM)
         end
     end
 
+    #If the play/pause button is clicked, change the label
+    lift(cellDivideButton.clicks) do clicks
+        CellDivide!(CPM,rand(1:CPM.σ))
+    end
+
     #can this be a loop?
         #Temperature slider update
         lift(sliders[1][:slider].value) do val
@@ -195,14 +200,18 @@ end
 
 
 #Create a new simulation
-CPM = CellPotts(n=50,σ=1,Vd=[300],patrol=true)
-CPM = CellPotts(n=150,σ=500,Vd=rand(35:45,500),patrol=false)
+CPM = CellPotts(n=100,σ=1,Vd=[50],patrol=false)
+#CPM = CellPotts(n=150,σ=500,Vd=rand(35:45,500),patrol=false)
 
 
-for i=1:1_000_000
+for i=1:10_000_000
     MHStep!(CPM)
     i % 10000 == 0 ? println(i) : nothing
 end
 
 
 CellGUI(CPM)
+
+
+heatmap(CPM.grid)
+CellDivide!(CPM,1)

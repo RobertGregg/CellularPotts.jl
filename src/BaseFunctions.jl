@@ -6,7 +6,7 @@
 #n+1 gets mapped to 1
 #This is exactly what is needed for periodic boundaries
 #Make mod1 work for CartesianIndex (I is the tuple of indices)
-Base.mod1(x::CartesianIndex{2},y::Int)  = CartesianIndex(mod1.(x.I,y))
+Base.mod1(x::CartesianIndex{2}, y::Int)  = CartesianIndex(mod1.(x.I,y))
 
 
 #Get the indices of the 8 (or 4) neighboring values
