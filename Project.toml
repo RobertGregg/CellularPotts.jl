@@ -17,6 +17,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 [compat]
 AbstractPlotting = "0"
 Colors = "0"
+ShiftedArrays = "1.0"
 StatsBase = "0"
 julia = "1"
 
