@@ -36,6 +36,11 @@ Base.@kwdef mutable struct PatrolMovement # specified default
     Gm::Array{Int64,2} #Array to keep track of active cell patrol movement
 end
 
+#Create a structure for cellular division
+Base.@kwdef mutable struct CellDivision # specified default
+    on::Bool = false #Do I want this in the simulation?
+end
+
 #Create a structure to hold the model parameters with default parameters
 mutable struct CellPotts
     n::Int64 #side length of the grid
@@ -47,6 +52,7 @@ mutable struct CellPotts
     λᵥ::OffsetVector{Int64,Array{Int64,1}} #volume lagrange multiplier
     H::Real #Hamiltonian energy (volume, adhesion)
     pm::PatrolMovement
+    cd::CellDivision
 
     #= Note about Offset Arrays
         The medium (grid square with no cell) is given a value of zero in the grid.
@@ -55,10 +61,15 @@ mutable struct CellPotts
         This means I need an index of 0 to refer to the medium (hence the base 0 offset array)
     =#
 
-    #Inner constructor
-    #Loop through each grid point and count the number of different pixels
-    #calculate the initial energy
-    function CellPotts(;n=100,β=3.0,σ=20,Vd=rand(40:55,20),patrol=false)
+    function CellPotts(;
+                       n::Int64=100,
+                       β::Float64=3.0,
+                       σ::Int64=20,
+                       Vd::Vector{Int64}=collect(41:60),
+                       patrol::Bool=false,
+                       divide::Bool=false)
+
+        #Set default values if not provided
 
         #Initialize the grid
         grid = rand(0:σ,n,n)
@@ -72,13 +83,16 @@ mutable struct CellPotts
         #Vc (initial current volume)
         Vc = OffsetVector(counts(grid),0:σ) #(0 means no cell on gridpoint)
 
-        #Active cell memory grid (equal to Ma if grid square contains cell)
-        pm = PatrolMovement(Gm = zeros(size(grid)))
 
+        pm = PatrolMovement(Gm = zeros(size(grid)))
         if patrol
+            #Active cell memory grid (equal to Ma if grid square contains cell)
             pm.on = patrol #change to true
             pm.Gm = @. pm.Ma*(grid ≠ 0) # if there is a cell id, replace 0 with Ma in Gm
         end
+
+
+        cd = CellDivision(on=divide) #change to true
 
         #H (adhesion)
         H = 0
@@ -91,7 +105,7 @@ mutable struct CellPotts
 
 
         #Return a new instantiation
-        return new(n,grid,β,σ,Vd,Vc,λᵥ,H,pm)
+        return new(n,grid,β,σ,Vd,Vc,λᵥ,H,pm,cd)
     end
 end
 
@@ -118,7 +132,7 @@ function Propose!(CPM::CellPotts,
 
     Vpropose = copy(CPM.Vc) #new proposed volumes
     Vpropose[idCurrent] -= 1 #lower the current volume id
-    Vpropose[idPropose] += 1 #increase the porposed volume id
+    Vpropose[idPropose] += 1 #increase the proposed volume id
 
     for (λ,Vd,Vc,Vp) in zip(CPM.λᵥ, CPM.Vd,CPM.Vc,Vpropose)
         ΔH += λ*((Vp - Vd)^2 - (Vc - Vd)^2) #This might be wrong
@@ -154,7 +168,7 @@ function MHStep!(CPM::CellPotts)
     if (rand()<acceptRatio) & (idCurrent ≠ idPropose) #If we like the move update grid, else do nothing
         #Update the current volume
         CPM.Vc[idCurrent] -= 1 #lower the current volume id
-        CPM.Vc[idPropose] += 1 #increase the porposed volume id
+        CPM.Vc[idPropose] += 1 #increase the proposed volume id
 
         #Update the grid
         CPM.grid[locCurrent] = idPropose

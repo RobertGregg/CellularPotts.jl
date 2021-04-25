@@ -43,3 +43,4 @@ The goal of this project to to create a cellular agent-based model in julia that
 - [ ] If the grid wraps around, the Edge2Grid function will have repeated edges
 - [ ] separate a struct for a cell and for a grid? Would having a grid of cells be slower/more memory intensive?
 - [ ] cellDivideButton seems to divide the cells twice before the GUI starts
+- [ ] Abstract types? who's she?

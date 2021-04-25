@@ -3,7 +3,7 @@
 function CellDivide!(CPM::CellPotts, σ::Int64)
     
     #Check if cell crosses the grid boundary
-    doesCross = (σ in CPM.grid[[1,CPM.n],:]) | (σ in CPM.grid[:,[1,CPM.n]])
+    doesCross = (σ in CPM.grid[[begin,end],:]) | (σ in CPM.grid[:,[begin,end]])
 
     #Shift the grid so the cell isn't segmented
     if doesCross
@@ -23,7 +23,7 @@ function CellDivide!(CPM::CellPotts, σ::Int64)
     DaughterSizeDiff = slope -> abs( diff(OptimizeSlope(slope, window, σ))[1] ) #L2 norm?
     opt = optimize(DaughterSizeDiff, -100.0, 100.0) #pick a slope b/w -100 and 100
 
-    #store the volumes for the daughter cells form the best slope
+    #store the volumes for the daughter cells from the best slope
     aboveBelow =  OptimizeSlope(opt.minimizer, window, σ)
 
     #Use the optimized slope to update the window
@@ -64,7 +64,7 @@ function OptimizeSlope(slope, window, σ)
     #Where are the cell squares of interest
     posFinds = findall(window .== σ) #this repeat find could be avoided
 
-    #Loop through the poisition and cound cell squares above/below line
+    #Loop through the poisition and count cell squares above/below line
     aboveBelow = [0, 0]
     for coord in posFinds
         if slope*coord[1] + b < coord[2]
@@ -90,7 +90,7 @@ function LineDivider!(window, slope, σ, σ_new)
     #Where are the cell squares of interest
     posFinds = findall(window .== σ) #this repeat find could be avoided
 
-    #Loop through the poisition and cound cell squares above/below line
+    #Loop through the poisition and count cell squares above/below line
     above = 0
     below = 0
     for coord in posFinds
