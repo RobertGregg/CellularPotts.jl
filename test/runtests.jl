@@ -2,24 +2,20 @@ using CellularPotts
 using Test
 using Random
 
-
-
 @testset "constructor methods" begin
     # We want to create a model in a variety of ways
-
-    #All default values
-    CellPotts()
-
-    #Specify one desired volume for all cells
-    CellPotts(n = 100, σ = 50, Vd = 20)
-
-    #Random starting grid vs seeded vs rectangular
-    CellPotts(initialGrid = :random)
-    CellPotts(initialGrid = :seeded)
-    CellPotts(initialGrid = :rect)
-
-    #Allowing cell properties
-    CellPotts(patrol = true)
-    CellPotts(divide = true)
-
 end
+
+
+
+
+M = ModelParameters(
+    graphDimension = (50,50,50),
+    isPeriodic = true,
+    cellTypes = ["TCell", "BCell"],
+    cellCounts = [100, 50],
+    cellVolumes = [100, 80],
+    penalties = [AdhesionPenalty([0 1 1; 1 1 1; 1 1 1]),
+                 VolumePenalty(fill(900,1500),[1,1])],
+    temperature = 20.0)
+CPM = CellPotts(M)

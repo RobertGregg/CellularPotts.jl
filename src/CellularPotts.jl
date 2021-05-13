@@ -3,16 +3,29 @@ module CellularPotts
 using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       GLMakie, #For plotting and making the GUI (also exports AbstractPlotting)
       Colors, #More color options for the cells (e.g. :Purples)
-      Optim, #Optimize the slope of a line dividing a cell
-      StatsBase #Currently just used for the `counts()` function
+      StatsBase, Random, #Currently just used for countmap, inverse_rle; shuffle
+      SparseArrays, #For creating large adjacency matrices
+      LinearAlgebra, #Additiona functionality for arrays
+      LightGraphs, #Needed for creating graphs that look like graphDimension
+      Metis #Lighting fast method for partitioning graphs
 
-import Printf.@printf
-import ShiftedArrays.circshift as circle_shift
 
-#Some functions needed for all simulations
 include("BaseFunctions.jl")
-include("CellDivision.jl")
+include("DivideCells.jl")
+include("InitializeCells.jl")
+include("MarkovStep.jl")
+include("Gui.jl")
 
-export CellPotts, Neighbors, MHStep!, Edge2Grid, Propose!, CellDivide!
+export Hamiltonian,
+      AdhesionPenalty,
+      VolumePenalty,
+      ModelParameters,
+      NamedGraph,
+      CellAttributes,
+      CellPotts,
+      UpdateConnections!,
+      MHStepInfo,
+      MHStep!,
+      CellDivision
 
 end

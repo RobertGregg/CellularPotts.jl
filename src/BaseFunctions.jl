@@ -1,240 +1,443 @@
-#This file contains functions that are pervasive throughout this package
+#This file contains functions that are pervasive throughout this package as well as structures to define common objects like cells of input variables
 
 
-#The mod1 function always returns a number between 1 and n
-#0 gets mapped to n
-#n+1 gets mapped to 1
-#This is exactly what is needed for periodic boundaries
-#Make mod1 work for CartesianIndex (I is the tuple of indices)
-Base.mod1(x::CartesianIndex{2}, y::Int)  = CartesianIndex(mod1.(x.I,y))
+#= Notes
+
+Questions
+    - what is the difference b/w Rect3D and FRect3D?
+    - Issue with visual when dimensions are not equal?
+        
+Comments
+    - metagraph saves attributes as Dict{Symbol, Any} which leads to a lot of type instability
+        - The upside is you can dynamically add any number of attributes
+    - If a cell moves to a border with non-periodic boundary conditions, medium could disconnect
+        - non-periodic boundary conditions forces cells to not be on opposite borders
+    - If you see an offset array, its just to give medium a zero index
+    - An ⊗ I(m) + I(n) ⊗ Am  ≠  Am ⊗ I(n) + I(m) ⊗ An  when n≠m
+
+Improvements
+    - allow user defined parameters to nodes (maybe input as a named tuple?)
+    - allow cells of the same type to be different sizes?
+    - could get a big speed improvement if you don't loop through all cells to update articulation points
+    - VP having desired volumes makes cell division difficult (type unstable), replace with CPM.M.cellVolumes (?)
+    - For 3D gui, don't recreate voxels every iteration, just set color to clear
+=#
+
+####################################################
+# Helper Functions
+####################################################
+
+⊗(A,B) = kron(A,B) #just makes things look nice
+
+#Kronecker delta function
+#δ(x::T, y::T) where {T<:Number} = isequal(x,y) ? one(T) : zero(T) #this typing is excessive, but good practice 
+δ(x, y) = isequal(x,y) ? 1 : 0
 
 
-#Get the indices of the 8 (or 4) neighboring values
-function Neighbors(loc::CartesianIndex{2}, n::Int64 ;type=8)
-    Δx = CartesianIndex(1,0)
-    Δy = CartesianIndex(0,1)
+#The following functions help generate adjacency matrices for the underlying network. Circulant arrays are used for periodic boundaries and off-diagonal arrays are used for non-periodic graphs
 
-    if type==8
-        return mod1.([loc-Δx-Δy,loc-Δy,loc+Δx-Δy,
-                      loc-Δx,           loc+Δx,
-                      loc-Δx+Δy,loc+Δy,loc+Δx+Δy],n)
-    elseif type==4
-        return mod1.([          loc-Δy,
-                      loc-Δx,           loc+Δx,
-                                loc+Δy         ],n)
+#See https://stackoverflow.com/a/45958661
+
+
+#Creates a circulant array. Rows are shifted over one down the array
+function circulant!(A,n)
+
+    vec = spzeros(Int, n)
+    vec[[2,n]] .= 1 #put values into the 2nd and last entry
+
+    for i in 1:n
+        A[i,:] = vec
+        circshift!(vec, vec, 1) #shift the row over by 1
+    end
+
+    return A
+end
+
+#Fills the diagonals above and below main diagonal
+function offDiags!(A)
+    A[diagind(A,1)] .= 1
+    A[diagind(A,-1)] .= 1
+    return A
+end
+
+#Generates a square (n,n) sparse adjacency matrix to convert into a network
+function genAdj(n::Int, isPeriodic::Bool)
+    A = spzeros(Int, n,n)
+    
+    if isPeriodic #Does the graph wrap around?
+        circulant!(A,n)
     else
-        throw(DomainError(type, "type must be 8 or 4"))
+        offDiags!(A)
+    end
+
+    return A ⊗ I(n) + I(n) ⊗ A
+end
+
+#Generates a rectangular (m,n) sparse adjacency matrix to convert into a network
+function genAdj(m::Int, n::Int, isPeriodic::Bool)
+    Am = spzeros(Int, m, m)
+    An = spzeros(Int, n, n)
+
+    if isPeriodic #Does the graph wrap around?
+        circulant!(Am,m)
+        circulant!(An,n)
+    else
+        offDiags!(Am)
+        offDiags!(An)
+    end
+
+    return An ⊗ I(m) + I(n) ⊗ Am
+end
+
+#Generates a 3D (l,m,n) sparse adjacency matrix to convert into a network
+function genAdj(n::Int, m::Int, l::Int, isPeriodic::Bool)
+    Al = spzeros(Int, l,l)
+    Am = spzeros(Int, m,m)
+    An = spzeros(Int, n,n)
+    
+    if isPeriodic #Does the graph wrap around?
+        circulant!(Al,l)
+        circulant!(Am,m)
+        circulant!(An,n)
+    else
+        offDiags!(Al)
+        offDiags!(Am)
+        offDiags!(An)
+    end
+
+    return I(l) ⊗ (Am ⊗ I(n) + I(m) ⊗ An) + Al ⊗ I(m*n) #This took a while to figure out...
+end
+
+####################################################
+# Hamiltonian Penalties
+####################################################
+
+"Define abstract type for different penalties"
+abstract type Hamiltonian end
+
+mutable struct AdhesionPenalty <: Hamiltonian
+    J::OffsetMatrix{Int, Matrix{Int}} #J[n,m] gives the adhesion penality for cells with types n and m
+
+    function AdhesionPenalty(J::Matrix{Int})
+        issymmetric(J) ? nothing : error("J needs to be symmetric")
+        
+        Joff = OffsetArray(J, CartesianIndex(0, 0):CartesianIndex(size(J).-1))
+        return new(Joff)
     end
 end
 
 
-#Create a structure for patrol movement
-Base.@kwdef mutable struct PatrolMovement # specified default
-    on::Bool = false #Do I want this in the simulation?
-    Ma::Int64 = 20 #Maximum value for Gm
-    λact::Float64 = 1.0 #act model lagrange multiplier
-    Gm::Array{Int64,2} #Array to keep track of active cell patrol movement
-end
+mutable struct VolumePenalty <: Hamiltonian
+    desiredVolumes::OffsetVector{Int,Vector{Int64}}
+    λᵥ::OffsetVector{Int,Vector{Int64}}
 
-#Create a structure for cellular division
-Base.@kwdef mutable struct CellDivision # specified default
-    on::Bool = false #Do I want this in the simulation?
-end
-
-#Create a structure to hold the model parameters with default parameters
-mutable struct CellPotts
-    n::Int64 #side length of the grid
-    grid::Array{Int64,2} #array of cell ids denoting where cells are located
-    β::Float64 #Simulation inverse temperature
-    σ::Int64 #Number of unique IDs
-    Vd::OffsetVector{Int64,Array{Int64,1}} #desired cell volumes
-    Vc::OffsetVector{Int64,Array{Int64,1}} #current cell volumes
-    λᵥ::OffsetVector{Int64,Array{Int64,1}} #volume lagrange multiplier
-    H::Real #Hamiltonian energy (volume, adhesion)
-    pm::PatrolMovement
-    cd::CellDivision
-
-    #= Note about Offset Arrays
-        The medium (grid square with no cell) is given a value of zero in the grid.
-        Sometimes a grid will attempt to change from a cell to medium (e.g. 4 → 0).
-        It is convenient to use the grid id as an index (grid id of 1 corresponds with the volume vector's 1st index).
-        This means I need an index of 0 to refer to the medium (hence the base 0 offset array)
-    =#
-
-    function CellPotts(;
-                       n::Int64=100,
-                       β::Float64=3.0,
-                       σ::Int64=20,
-                       Vd::Vector{Int64}=collect(41:60),
-                       patrol::Bool=false,
-                       divide::Bool=false)
-
-        #Set default values if not provided
-
-        #Initialize the grid
-        grid = rand(0:σ,n,n)
-
-        #lagrange multipliers
-        λᵥ = OffsetVector([0;ones(Int64,σ)],0:σ)
-
-        #Vd (desired volumes)
-        Vd = OffsetVector([0;Vd],0:σ) #the medium get index 0 and cell 1 gets index 1
-
-        #Vc (initial current volume)
-        Vc = OffsetVector(counts(grid),0:σ) #(0 means no cell on gridpoint)
-
-
-        pm = PatrolMovement(Gm = zeros(size(grid)))
-        if patrol
-            #Active cell memory grid (equal to Ma if grid square contains cell)
-            pm.on = patrol #change to true
-            pm.Gm = @. pm.Ma*(grid ≠ 0) # if there is a cell id, replace 0 with Ma in Gm
-        end
-
-
-        cd = CellDivision(on=divide) #change to true
-
-        #H (adhesion)
-        H = 0
-        for I in CartesianIndices(grid)
-            H += sum(Neighbors(I,n) .≠ grid[I]) #add 1 for each dis-similar neighbor
-        end
-
-        #H Volume
-        H += sum(@. λᵥ*(Vc - Vd)^2) #difference b/w desired and current volume
-
-
-        #Return a new instantiation
-        return new(n,grid,β,σ,Vd,Vc,λᵥ,H,pm,cd)
+    function VolumePenalty(desiredVolumes::Vector{Int}, λᵥ::Vector{Int})
+        desiredVolumesOff = OffsetVector([0; desiredVolumes], 0:length(desiredVolumes))
+        λᵥOff = OffsetVector([0; λᵥ], 0:length(λᵥ))
+        return new(desiredVolumesOff, λᵥOff)
     end
 end
 
 
-#Make the CellPotts struct print nicely
-function Base.show(io::IO, c::CellPotts) 
-    println("Cell Potts Model:")
-    @printf "%d×%d grid with %d cells\n" c.n c.n c.σ
-    println("Current Energy: ",c.H)
+####################################################
+# Structure for user to provide information
+####################################################
+
+Base.@kwdef struct ModelParameters{N} #N is graph dimension (makes types stable)
+    graphDimension::NTuple{N, Int} = (100,100) #What are the dimensions of the space?
+    isPeriodic::Bool = true #Do you want the space to wrap around?
+    cellTypes::Vector{String} = ["TCell"] #What kinds of cells do you want?
+    cellCounts::Vector{Int} = [10] #How many of each cell do you want?
+    cellVolumes::Vector{Int} = [200] #Desired size for each cell? (need same type cells with different sizes?)
+    penalties::Vector{Hamiltonian} = [AdhesionPenalty([0 1; 1 6]), VolumePenalty(fill(200,10),[1])] #What penalties are added to the model?
+    temperature::Float64 = 3.0 #Temperature to weight site flips (higher increases chance of accepting energy increasing flips)
+end
+
+####################################################
+# Structure for graph information
+####################################################
+
+mutable struct NamedGraph
+    network::SimpleGraph{Int} #a network of nodes and edges equivalent to the grid
+    #Attributes for the network (length == number of nodes)
+    σ::Vector{Int}
+    τ::Vector{String}
+    isArticulation::BitVector
+
+    #Two inner contructors, the first assume you have all the individual fields
+    NamedGraph(network::SimpleGraph{Int}, σ::Vector{Int}, τ::Vector{String}, isArticulation::BitVector) = new(network, σ, τ, isArticulation)
+
+    function NamedGraph(gr::SimpleGraph{Int}, cellMembership::Array{Int}, M::ModelParameters{N}) where N
+
+        #Cell ID for each node
+        σ = vec(cellMembership)
+
+        #Initialize a list of cell types proportional to the number of that type
+        #Shuffle is to make use all the same times are not next to each other
+        cellAssignments = shuffle(inverse_rle(M.cellTypes, M.cellCounts)) #inverse_rle(["a","b"], [2,3]) = ["a","a","b","b","b"] 
+
+        #Each node has a cell type
+        τ = [σᵢ == 0 ? "Medium" : cellAssignments[σᵢ] for σᵢ in σ]
+
+        #Additionally, each node can be a articulation point (removing will disconnect the cell)
+        isArticulation = falses(length(σ))
+
+        graph = new(gr, σ, τ, isArticulation)
+
+        #Update the articulation points
+        UpdateConnections!(graph; checkConnect=true)
+
+        return graph
+    end
+end
+
+####################################################
+# Structure to hold cell level attributes
+####################################################
+
+mutable struct CellAttributes
+    #Vectors are offset to include medium (medium gets index 0, cell 1 gets index 1, etc.)
+    ids::OffsetVector{Int,Vector{Int}} #vector of cell IDs
+    volumes::OffsetVector{Int,Vector{Int}} #vector of cell volumes 
+    types::OffsetVector{String,Vector{String}} #given a cell index, output it's type
+    typeMap::Dict{String, Int} #mapping cell types (e.g. "Medium") to an index (e.g. 0)
+
+    function CellAttributes(graph::NamedGraph, M::ModelParameters)
+        #How many cells are there?
+        totalCells = sum(M.cellCounts)
+
+        ids = OffsetVector(collect(0:totalCells), 0:totalCells)
+
+        volumes = OffsetVector([sum(x->x==i, graph.σ) for i in 0:totalCells], 0:totalCells)
+
+        types = OffsetVector(["Medium"; inverse_rle(M.cellTypes, M.cellCounts)], 0:totalCells)
+
+        typeMap = Dict( M.cellTypes .=> 1:length(M.cellTypes) )
+        typeMap["Medium"] = 0
+
+        return new(ids, volumes, types, typeMap)
+    end
 end
 
 
-#Calculate the change in energy from adhesion
-function Propose!(CPM::CellPotts,
-                idCurrent::Int64,
-                idPropose::Int64,
-                neighborIndices::Array{CartesianIndex{2},1})
+####################################################
+# Model Structure
+####################################################
 
-    #Choose a random neighbor ID
-    neighborIDs = CPM.grid[neighborIndices]
+mutable struct CellPotts{N}
+    M::ModelParameters{N} #input parameters from the user
+    cell::CellAttributes #summary of cell attributes
+    graph::NamedGraph #node properties: cell membership, cell type, bridge status
+    energy::Int #Total penality energy across graph
+    visual::Array{Int,N} #An array of cell memberships for plotting
+    stepCounter::Int #counts the number of MHSteps performed
 
-    #Calculate ΔH from adhesion
-    ΔH = sum(neighborIDs .≠ idPropose) - sum(neighborIDs .≠ idCurrent)
+    function CellPotts(M::ModelParameters{N}) where N
 
-    Vpropose = copy(CPM.Vc) #new proposed volumes
-    Vpropose[idCurrent] -= 1 #lower the current volume id
-    Vpropose[idPropose] += 1 #increase the proposed volume id
+        #Generate an adjacency matrix
+        adjMat = genAdj(M.graphDimension..., M.isPeriodic)
 
-    for (λ,Vd,Vc,Vp) in zip(CPM.λᵥ, CPM.Vd,CPM.Vc,Vpropose)
-        ΔH += λ*((Vp - Vd)^2 - (Vc - Vd)^2) #This might be wrong
+        #create a graph based on the adjacency matrix
+        gr = SimpleGraph(adjMat)
+
+        #Choose a cell initialization method
+        cellMembership = GrowCells(gr, M)
+
+        #Add attributes to the nodes
+        graph = NamedGraph(gr, cellMembership, M)
+
+        #create a summary of the cells
+        cell = CellAttributes(graph, M)
+
+        #Create an instance of the model with zero energy 
+        CPM = new{N}(M, cell, graph, 0, cellMembership, 0)
+
+        #Calculate the energy from the given penalties
+        #Update the energy with the given penalties
+        CPM.energy = sum([f(CPM) for f in M.penalties]) #😮
+
+        return CPM
     end
-
-    return ΔH
 end
 
-#Do a metropolis hastings step
-function MHStep!(CPM::CellPotts)
+####################################################
+# Variables for Markov Step 
+####################################################
 
-    #Pick a random location and pick a neighboring location to copy from
-    #make rand output tuple? e.g. CartesianIndex(Tuple(rand(1:10,2))...)
-    #The tuple method is slower and causes allocations
-    locCurrent = CartesianIndex(rand(1:CPM.n),rand(1:CPM.n))
-    idCurrent =  CPM.grid[locCurrent]
+Base.@kwdef mutable struct MHStepInfo
+    sourceNode::Int = 1
+    sourceNodeNeighbors::Vector{Int} = [1]
+    sourceCell::Int = 1
+    targetCell::Int = 1
+end
 
-    #Determine the neighbors of that random location
-    neighborIndices = Neighbors(locCurrent,CPM.n)
+####################################################
+# Penalty Functions
+####################################################
 
-    locPropose = rand(neighborIndices) #pick and random neighbor to get a new id
-    idPropose =  CPM.grid[locPropose]
+#=
+Need to define two methods for each penality: 
+    - calculate penality on the entire grid
+    - calculate change in penality after markov step
+=#
 
-    ΔH = Propose!(CPM,idCurrent,idPropose,neighborIndices) #adhesive and volume changes
+#----Calculate on entire Model (for initialization)----
 
-    if CPM.pm.on
-        ΔH_Gm = GmStep!(CPM,locCurrent,locPropose)
-        ΔH += ΔH_Gm
+#redirect to method below
+(AP::AdhesionPenalty)(CPM::CellPotts) = AP(CPM.graph, CPM.cell.typeMap)
+
+#This code gets repeated a lot so I made it a separate function
+function (AP::AdhesionPenalty)(graph::NamedGraph, typeMap::Dict{String, Int64})
+
+    #Initialize energy
+    H = 0
+
+    #Loop through all edges in network and calculate adhesion adjacencies
+    for edge in edges(graph.network)
+        
+        #Given a node index, get the cell id and type
+        (σᵢ, σⱼ) = graph.σ[ [edge.src, edge.dst] ]
+        (typeᵢ, typeⱼ) = graph.τ[ [edge.src, edge.dst] ]
+
+        #Convert the type (string) to an index for J
+        (τᵢ, τⱼ) = ( typeMap[typeᵢ], typeMap[typeⱼ] )
+
+        H += AP.J[τᵢ, τⱼ] * (1-δ(σᵢ, σⱼ))
     end
 
-    acceptRatio = min(1.0,exp(-ΔH*CPM.β))
+    return H
+end
 
-    if (rand()<acceptRatio) & (idCurrent ≠ idPropose) #If we like the move update grid, else do nothing
-        #Update the current volume
-        CPM.Vc[idCurrent] -= 1 #lower the current volume id
-        CPM.Vc[idPropose] += 1 #increase the proposed volume id
 
-        #Update the grid
-        CPM.grid[locCurrent] = idPropose
+function (VP::VolumePenalty)(CPM::CellPotts)
+    #Create slots to add up penalties for each cell type
+    ΔV = similar(VP.λᵥ)
+    ΔV .= 0 #Making an Offset zeros vector
 
-        #Update Gm
-        if CPM.pm.on
-            #Update the random proposal if it's part of a cell
-            CPM.pm.Gm[locCurrent] = idPropose == 0 ? 0 : CPM.pm.Ma
+    #Loop through cells, see how far they are from a desired volume, and put into appropriate slot
+    for id in CPM.cell.ids 
+        cellTypeIdx = CPM.cell.typeMap[ CPM.cell.types[id] ] # cell id (21) → cell type ("Medium") → cell type index (0)
+        ΔV[cellTypeIdx] += VP.λᵥ[cellTypeIdx] * (CPM.cell.volumes[id] - VP.desiredVolumes[id])^2
+    end
 
-            #Subtract 1 from all of Gm, except for 0 values
-            for I in CartesianIndices(CPM.pm.Gm)
-                if CPM.pm.Gm[I] > 0 
-                    CPM.pm.Gm[I] -= 1
-                end
+    #Calculate the penalty
+    return sum(ΔV)
+end
+
+
+#----Calculate on after markov step----
+
+function (AP::AdhesionPenalty)(CPM::CellPotts, stepInfo::MHStepInfo)
+        
+    #Just want to look at the local neighborhood
+    subGraphIdx = vcat(stepInfo.sourceNode, stepInfo.sourceNodeNeighbors)
+
+    subgraph = CPM.graph[subGraphIdx] #uses the custom getindex to subset all fields
+
+    sourceH = AP(subgraph, CPM.cell.typeMap)
+
+    #Change the subgraph to calculate H for the target node
+    subgraph.σ[1] = stepInfo.targetCell
+    subgraph.τ[1] = CPM.cell.types[stepInfo.targetCell]
+
+    #Loop through all edges in network and calculate adhesion adjacencies
+    targetH = AP(subgraph, CPM.cell.typeMap)
+
+    #Calculate the adhesion difference between target and source
+    return targetH - sourceH
+end
+
+function (VP::VolumePenalty)(CPM::CellPotts, stepInfo::MHStepInfo)
+
+    #Create a vector of source and target memberships
+    sourceTarget = [stepInfo.sourceCell, stepInfo.targetCell]
+
+    #Extract cell types
+    cellTypeIdx = [CPM.cell.typeMap[type] for type in CPM.cell.types[sourceTarget]] 
+
+    #Extract the desired volumes
+    desiredVolumes = VP.desiredVolumes[sourceTarget]
+
+    #Extract the current volumes
+    currentVolumes = CPM.cell.volumes[sourceTarget]
+
+    #Calculate the target volumes
+    targetVolumes = currentVolumes .+ [-1, 1]
+
+    #Return the delta (Target - Source)
+    return sum(@. VP.λᵥ[cellTypeIdx]*(targetVolumes - desiredVolumes)^2) - sum(@. VP.λᵥ[cellTypeIdx]*(currentVolumes - desiredVolumes)^2)
+end
+
+####################################################
+# Helper Functions that need structs defined
+####################################################
+
+function UpdateConnections!(graph::NamedGraph; checkConnect::Bool=false)
+
+    #Reset the articulation points (is this needed?)
+    graph.isArticulation .= falses(size(graph.isArticulation))
+
+    #Loop through cells to find articulation points
+    for σᵢ in unique(graph.σ)
+        
+        #Get the subgraph for a given cell ID
+        cellIdx = findall(isequal(σᵢ), graph.σ)
+        subgraph = graph.network[cellIdx]
+
+        if checkConnect
+            if !is_connected(subgraph) #if not connected
+                error("some cells are disconnected, try rerunning or use a different cell initialization")
             end
         end
 
-        #Update H
-        CPM.H += ΔH
+        #Update the articulation points
+        graph.isArticulation[cellIdx[articulation(subgraph)]] .= true
     end
 
     return nothing
 end
 
-#Based off of this paper: https://doi.org/10.1371/journal.pcbi.1004280
+#Overload getindex to get subset of Namedgraph
+Base.getindex(graph::NamedGraph, i) = NamedGraph(graph.network[i], graph.σ[i], graph.τ[i], graph.isArticulation[i])
 
-function GmPropose!(CPM::CellPotts,loc::CartesianIndex{2})
-    
-    neighborIndices = push!(Neighbors(loc,CPM.n),loc) #take location and append neighbors
 
-    #remove neighbors that do not have the same id
-    filter!(x -> CPM.grid[x] == CPM.grid[loc],neighborIndices)
 
-    return geomean(CPM.pm.Gm[neighborIndices])
-end
+####################################################
+# Override Base.show for each struct
+####################################################
 
-function GmStep!(CPM::CellPotts,locCurrent::CartesianIndex{2},locPropose::CartesianIndex{2})
+function Base.show(io::IO, CPM::CellPotts) 
+    println("Cell Potts Model:")
+    #Grid
+    dim = length(CPM.M.graphDimension)
+    if dim == 1
+        println("$(CPM.M.graphDimension[1])×$(CPM.M.graphDimension[1]) Grid")
+    elseif dim == 2
+        println("$(CPM.M.graphDimension[1])×$(CPM.M.graphDimension[2]) Grid")
+    else
+        println("$(CPM.M.graphDimension[1])×$(CPM.M.graphDimension[2])×$(CPM.M.graphDimension[3]) Grid")
+    end
 
-    #Now we have a location and a new location to try and extend to
-    ΔH_Gm = (CPM.pm.λact / CPM.pm.Ma) * (GmPropose!(CPM,locPropose) - GmPropose!(CPM,locCurrent))
-    
-    return ΔH_Gm
-end
+    #Cells and types
+    print("Cell Counts:")
+    for (key, value) in countmap(CPM.cell.types) #remove medium
+        if key ≠ "Medium"
+        print(" [$(key) → $(value)]")
+        end
+    end
 
-#This is very ugly and maybe one day I'll make it better
-#This function takes in the length of a square grid and returns pairs of all adjacent squares (wraps around)
-# ╔═══╤═══╗
-# ║ 1 │ 3 ║
-# ╠═══╪═══╣
-# ║ 2 │ 4 ║
-# ╚═══╧═══╝
-# Edge2Grid(2) = [[2, 1], [4, 3], [1, 2], [3, 4], [2, 1], [4, 3], [2, 4], [1, 3], [4, 2], [3, 1], [2, 4], [1, 3]]
+    if length(CPM.M.cellTypes) > 1
+        println(" [Total → $(length(CPM.cell.ids))]")
+    else
+        print("\n")
+    end
 
-function Edge2Grid(gridSize::Real)
-    gridIndices = 1:gridSize^2
-
-    x1 = reverse(reshape(gridIndices,gridSize,gridSize),dims=1)'[:]
-    x2 = circshift(x1,gridSize)
-
-    y1 = reverse(reshape(reverse(gridIndices),gridSize,gridSize),dims=2)[:]
-    y2 = circshift(y1,gridSize)
-
-    append!(x1,x1[1:gridSize])
-    append!(x2,x2[1:gridSize])
-    append!(y1,y1[1:gridSize])
-    append!(y2,y2[1:gridSize])
-
-    return [[id1,id2] for (id1,id2) in zip([x1;y1],[x2;y2])]
+    print("Model Penalties:")
+    for p in typeof.(CPM.M.penalties)
+        print(" $(p)")
+    end
+    print("\n")
+    println("Current Energy: ", CPM.energy)
+    println("Grid Temperature: ", CPM.M.temperature)
+    println("Steps: ", CPM.stepCounter)
 end

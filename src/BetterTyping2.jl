@@ -21,9 +21,8 @@ Improvements
     - allow additional parameters to nodes (maybe input as a named tuple?)
     - allow cells of the same type to be different sizes
     - could get a big speed improvement if you don't loop through all cells to update articulation points
-    - NamedTuple as input to penalty functors seems very rigid
-    - A lot of code repeat for AdhesionPenalty
     - VP having desired volumes makes cell division difficult (type unstable), replace with CPM.M.cellVolumes
+    - For 3D gui, don't recreate voxels every iteration, just set color to clear
 
 =#
 
@@ -164,10 +163,10 @@ mutable struct NamedGraph
     τ::Vector{String}
     isArticulation::BitVector
 
+    #Two inner contructors, the first assume you have all the individual fields
     NamedGraph(network::SimpleGraph{Int}, σ::Vector{Int}, τ::Vector{String}, isArticulation::BitVector) = new(network, σ, τ, isArticulation)
 
-
-    function NamedGraph(gr::SimpleGraph, cellMembership::Array{Int})
+    function NamedGraph(gr::SimpleGraph{Int}, cellMembership::Array{Int})
 
         #Cell ID for each node
         σ = vec(cellMembership)
@@ -184,6 +183,7 @@ mutable struct NamedGraph
 
         graph = new(gr, σ, τ, isArticulation)
 
+        #Update the articulation points
         UpdateConnections!(graph; checkConnect=true)
 
         return graph
@@ -197,7 +197,7 @@ mutable struct CellAttributes
     #Vectors are offset to include medium (medium gets index 0, cell 1 gets index 1, etc.)
     ids::OffsetVector{Int,Vector{Int}} #vector of cell IDs
     volumes::OffsetVector{Int,Vector{Int}} #vector of cell volumes 
-    types::OffsetVector{String,Vector{String}} #mapping cell types (e.g. "Medium") to an index 
+    types::OffsetVector{String,Vector{String}} #given a cell index, output it's type
     typeMap::Dict{String, Int} #mapping cell types (e.g. "Medium") to an index (e.g. 0)
 
     function CellAttributes(graph::NamedGraph, M::ModelParameters)
@@ -228,6 +228,7 @@ mutable struct CellPotts{N}
     graph::NamedGraph #node properties: cell membership, cell type, bridge status
     energy::Int #Total penality energy across graph
     visual::Array{Int,N} #An array of cell memberships for plotting
+    stepCounter::Int #counts the number of MHSteps performed
 
     function CellPotts(M::ModelParameters{N}) where N
 
@@ -247,7 +248,7 @@ mutable struct CellPotts{N}
         cell = CellAttributes(graph, M)
 
         #Create an instance of the model with zero energy 
-        CPM = new{N}(M, cell, graph, 0, cellMembership)
+        CPM = new{N}(M, cell, graph, 0, cellMembership, 0)
 
         #Calculate the energy from the given penalties
         #Update the energy with the given penalties
@@ -257,6 +258,16 @@ mutable struct CellPotts{N}
     end
 end
 
+####################################################
+# Variables for Markov Step 
+####################################################
+
+Base.@kwdef mutable struct MHStepInfo
+    sourceNode::Int = 1
+    sourceCell::Int = 1
+    sourceNodeNeighbors::Vector{Int} = [1]
+    targetCell::Int = 1
+end
 
 ####################################################
 # Penalty Functions
@@ -307,19 +318,18 @@ end
 
 #----Calculate on local graphgrid----
 
-function (AP::AdhesionPenalty)(CPM::CellPotts,
-    MHStepInfo::NamedTuple{(:sourceNode, :sourceCell, :sourceNodeNeighbors, :targetCell), Tuple{Int, Int, Vector{Int}, Int}})
+function (AP::AdhesionPenalty)(CPM::CellPotts, stepInfo::MHStepInfo)
         
     #Just want to look at the local neighborhood
-    subGraphIdx = vcat(MHStepInfo.sourceNode, MHStepInfo.sourceNodeNeighbors)
+    subGraphIdx = vcat(stepInfo.sourceNode, stepInfo.sourceNodeNeighbors)
 
     subgraph = CPM.graph[subGraphIdx] #uses the custom getindex to subset all fields
 
     sourceH = AP(subgraph, CPM.cell.typeMap)
 
     #Change the subgraph to calculate H for the target node
-    subgraph.σ[1] = MHStepInfo.targetCell
-    subgraph.τ[1] = CPM.cell.types[MHStepInfo.targetCell]
+    subgraph.σ[1] = stepInfo.targetCell
+    subgraph.τ[1] = CPM.cell.types[stepInfo.targetCell]
 
     #Loop through all edges in network and calculate adhesion adjacencies
     targetH = AP(subgraph, CPM.cell.typeMap)
@@ -328,11 +338,10 @@ function (AP::AdhesionPenalty)(CPM::CellPotts,
     return targetH - sourceH
 end
 
-function (VP::VolumePenalty)(CPM::CellPotts,
-    MHStepInfo::NamedTuple{(:sourceNode, :sourceCell, :sourceNodeNeighbors, :targetCell), Tuple{Int, Int, Vector{Int}, Int}})
+function (VP::VolumePenalty)(CPM::CellPotts, stepInfo::MHStepInfo)
 
     #Create a vector of source and target memberships
-    sourceTarget = [MHStepInfo.sourceCell, MHStepInfo.targetCell]
+    sourceTarget = [stepInfo.sourceCell, stepInfo.targetCell]
 
     #Extract cell types
     cellTypeIdx = [CPM.cell.typeMap[type] for type in CPM.cell.types[sourceTarget]] 
@@ -457,6 +466,7 @@ function Base.show(io::IO, CPM::CellPotts)
     print("\n")
     println("Current Energy: ", CPM.energy)
     println("Grid Temperature: ", CPM.M.temperature)
+    println("Steps: ", CPM.stepCounter)
 end
 
 
@@ -466,34 +476,41 @@ end
 
 function MHStep!(CPM::CellPotts)
 
-    #Pick a random location on the graph
-    sourceNode = rand(1:nv(CPM.graph.network))
-    #What cell does it belong to?
-    sourceCell = CPM.graph.σ[sourceNode]
+    #Create a structure to hold the source and target information
+    stepInfo = MHStepInfo() #should add as input, might save a little time
 
-    #Get all of the unique cell IDs neighboring this Node
-    sourceNodeNeighbors = neighbors(CPM.graph.network, sourceNode)
-    possibleCellTargets = unique(CPM.graph.σ[sourceNodeNeighbors])
+    #Loop through until a good source target is found
+    searching = true
+    while searching
+        #Pick a random location on the graph
+        stepInfo.sourceNode = rand(1:nv(CPM.graph.network))
+        #What cell does it belong to?
+        stepInfo.sourceCell = CPM.graph.σ[stepInfo.sourceNode]
 
-    #Some checks before attempting a flip
-    if all(possibleCellTargets .== sourceCell) #In the middle of a cell
-        return nothing
+        #Get all of the unique cell IDs neighboring this Node
+        stepInfo.sourceNodeNeighbors = neighbors(CPM.graph.network, stepInfo.sourceNode)
+        possibleCellTargets = unique(CPM.graph.σ[stepInfo.sourceNodeNeighbors])
+        #Choose a target
+        stepInfo.targetCell = rand(possibleCellTargets)
 
-    elseif CPM.graph.isArticulation[sourceNode] #will fragment the cell
-        return nothing
-    end     
+        #Some checks before attempting a flip
+            #In the middle of a cell
+            inMiddle = all(possibleCellTargets .== stepInfo.sourceCell)
+            #will fragment the cell
+            isArticulation = CPM.graph.isArticulation[stepInfo.sourceNode]
+            #target is the same as source cell 
+            isSource = stepInfo.targetCell == stepInfo.sourceCell
 
-    #Choose a target
-    targetCell = rand(possibleCellTargets)
-
-    #Package all of the information for the penality functions
-    MHStepInfo = (sourceNode = sourceNode,
-                        sourceCell = sourceCell,
-                        sourceNodeNeighbors = sourceNodeNeighbors,
-                        targetCell = targetCell)
+        #if all checks pass, attempt flip
+        if !(inMiddle | isArticulation | isSource) 
+            searching = false
+        else
+            CPM.stepCounter += 1
+        end
+    end    
 
     #Calculate the change in energy when source node is modified
-    ΔH =  sum([f(CPM, MHStepInfo) for f in CPM.M.penalties])
+    ΔH =  sum([f(CPM, stepInfo) for f in CPM.M.penalties])
 
     #Calculate an acceptance ratio
     acceptRatio = min(1.0,exp(-ΔH/CPM.M.temperature))
@@ -504,15 +521,15 @@ function MHStep!(CPM::CellPotts)
         #---Cell properties---
 
         #Update cell volumes
-        CPM.cell.volumes[sourceCell] -= 1
-        CPM.cell.volumes[targetCell] += 1
+        CPM.cell.volumes[stepInfo.sourceCell] -= 1
+        CPM.cell.volumes[stepInfo.targetCell] += 1
 
 
         #---Graph properties---
 
         #Cell IDs
-        CPM.graph.σ[sourceNode] = targetCell
-        CPM.graph.τ[sourceNode] = CPM.cell.types[targetCell]
+        CPM.graph.σ[stepInfo.sourceNode] = stepInfo.targetCell
+        CPM.graph.τ[stepInfo.sourceNode] = CPM.cell.types[stepInfo.targetCell]
 
         #Articulation points
         UpdateConnections!(CPM.graph)
@@ -521,7 +538,7 @@ function MHStep!(CPM::CellPotts)
         #Update energy
         CPM.energy += ΔH
         #Update visual
-        CPM.visual[sourceNode] = targetCell
+        CPM.visual[stepInfo.sourceNode] = stepInfo.targetCell
 
     end
     return nothing
@@ -532,7 +549,7 @@ end
 ####################################################
 
 #This is so easy with a graph 
-function DivideCells(CPM::CellPotts, σ::Int)
+function Division(CPM::CellPotts, σ::Int)
 
     cellIdx = findall(isequal(σ), CPM.graph.σ)
 
@@ -584,64 +601,42 @@ end
 
 
 M = ModelParameters(
-    graphDimension = (200,200),
+    graphDimension = (50,50),
     isPeriodic = true,
     cellTypes = ["TCell"],
-    cellCounts = [1],
-    cellVolumes = [500],
-    penalties = [AdhesionPenalty([0 20; 20 100]),
-                 VolumePenalty([500],[50])],
+    cellCounts = [20],
+    cellVolumes = [50],
+    penalties = [AdhesionPenalty([0 50; 50 100]),
+                 VolumePenalty(fill(50,20),[5])],
     temperature = 20.0)
 
 CPM = CellPotts(M)
 
-using Plots
-gr()
+# using Plots
+# gr()
 
-heatmap(CPM.visual,c = :Purples)
+# heatmap(CPM.visual,c = :Purples)
 
 
-for i in 1:100_000
-    MHStep!(CPM)
-    if mod(i,100) == 0
-        display(heatmap(CPM.visual, c = :Purples))
-        @show i
-    end
-end
+# for i in 1:100_000
+#     MHStep!(CPM)
+#     if mod(i,100) == 0
+#         display(heatmap(CPM.visual, c = :Purples))
+#         @show i
+#     end
+# end
 
 ####################################################
 # Testing 3D
 ####################################################
 
-# M = ModelParameters(graphDimension=(70,60,50))
+# M = ModelParameters(
+#     graphDimension = (40,40,40),
+#     isPeriodic = true,
+#     cellTypes = ["TCell"],
+#     cellCounts = [20],
+#     cellVolumes = [1000],
+#     penalties = [AdhesionPenalty([0 50; 50 100]),
+#                  VolumePenalty(fill(1000,20),[5])],
+#     temperature = 20.0)
 # CPM = CellPotts(M)
-
-# using GLMakie
-
-# GLMakie.enable_SSAO[] = true
-
-# # SSAO attributes are per scene (will need to play with these), too slow for animation?
-# scene = Scene()
-# scene[:SSAO][:radius][] = 5.0
-# scene[:SSAO][:blur][] = 3
-# scene[:SSAO][:bias][] = 0.025
-
-# #General voxel
-# voxel = Rect3D(Point3f0(-0.5), Vec3f0(1))
-# #Positions for the voxels
-# positions = [Point3f0(idx.I...) for idx in CartesianIndices(CPM.visual) if CPM.visual[idx] ≠ 0]
-# #use the cell indices to color the cell (could also use cell type)
-# colors = filter(!isequal(0), CPM.visual)
-
-# lim = FRect3D((0,0,0), CPM.M.graphDimension)
-
-# meshscatter!(scene,
-#     positions,
-#     marker=voxel,
-#     markersize=1,
-#     color=colors,
-#     colormap=:RdYlBu_11, #see https://juliagraphics.github.io/ColorSchemes.jl/stable/basics/
-#     limits = lim,
-#     ssao=true)
-
-# scene
