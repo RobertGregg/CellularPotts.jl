@@ -149,8 +149,8 @@ Base.@kwdef struct ModelParameters{N} #N is graph dimension (makes types stable)
     cellTypes::Vector{String} = ["TCell"] #What kinds of cells do you want?
     cellCounts::Vector{Int} = [10] #How many of each cell do you want?
     cellVolumes::Vector{Int} = [200] #Desired size for each cell? (need same type cells with different sizes?)
-    penalties::Vector{Hamiltonian} = [AdhesionPenalty([0 1; 1 6]), VolumePenalty(fill(200,10),[1])] #What penalties are added to the model?
-    temperature::Float64 = 3.0 #Temperature to weight site flips (higher increases chance of accepting energy increasing flips)
+    penalties::Vector{Hamiltonian} = [AdhesionPenalty([0 50; 50 100]), VolumePenalty(fill(200,10),[5])] #What penalties are added to the model?
+    temperature::Float64 = 20.0 #Temperature to weight site flips (higher increases chance of accepting energy increasing flips)
 end
 
 ####################################################
@@ -373,6 +373,31 @@ end
 ####################################################
 
 function UpdateConnections!(graph::NamedGraph; checkConnect::Bool=false)
+
+    #Reset the articulation points (is this needed?)
+    graph.isArticulation .= falses(size(graph.isArticulation))
+
+    #Loop through cells to find articulation points
+    for σᵢ in unique(graph.σ)
+        
+        #Get the subgraph for a given cell ID
+        cellIdx = findall(isequal(σᵢ), graph.σ)
+        subgraph = graph.network[cellIdx]
+
+        if checkConnect
+            if !is_connected(subgraph) #if not connected
+                error("some cells are disconnected, try rerunning or use a different cell initialization")
+            end
+        end
+
+        #Update the articulation points
+        graph.isArticulation[cellIdx[articulation(subgraph)]] .= true
+    end
+
+    return nothing
+end
+
+function UpdateConnections!(graph::NamedGraph, stepInfo::MHStepInfo; checkConnect::Bool=false)
 
     #Reset the articulation points (is this needed?)
     graph.isArticulation .= falses(size(graph.isArticulation))

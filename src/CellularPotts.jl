@@ -16,7 +16,10 @@ include("InitializeCells.jl")
 include("MarkovStep.jl")
 include("Gui.jl")
 
-export Hamiltonian,
+export 
+
+#BaseFunctions.jl
+      Hamiltonian,
       AdhesionPenalty,
       VolumePenalty,
       ModelParameters,
@@ -24,8 +27,16 @@ export Hamiltonian,
       CellAttributes,
       CellPotts,
       UpdateConnections!,
+
+#MarkovStep
       MHStepInfo,
       MHStep!,
-      CellDivision
+      MHStep_naive!,
+
+#DivideCells.jl
+      CellDivision,
+
+#Gui.jl
+      CellGUI
 
 end
