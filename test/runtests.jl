@@ -9,7 +9,7 @@ end
 
 
 
-M = ModelParameters(temperature=50.0)
+M = ModelParameters()
 CPM = CellPotts(M)
 
 CellGUI(CPM)

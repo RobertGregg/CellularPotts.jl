@@ -8,6 +8,7 @@
 
 function CellGUI(CPM::CellPotts{2})
 
+    #--------Simulation Screen--------
     #Start by creating a blank figure
     fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf0(0.98, 0.98, 0.98))
 
@@ -103,14 +104,52 @@ function CellGUI(CPM::CellPotts{2})
     xvals = @lift( $lim[1]+1:$lim[2] )
     lines!(axEnergy, xvals, energies)
 
+    #--------Buttons--------
+    #Currently 2 buttons: a play/pause and a stop button
+    #Place the buttons below the simulation and align to the left
+    fig[2,1] = buttongrid = GridLayout(tellwidth = false, halign = :left)
+    buttonsLabels = ["▶","■","Divide!"]
+
+    #Loop through and assign button labels, width, and color
+    buttongrid[1,1:length(buttonsLabels)] = [Button(
+        fig,
+        label = lab,
+        width = 70,
+        buttoncolor = :grey) for lab in buttonsLabels] 
+
+    #Set the buttons to individual variables
+    playpause, stop, cellDivideButton = contents(buttongrid)
+
+    #If the play/pause button is clicked, change the label
+    lift(playpause.clicks) do clicks
+        if isodd(clicks)
+            playpause.label = "𝅛𝅛"
+        else
+            playpause.label = "▶"
+        end
+    end
+
     display(fig)
 
     runsim = true
+    stop.clicks[] = 0 #for stop button
     while runsim
-        timestep[] += 1
-        appendEnergy!(energies,CPM)
-        notify(timestep)
-        notify(energies)
+
+        #Is the pause button pushed?
+        if playpause.label[] == "▶"
+            timestep[] += 1
+            appendEnergy!(energies,CPM)
+            notify(timestep)
+            notify(energies)
+        end
+
+        #Has the stop button been pushed?
+        if  stop.clicks[] == 1
+            runsim = false
+            GLMakie.destroy!(GLMakie.global_gl_screen()) #close the window
+        end
+
+        
         sleep(eps())
     end
 end
