@@ -129,6 +129,11 @@ function CellGUI(CPM::CellPotts{2})
         end
     end
 
+    #partition a random cell when button is clicked 
+    lift(cellDivideButton.clicks) do clicks
+        CellDivision!(CPM,rand(1:maximum(CPM.cell.ids)))
+    end
+
     display(fig)
 
     runsim = true

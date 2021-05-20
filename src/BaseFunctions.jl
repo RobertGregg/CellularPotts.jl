@@ -1,28 +1,5 @@
 #This file contains functions that are pervasive throughout this package as well as structures to define common objects like cells of input variables
 
-
-#= Notes
-
-Questions
-    - what is the difference b/w Rect3D and FRect3D?
-    - Issue with visual when dimensions are not equal?
-        
-Comments
-    - metagraph saves attributes as Dict{Symbol, Any} which leads to a lot of type instability
-        - The upside is you can dynamically add any number of attributes
-    - If a cell moves to a border with non-periodic boundary conditions, medium could disconnect
-        - non-periodic boundary conditions forces cells to not be on opposite borders
-    - If you see an offset array, its just to give medium a zero index
-    - An ⊗ I(m) + I(n) ⊗ Am  ≠  Am ⊗ I(n) + I(m) ⊗ An  when n≠m
-
-Improvements
-    - allow user defined parameters to nodes (maybe input as a named tuple?)
-    - allow cells of the same type to be different sizes?
-    - could get a big speed improvement if you don't loop through all cells to update articulation points
-    - VP having desired volumes makes cell division difficult (type unstable), replace with CPM.M.cellVolumes (?)
-    - For 3D gui, don't recreate voxels every iteration, just set color to clear
-=#
-
 ####################################################
 # Helper Functions
 ####################################################
@@ -35,7 +12,6 @@ Improvements
 
 
 #The following functions help generate adjacency matrices for the underlying network. Circulant arrays are used for periodic boundaries and off-diagonal arrays are used for non-periodic graphs
-
 #See https://stackoverflow.com/a/45958661
 
 
@@ -199,6 +175,7 @@ mutable struct CellAttributes
     #Vectors are offset to include medium (medium gets index 0, cell 1 gets index 1, etc.)
     ids::OffsetVector{Int,Vector{Int}} #vector of cell IDs
     volumes::OffsetVector{Int,Vector{Int}} #vector of cell volumes 
+    desiredVolumes::OffsetVector{Int,Vector{Int}} #vector of desired cell volumes
     types::OffsetVector{String,Vector{String}} #given a cell index, output it's type
     typeMap::Dict{String, Int} #mapping cell types (e.g. "Medium") to an index (e.g. 0)
 
@@ -212,10 +189,14 @@ mutable struct CellAttributes
 
         types = OffsetVector(["Medium"; inverse_rle(M.cellTypes, M.cellCounts)], 0:totalCells)
 
+        #Look for the VolumePenalty and use it to update the desired volumes
+        volIdx = findfirst(p -> isa(p,VolumePenalty), M.penalties)
+        desiredVolumes = M.penalties[volIdx].desiredVolumes #This is type unstable but it only happens once
+
         typeMap = Dict( M.cellTypes .=> 1:length(M.cellTypes) )
         typeMap["Medium"] = 0
 
-        return new(ids, volumes, types, typeMap)
+        return new(ids, volumes, desiredVolumes, types, typeMap)
     end
 end
 
@@ -317,7 +298,7 @@ function (VP::VolumePenalty)(CPM::CellPotts)
     #Loop through cells, see how far they are from a desired volume, and put into appropriate slot
     for id in CPM.cell.ids 
         cellTypeIdx = CPM.cell.typeMap[ CPM.cell.types[id] ] # cell id (21) → cell type ("Medium") → cell type index (0)
-        ΔV[cellTypeIdx] += VP.λᵥ[cellTypeIdx] * (CPM.cell.volumes[id] - VP.desiredVolumes[id])^2
+        ΔV[cellTypeIdx] += VP.λᵥ[cellTypeIdx] * (CPM.cell.volumes[id] - CPM.cell.desiredVolumes[id])^2
     end
 
     #Calculate the penalty
@@ -325,7 +306,7 @@ function (VP::VolumePenalty)(CPM::CellPotts)
 end
 
 
-#----Calculate on after markov step----
+#----Calculate after markov step----
 
 function (AP::AdhesionPenalty)(CPM::CellPotts, stepInfo::MHStepInfo)
         
@@ -356,7 +337,7 @@ function (VP::VolumePenalty)(CPM::CellPotts, stepInfo::MHStepInfo)
     cellTypeIdx = [CPM.cell.typeMap[type] for type in CPM.cell.types[sourceTarget]] 
 
     #Extract the desired volumes
-    desiredVolumes = VP.desiredVolumes[sourceTarget]
+    desiredVolumes = CPM.cell.desiredVolumes[sourceTarget]
 
     #Extract the current volumes
     currentVolumes = CPM.cell.volumes[sourceTarget]
@@ -465,4 +446,30 @@ function Base.show(io::IO, CPM::CellPotts)
     println("Current Energy: ", CPM.energy)
     println("Grid Temperature: ", CPM.M.temperature)
     println("Steps: ", CPM.stepCounter)
+end
+
+
+
+macro create_class(classname, fields...)
+    quote
+        mutable struct $classname
+            $(fields...)
+            function $classname($(fields...))
+                new($(fields...))
+            end
+        end
+    end
+end
+
+
+macro create_class2(classname, fields_tuple)
+    fields = fields_tuple.args
+    quote
+        mutable struct $classname
+            $(fields...)
+            function $classname($(fields...))
+                new($(fields...))
+            end
+        end
+    end
 end

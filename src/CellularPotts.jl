@@ -34,7 +34,7 @@ export
       MHStep_naive!,
 
 #DivideCells.jl
-      CellDivision,
+      CellDivision!,
 
 #Gui.jl
       CellGUI

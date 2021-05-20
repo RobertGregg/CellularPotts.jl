@@ -4,7 +4,7 @@
 ####################################################
 
 #This is so easy with a graph 
-function CellDivision(CPM::CellPotts, σ::Int)
+function CellDivision!(CPM::CellPotts, σ::Int)
 
     cellIdx = findall(isequal(σ), CPM.graph.σ)
 
@@ -16,9 +16,13 @@ function CellDivision(CPM::CellPotts, σ::Int)
     #Update cell attributes
     #ID
         push!(CPM.cell.ids, CPM.cell.ids[end]+1)
-    #Volumes
+    #Current volumes
         CPM.cell.volumes[σ] = sum(x->x==1, newCellsIdx)
         push!(CPM.cell.volumes, sum(x->x==2, newCellsIdx))
+
+    #desired volumes
+        push!(CPM.cell.desiredVolumes, CPM.cell.desiredVolumes[σ])
+        
     #Types
         push!(CPM.cell.types, CPM.cell.types[σ])
 
@@ -37,4 +41,6 @@ function CellDivision(CPM::CellPotts, σ::Int)
         CPM.energy = sum([f(CPM) for f in CPM.M.penalties])
     #visual
         CPM.visual[newCellNodeIdx] .= CPM.cell.ids[end]
+
+    return nothing
 end
