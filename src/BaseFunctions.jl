@@ -200,6 +200,17 @@ mutable struct CellAttributes
     end
 end
 
+####################################################
+# Variables for Markov Step 
+####################################################
+
+Base.@kwdef mutable struct MHStepInfo
+    sourceNode::Int = 1
+    sourceNodeNeighbors::Vector{Int} = [1]
+    possibleCellTargets::Vector{Int} = [1]
+    sourceCell::Int = 1
+    targetCell::Int = 1
+end
 
 ####################################################
 # Model Structure
@@ -212,6 +223,7 @@ mutable struct CellPotts{N}
     energy::Int #Total penality energy across graph
     visual::Array{Int,N} #An array of cell memberships for plotting
     stepCounter::Int #counts the number of MHSteps performed
+    stepInfo::MHStepInfo
 
     function CellPotts(M::ModelParameters{N}) where N
 
@@ -231,7 +243,7 @@ mutable struct CellPotts{N}
         cell = CellAttributes(graph, M)
 
         #Create an instance of the model with zero energy 
-        CPM = new{N}(M, cell, graph, 0, cellMembership, 0)
+        CPM = new{N}(M, cell, graph, 0, cellMembership, 0, MHStepInfo())
 
         #Calculate the energy from the given penalties
         #Update the energy with the given penalties
@@ -239,17 +251,6 @@ mutable struct CellPotts{N}
 
         return CPM
     end
-end
-
-####################################################
-# Variables for Markov Step 
-####################################################
-
-Base.@kwdef mutable struct MHStepInfo
-    sourceNode::Int = 1
-    sourceNodeNeighbors::Vector{Int} = [1]
-    sourceCell::Int = 1
-    targetCell::Int = 1
 end
 
 ####################################################

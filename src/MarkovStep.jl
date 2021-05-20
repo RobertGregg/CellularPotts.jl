@@ -4,8 +4,8 @@
 
 function MHStep!(CPM::CellPotts)
 
-    #Create a structure to hold the source and target information
-    stepInfo = MHStepInfo() #should add as input, might save a little time
+    #unpack current step structure to update
+    stepInfo = CPM.stepInfo #does this allocate/slow things down? Parameters.jl ?
 
     #Loop through until a good source target is found
     searching = true
@@ -17,13 +17,13 @@ function MHStep!(CPM::CellPotts)
 
         #Get all of the unique cell IDs neighboring this Node
         stepInfo.sourceNodeNeighbors = neighbors(CPM.graph.network, stepInfo.sourceNode)
-        possibleCellTargets = unique(CPM.graph.σ[stepInfo.sourceNodeNeighbors])
+        stepInfo.possibleCellTargets = unique(CPM.graph.σ[stepInfo.sourceNodeNeighbors])
         #Choose a target
-        stepInfo.targetCell = rand(possibleCellTargets)
+        stepInfo.targetCell = rand(stepInfo.possibleCellTargets)
 
         #Some checks before attempting a flip
             #In the middle of a cell
-            inMiddle = all(possibleCellTargets .== stepInfo.sourceCell)
+            inMiddle = all(x-> x == stepInfo.sourceCell, stepInfo.possibleCellTargets)
             #will fragment the cell
             isArticulation = CPM.graph.isArticulation[stepInfo.sourceNode]
             #target is the same as source cell 
