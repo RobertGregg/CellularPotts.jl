@@ -11,7 +11,6 @@ end
 
 M = ModelParameters()
 CPM = CellPotts(M)
-stepInfo = MHStepInfo()
 
 MHStep!(CPM)
 

@@ -204,12 +204,12 @@ end
 # Variables for Markov Step 
 ####################################################
 
-Base.@kwdef mutable struct MHStepInfo
-    sourceNode::Int = 1
-    sourceNodeNeighbors::Vector{Int} = [1]
-    possibleCellTargets::Vector{Int} = [1]
-    sourceCell::Int = 1
-    targetCell::Int = 1
+Base.@kwdef mutable struct MHStepInfo{T<:Int}
+    sourceNode::T = 1
+    sourceNodeNeighbors::Vector{T} = [1]
+    possibleCellTargets::Vector{T} = [1]
+    sourceCell::T = 1
+    targetCell::T = 1
 end
 
 ####################################################

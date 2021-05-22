@@ -65,8 +65,8 @@ function CellGUI(CPM::CellPotts{2})
     (m,n) = CPM.M.graphDimension
 
     #Generate all of the edge Connections by putting a point on each cell corner
-    horizontal = [Point2f0(x, y) => Point2f0(x+1, y) for x in 0:m-1, y in 0:m]
-    vertical = [Point2f0(x, y) => Point2f0(x, y+1) for y in 0:n-1, x in 0:n]
+    horizontal = [Point2f0(x, y) => Point2f0(x+1, y) for x in 0.5:m-0.5, y in 0.5:m+0.5]
+    vertical = [Point2f0(x, y) => Point2f0(x, y+1) for y in 0.5:n-0.5, x in 0.5:n+0.5]
     points = vcat(horizontal[:],vertical[:])
 
     #Determine the transparency of the linesegments
