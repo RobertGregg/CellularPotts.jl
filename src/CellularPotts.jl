@@ -11,7 +11,7 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
 
 
 include("BaseFunctions.jl")
-include("DivideCells.jl")
+include("CellActions.jl")
 include("InitializeCells.jl")
 include("MarkovStep.jl")
 include("Gui.jl")
@@ -33,8 +33,9 @@ export
       MHStep!,
       MHStep_naive!,
 
-#DivideCells.jl
+#CellActions.jl
       CellDivision!,
+      CellDeath!,
 
 #Gui.jl
       CellGUI

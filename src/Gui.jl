@@ -108,7 +108,7 @@ function CellGUI(CPM::CellPotts{2})
     #Currently 2 buttons: a play/pause and a stop button
     #Place the buttons below the simulation and align to the left
     fig[2,1] = buttongrid = GridLayout(tellwidth = false, halign = :left)
-    buttonsLabels = ["▶","■","Divide!"]
+    buttonsLabels = ["▶","■","Divide!","Kill"]
 
     #Loop through and assign button labels, width, and color
     buttongrid[1,1:length(buttonsLabels)] = [Button(
@@ -118,10 +118,10 @@ function CellGUI(CPM::CellPotts{2})
         buttoncolor = :grey) for lab in buttonsLabels] 
 
     #Set the buttons to individual variables
-    playpause, stop, cellDivideButton = contents(buttongrid)
+    playpause, stop, cellDivideButton, cellDeathButton = contents(buttongrid)
 
     #If the play/pause button is clicked, change the label
-    lift(playpause.clicks) do clicks
+    on(playpause.clicks) do clicks
         if isodd(clicks)
             playpause.label = "𝅛𝅛"
         else
@@ -130,8 +130,13 @@ function CellGUI(CPM::CellPotts{2})
     end
 
     #partition a random cell when button is clicked 
-    lift(cellDivideButton.clicks) do clicks
+    on(cellDivideButton.clicks) do clicks
         CellDivision!(CPM,rand(1:maximum(CPM.cell.ids)))
+    end
+
+    #Choose a random cell to kill
+    on(cellDeathButton.clicks) do clicks
+        CellDeath!(CPM,rand(1:maximum(CPM.cell.ids)))
     end
 
     display(fig)

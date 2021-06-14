@@ -36,7 +36,7 @@ function CellDivision!(CPM::CellPotts, σ::Int)
     #isArticulation
         UpdateConnections!(CPM.graph)
 
-    #Penalties???   
+    #Volumne penalties should have desired value?   
 
     #Global CellPotts attributes
     #energy
@@ -44,5 +44,17 @@ function CellDivision!(CPM::CellPotts, σ::Int)
     #visual
         CPM.visual[newCellNodeIdx] .= CPM.cell.ids[end]
 
+    return nothing
+end
+
+
+####################################################
+# Cell Death
+####################################################
+
+
+#Just set the desired volume to zero?
+function CellDeath!(CPM::CellPotts, σ::Int)
+    CPM.cell.desiredVolumes[σ] = 0
     return nothing
 end
