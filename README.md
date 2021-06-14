@@ -16,7 +16,7 @@ Researchers and developers have been able to accomplish a lot with their respect
 
 Careful attention has been taken to ensure this package is as performant as I can possibly make it (particually with type stability and allocations). However, if you spot something egregious in the codebase, feel free to raise an issue or pull request.
 
-Also of note, **this package is still in major development and is not currently recommended for general use**. I'm still working out how to best organize datastructures and functionally. However, still feel free to try it if your curious. 
+Also of note, **this package is still in major development and is not currently recommended for general use**. I'm still working out how to best organize datastructures and functionally. However, still feel free to try it if you're curious. 
 
 Below is simply tracking the progress of the package and any notes to myself.
 
