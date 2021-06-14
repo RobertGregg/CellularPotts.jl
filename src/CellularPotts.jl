@@ -5,9 +5,9 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       Colors, #More color options for the cells (e.g. :Purples)
       StatsBase, Random, #Currently just used for countmap, inverse_rle; shuffle
       SparseArrays, #For creating large adjacency matrices
-      LinearAlgebra, #Additiona functionality for arrays
+      LinearAlgebra, #Additional functionality for arrays
       LightGraphs, #Needed for creating graphs that look like graphDimension
-      Metis #Lighting fast method for partitioning graphs
+      Metis #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
 
 
 include("BaseFunctions.jl")
@@ -28,7 +28,7 @@ export
       CellPotts,
       UpdateConnections!,
 
-#MarkovStep
+#MarkovStep.jl
       MHStepInfo,
       MHStep!,
       MHStep_naive!,

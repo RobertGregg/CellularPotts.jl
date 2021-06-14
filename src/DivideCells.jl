@@ -6,12 +6,14 @@
 #This is so easy with a graph 
 function CellDivision!(CPM::CellPotts, σ::Int)
 
+    #Find all the nodes with the same ID (σ) as input
     cellIdx = findall(isequal(σ), CPM.graph.σ)
 
-    #Vector of ones and twos
-    newCellsIdx = Metis.partition(CPM.graph.network[cellIdx], 2)
+    #Use Metis to evenly partition the cell into two subcells
+    newCellsIdx = Metis.partition(CPM.graph.network[cellIdx], 2) #Vector of ones and twos
     newCellNodeIdx = cellIdx[newCellsIdx .== 2]
     
+    #Now we just need to update the model to account for the new cell
 
     #Update cell attributes
     #ID

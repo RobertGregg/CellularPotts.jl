@@ -135,10 +135,9 @@ end
 
 mutable struct NamedGraph
     network::SimpleGraph{Int} #a network of nodes and edges equivalent to the grid
-    #Attributes for the network (length == number of nodes)
-    σ::Vector{Int}
-    τ::Vector{String}
-    isArticulation::BitVector
+    σ::Vector{Int} #Cell ID for each node
+    τ::Vector{String} #Each node has a cell type
+    isArticulation::BitVector #Check for whether changing a node's ID will dissconnent the cell
 
     #Two inner contructors, the first assume you have all the individual fields
     NamedGraph(network::SimpleGraph{Int}, σ::Vector{Int}, τ::Vector{String}, isArticulation::BitVector) = new(network, σ, τ, isArticulation)
@@ -205,11 +204,11 @@ end
 ####################################################
 
 Base.@kwdef mutable struct MHStepInfo{T<:Int}
-    sourceNode::T = 1
-    sourceNodeNeighbors::Vector{T} = [1]
-    possibleCellTargets::Vector{T} = [1]
-    sourceCell::T = 1
-    targetCell::T = 1
+    sourceNode::T = 1 #Index of node choosen
+    sourceNodeNeighbors::Vector{T} = [1] # Indicies for the neighboring nodes
+    possibleCellTargets::Vector{T} = [1] # Unique cell IDs of the neighboring nodes
+    sourceCell::T = 1 #ID of sourceNode
+    targetCell::T = 1 #ID of chosen cell target
 end
 
 ####################################################
@@ -223,7 +222,7 @@ mutable struct CellPotts{N}
     energy::Int #Total penality energy across graph
     visual::Array{Int,N} #An array of cell memberships for plotting
     stepCounter::Int #counts the number of MHSteps performed
-    stepInfo::MHStepInfo
+    stepInfo::MHStepInfo #Information about nodes choosen for flip attempts
 
     function CellPotts(M::ModelParameters{N}) where N
 
@@ -379,25 +378,21 @@ function UpdateConnections!(graph::NamedGraph; checkConnect::Bool=false)
     return nothing
 end
 
-function UpdateConnections!(graph::NamedGraph, stepInfo::MHStepInfo; checkConnect::Bool=false)
+#Still need to fix this: how can we update the articulation points without looping through every cell?
+function UpdateConnections!(graph::NamedGraph, stepInfo::MHStepInfo)
 
     #Reset the articulation points (is this needed?)
-    graph.isArticulation .= falses(size(graph.isArticulation))
+    subGraphIdx = unique([stepInfo.possibleCellTargets; stepInfo.sourceCell])
 
     #Loop through cells to find articulation points
-    for σᵢ in unique(graph.σ)
+    for σᵢ in subGraphIdx
         
         #Get the subgraph for a given cell ID
         cellIdx = findall(isequal(σᵢ), graph.σ)
-        subgraph = graph.network[cellIdx]
-
-        if checkConnect
-            if !is_connected(subgraph) #if not connected
-                error("some cells are disconnected, try rerunning or use a different cell initialization")
-            end
-        end
+        subgraph = graph.network[cellIdx] #<------------- THIS IS SLOW
 
         #Update the articulation points
+        graph.isArticulation[cellIdx] .= false
         graph.isArticulation[cellIdx[articulation(subgraph)]] .= true
     end
 
@@ -447,30 +442,4 @@ function Base.show(io::IO, CPM::CellPotts)
     println("Current Energy: ", CPM.energy)
     println("Grid Temperature: ", CPM.M.temperature)
     println("Steps: ", CPM.stepCounter)
-end
-
-
-
-macro create_class(classname, fields...)
-    quote
-        mutable struct $classname
-            $(fields...)
-            function $classname($(fields...))
-                new($(fields...))
-            end
-        end
-    end
-end
-
-
-macro create_class2(classname, fields_tuple)
-    fields = fields_tuple.args
-    quote
-        mutable struct $classname
-            $(fields...)
-            function $classname($(fields...))
-                new($(fields...))
-            end
-        end
-    end
 end

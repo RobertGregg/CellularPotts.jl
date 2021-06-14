@@ -14,7 +14,7 @@ function CellGUI(CPM::CellPotts{2})
 
     #Create observables that will change as the simulation progresses
     timestep = Node(1) #will increase by one every step
-    maxLength = 1000
+    maxLength = 1000 #Window history for plot
     energies = Node(fill(CPM.energy, maxLength)) #vector of past CPM emergies
 
     #The energies plot updates overtime and needs dynamic axes limits
@@ -192,7 +192,7 @@ function Edge2Grid(dim)
     return [[id1,id2] for (id1,id2) in zip([x1;y1],[x2;y2])]
 end
 
-
+#3D method for GUI
 function CellGUI(CPM::CellPotts{3})
 
     timestep = Node(1)
