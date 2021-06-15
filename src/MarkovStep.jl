@@ -60,7 +60,7 @@ function MHStep!(CPM::CellPotts)
         CPM.graph.τ[stepInfo.sourceNode] = CPM.cell.types[stepInfo.targetCell]
 
         #Articulation points
-        UpdateConnections!(CPM.graph)
+        UpdateConnections!(CPM.graph, stepInfo)
         
         #---Overall properties---
         #Update energy

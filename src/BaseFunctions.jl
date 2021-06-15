@@ -378,14 +378,11 @@ function UpdateConnections!(graph::NamedGraph; checkConnect::Bool=false)
     return nothing
 end
 
-#Still need to fix this: how can we update the articulation points without looping through every cell?
+#If not the source or target cell, then the articulations points will not change...right?
 function UpdateConnections!(graph::NamedGraph, stepInfo::MHStepInfo)
 
-    #Reset the articulation points (is this needed?)
-    subGraphIdx = unique([stepInfo.possibleCellTargets; stepInfo.sourceCell])
-
-    #Loop through cells to find articulation points
-    for σᵢ in subGraphIdx
+    #Loop through cells that were changed
+    for σᵢ in [stepInfo.sourceCell, stepInfo.targetCell]
         
         #Get the subgraph for a given cell ID
         cellIdx = findall(isequal(σᵢ), graph.σ)
