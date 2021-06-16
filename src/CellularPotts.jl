@@ -7,7 +7,8 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       SparseArrays, #For creating large adjacency matrices
       LinearAlgebra, #Additional functionality for arrays
       LightGraphs, #Needed for creating graphs that look like graphDimension
-      Metis #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
+      Metis, #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
+      TimerOutputs #looking for allocations
 
 
 include("BaseFunctions.jl")

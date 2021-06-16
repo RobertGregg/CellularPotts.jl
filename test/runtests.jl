@@ -9,6 +9,10 @@ end
 
 
 # Default 2D
+M = ModelParameters()
+
+
+
 M = ModelParameters(
     graphDimension = (120,120),
     cellCounts = [200],
@@ -33,3 +37,5 @@ M = ModelParameters(
     penalties = [AdhesionPenalty([0 50; 50 100]), VolumePenalty(fill(200,50),[5])])
 
 CellGUI(CPM)
+
+
