@@ -2,9 +2,9 @@ using CellularPotts
 using Test
 using Random
 
-@testset "constructor methods" begin
-    # We want to create a model in a variety of ways
-end
+# @testset "constructor methods" begin
+#     # We want to create a model in a variety of ways
+# end
 
 
 
@@ -24,7 +24,7 @@ CPM = CellPotts(M)
 
 MHStep!(CPM)
 
-using BenchmarkTools
+using BenchmarkToolsd
 
 @benchmark MHStep!(CPM)
 
