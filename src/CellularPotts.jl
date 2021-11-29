@@ -8,7 +8,10 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       LinearAlgebra, #Additional functionality for arrays
       LightGraphs, #Needed for creating graphs that look like graphDimension
       Metis, #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
-      TimerOutputs #looking for allocations
+      TimerOutputs, #looking for allocations
+      Catalyst, #Testing reactions DLS
+      DiffEqJump, #Discrete Differential Equations
+      Plots #Well...for faster plotting
 
 
 include("BaseFunctions.jl")
