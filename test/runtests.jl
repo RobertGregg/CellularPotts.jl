@@ -1,41 +1,29 @@
+using Revise
 using CellularPotts
 using Test
 using Random
+using Graphs
+using GLMakie
 
-# @testset "constructor methods" begin
-#     # We want to create a model in a variety of ways
-# end
+parameters = Parameters()
 
+cpm = CellPotts(parameters)
 
+initializeCells!(cpm)
 
-# Default 2D
-M = ModelParameters()
+#MHStep!(cpm)
 
-
-
-M = ModelParameters(
-    graphDimension = (120,120),
-    cellCounts = [200],
-    cellVolumes = [50],
-    penalties = [AdhesionPenalty([0 50; 50 100]), VolumePenalty(fill(50,200),[5])]
-)
-
-CPM = CellPotts(M)
-
-MHStep!(CPM)
-
-using BenchmarkToolsd
-
-@benchmark MHStep!(CPM)
+# @profview fp(cpm)
 
 
-#3D
-M = ModelParameters(
-    graphDimension = (50,50,50),
-    cellCounts = [50],
-    cellVolumes = [1000],
-    penalties = [AdhesionPenalty([0 50; 50 100]), VolumePenalty(fill(200,50),[5])])
+function fp(cpm)
+    for i=1:1000
+        MHStep!(cpm)
+    end
+end
 
-CellGUI(CPM)
+
+
+CellGUI(cpm)
 
 
