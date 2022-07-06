@@ -31,8 +31,19 @@ induced_subgraph_mod(g,cellIdx)
 
 
 ####################################################
-# Determine if a node is an Articulation point
+# Use a macro to create custom cell types
 ####################################################
 
-#Currently, articulation points are recalculated each time MHStep is called which is very slow/wasteful
-#Need a better way to calculate to determine how articulation points change after a node is added removed
+#Cells need rules and properties!
+
+#This is from Agents.jl to create a custom struct with some defaults
+macro agent(name, base, fields)
+    base_type = Core.eval(@__MODULE__, base)
+    base_fieldnames = fieldnames(base_type)
+    base_types = [t for t in base_type.types]
+    base_fields = [:($f::$T) for (f, T) in zip(base_fieldnames, base_types)]
+    res = :(mutable struct $(esc(name)) <: AbstractAgent end)
+    push!(res.args[end].args, base_fields...)
+    push!(res.args[end].args, map(esc, fields.args)...)
+    return res
+end

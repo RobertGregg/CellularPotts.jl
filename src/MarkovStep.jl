@@ -9,7 +9,6 @@ function MHStep!(cpm::CellPotts)
 
 
     #Loop through until a good source target is found
-
     searching = true
     while searching
         #Pick a random location on the graph
@@ -18,11 +17,10 @@ function MHStep!(cpm::CellPotts)
         stepInfo.sourceCell = cpm.graph.nodeIDs[stepInfo.sourceNode]
 
         #Get all of the unique cell IDs neighboring this Node
-        stepInfo.sourceNodeNeighbors = neighbors(cpm.graph, stepInfo.sourceNode)
-        stepInfo.possibleCellTargets = cpm.graph.nodeIDs[stepInfo.sourceNodeNeighbors]
-        unique!(stepInfo.possibleCellTargets)
+        stepInfo.sourceNeighbors = neighbors(cpm.graph, stepInfo.sourceNode)
+
         #Choose a target
-        stepInfo.targetCell = rand(stepInfo.possibleCellTargets)
+        stepInfo.targetCell = cpm.graph.nodeIDs[rand(stepInfo.sourceNeighbors)]
 
         #Collect the target and source into a vector
         stepInfo.sourceTargetCell[1] = stepInfo.sourceCell
@@ -30,7 +28,7 @@ function MHStep!(cpm::CellPotts)
 
         #Some checks before attempting a flip
             #In the middle of a cell
-            inMiddle = length(stepInfo.possibleCellTargets) == 1
+            inMiddle = checkMiddle(cpm, stepInfo)
             #target is the same as source cell 
             isSource = stepInfo.targetCell == stepInfo.sourceCell
 
@@ -43,11 +41,11 @@ function MHStep!(cpm::CellPotts)
 
 
     #Calculate the change in energy when source node is modified
-    ΔH =  sum(f(cpm, stepInfo) for f in cpm.parameters.penalties)
+    #ΔH =  sum(f(cpm, stepInfo) for f in cpm.parameters.penalties)
+    ΔH =  applyPenalties(cpm, stepInfo)
 
     #Calculate an acceptance ratio
     acceptRatio = min(1.0,exp(-ΔH/cpm.parameters.temperature))
-
 
 
     if rand() < acceptRatio #If the acceptance ratio is large enough
@@ -76,4 +74,25 @@ function MHStep!(cpm::CellPotts)
     end
 
     return nothing
+end
+
+function checkMiddle(cpm, stepInfo)
+    
+    for neighbor in stepInfo.sourceNeighbors
+        if stepInfo.sourceCell ≠ cpm.graph.nodeIDs[neighbor]
+            return false
+        end
+    end
+
+    return true
+end
+
+function applyPenalties(cpm, stepInfo)
+    ΔH = 0
+
+    for penalty in cpm.parameters.penalties
+        ΔH += penalty(cpm, stepInfo)
+    end
+
+    return ΔH
 end

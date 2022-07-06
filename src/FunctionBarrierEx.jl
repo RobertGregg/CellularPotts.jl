@@ -51,7 +51,27 @@ function setTotalPrice(A::Block)
 end
 
 
+function setTotalPriceBad(A::Block)
+    
+    A.totalPriceApartments = A.totalPriceCondos = A.totalPrice = 0.0
+
+    @inbounds for dwelling in A.homes
+        if isa(dwelling, Apartment)
+            A.totalPriceApartments += dwelling.price * dwelling.floors
+        elseif isa(dwelling, Condo)
+            A.totalPriceCondos += dwelling.price
+        else
+            continue
+        end
+    end
+
+    A.totalPrice = A.totalPriceApartments + A.totalPriceCondos
+
+    return nothing
+end
+
 
 using BenchmarkTools
 
+@benchmark setTotalPriceBad(myBlock)
 @benchmark setTotalPrice(myBlock)

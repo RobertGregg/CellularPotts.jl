@@ -4,45 +4,36 @@
 ####################################################
 
 #This is so easy with a graph 
-function CellDivision!(CPM::CellPotts, σ::Int)
+function CellDivision!(cpm::CellPotts, σ::Int)
 
     #Find all the nodes with the same ID (σ) as input
-    cellIdx = findall(isequal(σ), CPM.graph.σ)
+    cellIdx = findall(isequal(σ), cpm.graph.nodeIDs)
 
     #Use Metis to evenly partition the cell into two subcells
-    newCellsIdx = Metis.partition(CPM.graph.network[cellIdx], 2) #Vector of ones and twos
+    newCellsIdx = Metis.partition(cpm.graph[cellIdx], 2) #Vector of ones and twos
     newCellNodeIdx = cellIdx[newCellsIdx .== 2]
     
     #Now we just need to update the model to account for the new cell
 
-    #Update cell attributes
-    #ID
-        push!(CPM.cell.ids, CPM.cell.ids[end]+1)
-    #Current volumes
-        CPM.cell.volumes[σ] = sum(x->x==1, newCellsIdx)
-        push!(CPM.cell.volumes, sum(x->x==2, newCellsIdx))
-
-    #desired volumes
-        push!(CPM.cell.desiredVolumes, CPM.cell.desiredVolumes[σ])
-        
-    #Types
-        push!(CPM.cell.types, CPM.cell.types[σ])
+    #Update cell summary
+        push!(cpm.cells.names, cpm.cells.names[σ]) 
+        push!(cpm.cells.ids, cpm.cells.ids[end]+1) 
+        #Current volumes
+        cpm.cells.volumes[σ] = sum(x->x==1, newCellsIdx)
+        push!(cpm.cells.volumes, sum(x->x==2, newCellsIdx))
+        #Desired volumes 
+        push!(cpm.cells.desiredVolumes, cpm.cells.desiredVolumes[σ])
 
     #Update graph attributes
-    #σ
-        CPM.graph.σ[newCellNodeIdx] .= CPM.cell.ids[end]
-    #τ
-        CPM.graph.τ[newCellNodeIdx] .= CPM.cell.types[end]
-    #isArticulation
-        UpdateConnections!(CPM.graph)
-
-    #Volumne penalties should have desired value?   
+        cpm.graph.nodeIDs[newCellNodeIdx] .= cpm.cells.ids[end]
 
     #Global CellPotts attributes
     #energy
-        CPM.energy = sum([f(CPM) for f in CPM.M.penalties])
+        for penalty in cpm.parameters.penalties
+            penalty(cpm)
+        end
     #visual
-        CPM.visual[newCellNodeIdx] .= CPM.cell.ids[end]
+        cpm.visual[newCellNodeIdx] .= cpm.cells.ids[end]
 
     return nothing
 end
@@ -54,7 +45,7 @@ end
 
 
 #Just set the desired volume to zero?
-function CellDeath!(CPM::CellPotts, σ::Int)
-    CPM.cell.desiredVolumes[σ] = 0
+function CellDeath!(cpm::CellPotts, σ::Int)
+    cpm.cells.desiredVolumes[σ] = 0
     return nothing
 end

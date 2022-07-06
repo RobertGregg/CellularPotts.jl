@@ -28,7 +28,7 @@ import Base: eltype
 
 #include("BaseFunctions.jl")
 include("newBase.jl")
-#include("CellActions.jl")
+include("CellActions.jl")
 #include("InitializeCells.jl")
 include("MarkovStep.jl")
 include("Gui.jl")
@@ -41,10 +41,14 @@ export
       Penalty,
       AdhesionPenalty,
       VolumePenalty,
+      PerimeterPenalty,
       Parameters,
       initializeCells!,
       CellPotts,
       genAdj,
+#CellActions.jl
+      CellDivision!,
+      CellDeath!,
 #MarkovStep.jl
       MHStep!,
 #Gui.jl

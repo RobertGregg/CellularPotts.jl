@@ -28,8 +28,8 @@ function CellGUI(cpm::CellPotts{2})
 
     #Name the axes on the figure
     axSim = fig[1, 1] = Axis(fig, title = "Simulation")
-    # axEnergy = fig[1, 2] = Axis(fig, title = "Energy", limits = lim, height = 300, tellheight = false, valign = :top)
-    axEnergy = fig[1, 2] = Axis(fig, title = "Energy", height = 300, tellheight = false, valign = :top)
+    axEnergy = fig[1, 2] = Axis(fig, title = "Energy", limits = lim, height = 300, tellheight = false, valign = :top)
+    # axEnergy = fig[1, 2] = Axis(fig, title = "Energy", height = 300, tellheight = false, valign = :top)
     colsize!(fig.layout, 1, Relative(2/3)) #Make cells heatmap plot relatively larger
 
     #The first plot will show a heatmap of the cell simulation
@@ -65,7 +65,7 @@ function CellGUI(cpm::CellPotts{2})
     clear = RGBA{Float64}(0.0,0.0,0.0,0.0);
     
     #Loop through all the grid connected and assign the correct color
-    currentEdgeColors = [gridflip[edges[1]]==gridflip[edges[2]] ? clear : black for edges in edgeConnectors];
+    currentEdgeColors = [gridflip[edges[1]]==gridflip[edges[2]] ? black : black for edges in edgeConnectors];
 
     #For each time update, recolor all of the edges
     lineColors_node = @lift begin
@@ -74,7 +74,7 @@ function CellGUI(cpm::CellPotts{2})
         gridflip = rotl90(cpm.visual)
 
         for (i,edges) in enumerate(edgeConnectors)
-            currentEdgeColors[i] = gridflip[edges[1]]==gridflip[edges[2]] ? clear : black
+            currentEdgeColors[i] = gridflip[edges[1]]==gridflip[edges[2]] ? black : black
         end
 
         currentEdgeColors
@@ -119,12 +119,12 @@ function CellGUI(cpm::CellPotts{2})
 
     #partition a random cell when button is clicked 
     on(cellDivideButton.clicks) do clicks
-        CellDivision!(cpm,rand(1:maximum(cpm.cell.ids)))
+        CellDivision!(cpm,rand(1:maximum(cpm.cells.ids)))
     end
 
     #Choose a random cell to kill
     on(cellDeathButton.clicks) do clicks
-        CellDeath!(cpm,rand(1:maximum(cpm.cell.ids)))
+        CellDeath!(cpm,rand(1:maximum(cpm.cells.ids)))
     end
 
     display(fig)
@@ -237,3 +237,5 @@ function CellGUI(cpm::CellPotts{3})
             sleep(eps())
         end
 end
+
+
