@@ -14,8 +14,6 @@ The goal of this package is to develop a cellular, agent-based modeling approach
 
 Researchers and developers have been able to accomplish a lot with their respective softwares and I would urge anyone to check them out. My favorites are [Morpheus](https://morpheus.gitlab.io/), [Artistoo](https://artistoo.net/), and [CompuCell3D](https://compucell3d.org/). This package takes a lot of inspiration from their design and pedagogical examples.
 
-One question you might have is "Why not just use the existing [Agents.jl]([GitHub - JuliaDynamics/Agents.jl: Agent-based modeling framework in Julia](https://github.com/JuliaDynamics/Agents.jl)) or [DynamicGrids.jl](https://github.com/cesaraustralia/DynamicGrids.jl) packages?". CPMs are unique in that an agent spans more than one spatial unit and has an irregular shape that varies with time. This goes against a lot of the key assumptions used in these packages so hooking into them would be a challenge. However, they do provide some amazing visual tools which might be useful to incoporate into this package. 
-
 Careful attention has been taken to ensure this package is as performant as I can possibly make it (particually with type stability and allocations). For example, stepping the model forward in time produces not allocations. However, if you spot something egregious in the codebase, feel free to raise an issue or pull request.
 
 Also of note, **this package is still in major development and is not currently recommended for general use**. I'm still working out how to best organize datastructures and functionally. However, still feel free to try it if you're curious. 
@@ -29,6 +27,7 @@ Below is simply tracking the progress of the package and any notes to myself.
   - How will cells update the gradient? Just at their border?
 - Should the cell age be tracked for division?
 - What is the difference b/w Rect3D and FRect3D?
+- How to hook into Agents.jl?
 
 ## Comments
 
