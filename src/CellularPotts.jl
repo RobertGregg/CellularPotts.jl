@@ -5,38 +5,53 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       Colors, #More color options for the cells (e.g. :Purples)
       StatsBase, Random, #Currently just used for countmap, inverse_rle; shuffle
       SparseArrays, #For creating large adjacency matrices
-      LinearAlgebra, #Additiona functionality for arrays
-      LightGraphs, #Needed for creating graphs that look like graphDimension
-      Metis #Lighting fast method for partitioning graphs
+      LinearAlgebra, #Additional functionality for arrays
+      Graphs, #Needed for creating graphs that look like graphDimension
+      Metis, #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
+      TimerOutputs #looking for allocations
+
+import Graphs:
+            AbstractSimpleGraph,
+            SimpleEdge,
+            is_directed,
+            edgetype,
+            ne,
+            nv,
+            vertices,
+            edges,
+            has_vertex,
+            has_edge,
+            add_edge!
+
+import Base: eltype
 
 
-include("BaseFunctions.jl")
-include("DivideCells.jl")
-include("InitializeCells.jl")
+#include("BaseFunctions.jl")
+include("GraphStructure.jl")
+include("newBase.jl")
+include("CellActions.jl")
+#include("InitializeCells.jl")
 include("MarkovStep.jl")
 include("Gui.jl")
 
 export 
 
-#BaseFunctions.jl
-      Hamiltonian,
+#newBase.jl
+      InitialCellState,
+      CellSummary,
+      Penalty,
       AdhesionPenalty,
       VolumePenalty,
-      ModelParameters,
-      NamedGraph,
-      CellAttributes,
+      PerimeterPenalty,
+      Parameters,
+      initializeCells!,
       CellPotts,
-      UpdateConnections!,
-
-#MarkovStep
-      MHStepInfo,
+      genAdj,
+#CellActions.jl
+      CellDivision!,
+      CellDeath!,
+#MarkovStep.jl
       MHStep!,
-      MHStep_naive!,
-
-#DivideCells.jl
-      CellDivision,
-
 #Gui.jl
       CellGUI
-
 end

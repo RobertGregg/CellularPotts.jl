@@ -2,46 +2,51 @@
 # Metropolis–Hasting Step
 ####################################################
 
-function MHStep!(CPM::CellPotts)
+function MHStep!(cpm::CellPotts)
 
-    #Create a structure to hold the source and target information
-    stepInfo = MHStepInfo() #should add as input, might save a little time
+    #unpack current step structure update
+    stepInfo = cpm.stepInfo
+
 
     #Loop through until a good source target is found
     searching = true
     while searching
         #Pick a random location on the graph
-        stepInfo.sourceNode = rand(1:nv(CPM.graph.network))
+        stepInfo.sourceNode = rand(1:nv(cpm.graph))
         #What cell does it belong to?
-        stepInfo.sourceCell = CPM.graph.σ[stepInfo.sourceNode]
+        stepInfo.sourceCell = cpm.graph.nodeIDs[stepInfo.sourceNode]
 
         #Get all of the unique cell IDs neighboring this Node
-        stepInfo.sourceNodeNeighbors = neighbors(CPM.graph.network, stepInfo.sourceNode)
-        possibleCellTargets = unique(CPM.graph.σ[stepInfo.sourceNodeNeighbors])
+        stepInfo.sourceNeighbors = neighbors(cpm.graph, stepInfo.sourceNode)
+
         #Choose a target
-        stepInfo.targetCell = rand(possibleCellTargets)
+        stepInfo.targetCell = cpm.graph.nodeIDs[rand(stepInfo.sourceNeighbors)]
+
+        #Collect the target and source into a vector
+        stepInfo.sourceTargetCell[1] = stepInfo.sourceCell
+        stepInfo.sourceTargetCell[2] = stepInfo.targetCell
 
         #Some checks before attempting a flip
             #In the middle of a cell
-            inMiddle = all(possibleCellTargets .== stepInfo.sourceCell)
-            #will fragment the cell
-            isArticulation = CPM.graph.isArticulation[stepInfo.sourceNode]
+            inMiddle = checkMiddle(cpm, stepInfo)
             #target is the same as source cell 
             isSource = stepInfo.targetCell == stepInfo.sourceCell
 
         #if all checks pass, attempt flip
-        if !(inMiddle | isArticulation | isSource) 
+        if !(inMiddle | isSource) 
             searching = false
-        else
-            CPM.stepCounter += 1
         end
     end    
 
+
+
     #Calculate the change in energy when source node is modified
-    ΔH =  sum([f(CPM, stepInfo) for f in CPM.M.penalties])
+    #ΔH =  sum(f(cpm, stepInfo) for f in cpm.parameters.penalties)
+    ΔH =  applyPenalties(cpm, stepInfo)
 
     #Calculate an acceptance ratio
-    acceptRatio = min(1.0,exp(-ΔH/CPM.M.temperature))
+    acceptRatio = min(1.0,exp(-ΔH/cpm.parameters.temperature))
+
 
     if rand() < acceptRatio #If the acceptance ratio is large enough
 
@@ -49,67 +54,48 @@ function MHStep!(CPM::CellPotts)
         #---Cell properties---
 
         #Update cell volumes
-        CPM.cell.volumes[stepInfo.sourceCell] -= 1
-        CPM.cell.volumes[stepInfo.targetCell] += 1
+        cpm.cells.volumes[stepInfo.sourceCell] -= 1
+        cpm.cells.volumes[stepInfo.targetCell] += 1
 
+        #update cell perimeters
+        cpm.cells.volumes[stepInfo.sourceCell] -= 1
+        cpm.cells.volumes[stepInfo.targetCell] += 1
 
         #---Graph properties---
 
         #Cell IDs
-        CPM.graph.σ[stepInfo.sourceNode] = stepInfo.targetCell
-        CPM.graph.τ[stepInfo.sourceNode] = CPM.cell.types[stepInfo.targetCell]
-
-        #Articulation points
-        UpdateConnections!(CPM.graph)
+        cpm.graph.nodeIDs[stepInfo.sourceNode] = stepInfo.targetCell
+        cpm.graph.nodeTypes[stepInfo.sourceNode] = cpm.cells.names[stepInfo.targetCell]
         
         #---Overall properties---
         #Update energy
-        CPM.energy += ΔH
+        cpm.energy += ΔH
         #Update visual
-        CPM.visual[stepInfo.sourceNode] = stepInfo.targetCell
+        cpm.visual[stepInfo.sourceNode] = stepInfo.targetCell
+        cpm.stepCounter += 1
 
     end
+
     return nothing
 end
 
-function MHStep_naive!(CPM::CellPotts)
-
-    #Create a structure to hold the source and target information
-    stepInfo = MHStepInfo() #should add as input, might save a little time
-
-    stepInfo.sourceNode = rand(1:nv(CPM.graph.network))
-    stepInfo.sourceCell = CPM.graph.σ[stepInfo.sourceNode]
-    stepInfo.sourceNodeNeighbors = neighbors(CPM.graph.network, stepInfo.sourceNode)
-    stepInfo.targetCell = rand(CPM.graph.σ[stepInfo.sourceNodeNeighbors])
-
-    #Calculate the change in energy when source node is modified
-    ΔH =  sum([f(CPM, stepInfo) for f in CPM.M.penalties])
-
-    #Calculate an acceptance ratio
-    acceptRatio = min(1.0,exp(-ΔH/CPM.M.temperature))
-
-    if rand() < acceptRatio #If the acceptance ratio is large enough
-
-        #Need to update all cell and graph properties
-        #---Cell properties---
-
-        #Update cell volumes
-        CPM.cell.volumes[stepInfo.sourceCell] -= 1
-        CPM.cell.volumes[stepInfo.targetCell] += 1
-
-
-        #---Graph properties---
-
-        #Cell IDs
-        CPM.graph.σ[stepInfo.sourceNode] = stepInfo.targetCell
-        CPM.graph.τ[stepInfo.sourceNode] = CPM.cell.types[stepInfo.targetCell]
-        
-        #---Overall properties---
-        #Update energy
-        CPM.energy += ΔH
-        #Update visual
-        CPM.visual[stepInfo.sourceNode] = stepInfo.targetCell
-
+function checkMiddle(cpm, stepInfo)
+    
+    for neighbor in stepInfo.sourceNeighbors
+        if stepInfo.sourceCell ≠ cpm.graph.nodeIDs[neighbor]
+            return false
+        end
     end
-    return nothing
+
+    return true
+end
+
+function applyPenalties(cpm, stepInfo)
+    ΔH = 0
+
+    for penalty in cpm.parameters.penalties
+        ΔH += penalty(cpm, stepInfo)
+    end
+
+    return ΔH
 end
