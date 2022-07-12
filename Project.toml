@@ -23,6 +23,7 @@ WGLMakie = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
 
 [compat]
 Colors = "0"
+GLMakie = "0.2"
 OffsetArrays = "1.8"
 StatsBase = "0"
 julia = "1"
