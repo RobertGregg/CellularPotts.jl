@@ -63,3 +63,4 @@ Below is simply tracking the progress of the package and any notes to myself.
   - Need to be clever about updating articulation points locally (is this possible?)
 - [ ] Don't loop through all of the cell borders when updating the GUI.
 - [ ] Use abstract typing (e.g. `AbstractVector` vs `Vector`) without creating type instability
+- [ ] Do we even need to track to total energy?

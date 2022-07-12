@@ -57,6 +57,9 @@ function MHStep!(cpm::CellPotts)
         cpm.cells.volumes[stepInfo.sourceCell] -= 1
         cpm.cells.volumes[stepInfo.targetCell] += 1
 
+        #update cell perimeters
+        cpm.cells.volumes[stepInfo.sourceCell] -= 1
+        cpm.cells.volumes[stepInfo.targetCell] += 1
 
         #---Graph properties---
 

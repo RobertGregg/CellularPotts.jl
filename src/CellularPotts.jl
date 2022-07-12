@@ -27,6 +27,7 @@ import Base: eltype
 
 
 #include("BaseFunctions.jl")
+include("GraphStructure.jl")
 include("newBase.jl")
 include("CellActions.jl")
 #include("InitializeCells.jl")

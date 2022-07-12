@@ -1,11 +1,10 @@
-#This is mostly just a copy of Graph.jl version of SimpleGraph but now each node was two extra values: cell ID and cell type.
-
-
 ####################################################
 # Network Structure
 ####################################################
 
-#Possible improvement: if we assume the network is a lattice where each node have 4 neighbors, then we could use an array (n×4) instead of an adjacency list
+#This is mostly just a copy of Graph.jl version of SimpleGraph but now each node was two extra values: cell ID and cell type.
+
+#Possible improvement: if we assume the network is a lattice where each node have 8 neighbors, then we could use an array (n×8) instead of an adjacency list
 
 mutable struct network{T<:Integer} <: AbstractSimpleGraph{T}
     ne::T #number of edges
@@ -92,4 +91,59 @@ end
 function has_edge(g::network{T}, e::SimpleEdge{T}) where T
     s, d = T.(Tuple(e))
     return has_edge(g, s, d)
+end
+
+
+####################################################
+# Generate grid network
+####################################################
+
+#The mod1 function always returns a number between 1 and n
+#0 gets mapped to n
+#n+1 gets mapped to 1
+#This is exactly what is needed for periodic boundaries
+#Make mod1 work for CartesianIndex (I is the tuple of indices)
+Base.mod1(x::CartesianIndex{N}, i::Int...) where N = CartesianIndex(mod1.(x.I,i))
+
+#Get the 8 neighboring nodes around current position
+function mooreNeighbors(J::CartesianIndex{2}, gridSize::NTuple{2, Int})
+    Δx = CartesianIndex(1,0)
+    Δy = CartesianIndex(0,1)
+    
+    return mod1.([J-Δx-Δy,J-Δy,J+Δx-Δy,
+                  J-Δx,        J+Δx,
+                  J-Δx+Δy,J+Δy,J+Δx+Δy], gridSize...)
+end
+
+function mooreNeighbors(J::CartesianIndex{3}, gridSize::NTuple{3, Int})
+    Δx = CartesianIndex(1,0,0)
+    Δy = CartesianIndex(0,1,0)
+    Δz = CartesianIndex(0,0,1)
+    
+    return mod1.([
+        J-Δx-Δy-Δz,J-Δy-Δz,J+Δx-Δy-Δz,
+        J-Δx-Δz,   J-Δz,   J+Δx-Δz,
+        J-Δx+Δy-Δz,J+Δy-Δz,J+Δx+Δy-Δz,
+        
+        J-Δx-Δy,J-Δy,J+Δx-Δy,
+        J-Δx,        J+Δx,
+        J-Δx+Δy,J+Δy,J+Δx+Δy,
+        
+        J-Δx-Δy+Δz,J-Δy+Δz,J+Δx-Δy+Δz,
+        J-Δx+Δz,   J+Δz,   J+Δx+Δz,
+        J-Δx+Δy+Δz,J+Δy+Δz,J+Δx+Δy+Δz], gridSize...)
+end
+
+#Given a network, add in all the needed edges
+function connectGraph!(g::network{Int}, gridSize::NTuple{N, Int}) where N
+
+    grid = reshape(1:prod(gridSize), gridSize...)
+
+    for J in CartesianIndices(grid)
+        for K in mooreNeighbors(J,gridSize)
+            add_edge!(g, grid[J], grid[K])
+        end
+    end
+
+    return g
 end

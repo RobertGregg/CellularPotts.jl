@@ -1,4 +1,4 @@
-include("GraphStructure.jl")
+#include("GraphStructure.jl")
 
 ####################################################
 # Helper Functions
@@ -109,10 +109,12 @@ end
 
 mutable struct PerimeterPenalty <: Penalty
     λₚ::OffsetVector{Int,Vector{Int}}
+    currentPerimeters::Vector{Int}
 
     function PerimeterPenalty(λᵥ::Vector{Int}) 
         λᵥOff = OffsetVector([0; λᵥ], 0:length(λᵥ))
-        return new(λᵥOff)
+        currentPerimeters = zeros(Int,2)
+        return new(λᵥOff, currentPerimeters)
     end
 end
 
@@ -453,8 +455,71 @@ end
 
 function (PP::PerimeterPenalty)(cpm::CellPotts, stepInfo::MHStepInfo)
 
+    sourceTargetCell = stepInfo.sourceTargetCell
+    perimeters = PP.currentPerimeters
+
+    #Avoid allocations...
+    perimeters[1] = cpm.cells.perimeters[sourceTargetCell[1]]
+    perimeters[2] = cpm.cells.perimeters[sourceTargetCell[2]]
+
+    sourcePerimeter = 0
+    for (i, σᵢ) in enumerate(sourceTargetCell)
+        perimeter = perimeters[i]
+        desiredPerimeter = cpm.cells.desiredPerimeters[σᵢ]
+        name = cpm.cells.names[σᵢ]
+        typeID = cpm.cells.typeMap[name]
+        
+        sourcePerimeter += PP.λₚ[typeID] * (perimeter - desiredPerimeter)^2
+    end
+
+
+    #Remove perimeter contribution from source cell
+    perimeters[1] -= cpm.cells.perimeterCache[stepInfo.sourceNode]
+
+    #The perimeter penalties around the changed node are also impacted
+    #loop through all the neighbors of the source/target cell
+    for sourceNeighbor in stepInfo.sourceNeighbors
+        #If the neighbor was part of the source cell increase perimeter by 1
+        if cpm.graph.nodeIDs[sourceNeighbor] == stepInfo.sourceCell
+            perimeters[1] += 1
+        end
+
+        #If the neighbor was part of the target cell decrease perimeter by 1
+        if cpm.graph.nodeIDs[sourceNeighbor] == stepInfo.targetCell
+            perimeters[2] -= 1
+        end
+
+        #New perimeter for the source/target node
+        if cpm.graph.nodeIDs[sourceNeighbor] ≠ stepInfo.targetCell
+            perimeters[2] += 1
+        end
+    end
+
+    #New Penalty
+    targetPerimeter = 0
+    for (i, σᵢ) in enumerate(sourceTargetCell)
+        perimeter = perimeters[i]
+        desiredPerimeter = cpm.cells.desiredPerimeters[σᵢ]
+        name = cpm.cells.names[σᵢ]
+        typeID = cpm.cells.typeMap[name]
+        
+        targetPerimeter += PP.λₚ[typeID] * (perimeter - desiredPerimeter)^2
+    end
+
+    return targetPerimeter - sourcePerimeter
 end
 
+
+# julia> stepInfo.sourceNeighbors
+# 8-element Vector{Int64}:
+#  34
+#  35
+#  36
+#  44
+#  46
+#  54
+#  55
+#  56
 
 ####################################################
 # Override Base.show cpm
