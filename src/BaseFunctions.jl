@@ -1,28 +1,5 @@
 #This file contains functions that are pervasive throughout this package as well as structures to define common objects like cells of input variables
 
-
-#= Notes
-
-Questions
-    - what is the difference b/w Rect3D and FRect3D?
-    - Issue with visual when dimensions are not equal?
-        
-Comments
-    - metagraph saves attributes as Dict{Symbol, Any} which leads to a lot of type instability
-        - The upside is you can dynamically add any number of attributes
-    - If a cell moves to a border with non-periodic boundary conditions, medium could disconnect
-        - non-periodic boundary conditions forces cells to not be on opposite borders
-    - If you see an offset array, its just to give medium a zero index
-    - An ⊗ I(m) + I(n) ⊗ Am  ≠  Am ⊗ I(n) + I(m) ⊗ An  when n≠m
-
-Improvements
-    - allow user defined parameters to nodes (maybe input as a named tuple?)
-    - allow cells of the same type to be different sizes?
-    - could get a big speed improvement if you don't loop through all cells to update articulation points
-    - VP having desired volumes makes cell division difficult (type unstable), replace with CPM.M.cellVolumes (?)
-    - For 3D gui, don't recreate voxels every iteration, just set color to clear
-=#
-
 ####################################################
 # Helper Functions
 ####################################################
@@ -35,7 +12,6 @@ Improvements
 
 
 #The following functions help generate adjacency matrices for the underlying network. Circulant arrays are used for periodic boundaries and off-diagonal arrays are used for non-periodic graphs
-
 #See https://stackoverflow.com/a/45958661
 
 
@@ -159,10 +135,9 @@ end
 
 mutable struct NamedGraph
     network::SimpleGraph{Int} #a network of nodes and edges equivalent to the grid
-    #Attributes for the network (length == number of nodes)
-    σ::Vector{Int}
-    τ::Vector{String}
-    isArticulation::BitVector
+    σ::Vector{Int} #Cell ID for each node
+    τ::Vector{String} #Each node has a cell type
+    isArticulation::BitVector #Check for whether changing a node's ID will dissconnent the cell
 
     #Two inner contructors, the first assume you have all the individual fields
     NamedGraph(network::SimpleGraph{Int}, σ::Vector{Int}, τ::Vector{String}, isArticulation::BitVector) = new(network, σ, τ, isArticulation)
@@ -199,6 +174,7 @@ mutable struct CellAttributes
     #Vectors are offset to include medium (medium gets index 0, cell 1 gets index 1, etc.)
     ids::OffsetVector{Int,Vector{Int}} #vector of cell IDs
     volumes::OffsetVector{Int,Vector{Int}} #vector of cell volumes 
+    desiredVolumes::OffsetVector{Int,Vector{Int}} #vector of desired cell volumes
     types::OffsetVector{String,Vector{String}} #given a cell index, output it's type
     typeMap::Dict{String, Int} #mapping cell types (e.g. "Medium") to an index (e.g. 0)
 
@@ -212,13 +188,28 @@ mutable struct CellAttributes
 
         types = OffsetVector(["Medium"; inverse_rle(M.cellTypes, M.cellCounts)], 0:totalCells)
 
+        #Look for the VolumePenalty and use it to update the desired volumes
+        volIdx = findfirst(p -> isa(p,VolumePenalty), M.penalties)
+        desiredVolumes = M.penalties[volIdx].desiredVolumes #This is type unstable but it only happens once
+
         typeMap = Dict( M.cellTypes .=> 1:length(M.cellTypes) )
         typeMap["Medium"] = 0
 
-        return new(ids, volumes, types, typeMap)
+        return new(ids, volumes, desiredVolumes, types, typeMap)
     end
 end
 
+####################################################
+# Variables for Markov Step 
+####################################################
+
+Base.@kwdef mutable struct MHStepInfo{T<:Int}
+    sourceNode::T = 1 #Index of node choosen
+    sourceNodeNeighbors::Vector{T} = [1] # Indicies for the neighboring nodes
+    possibleCellTargets::Vector{T} = [1] # Unique cell IDs of the neighboring nodes
+    sourceCell::T = 1 #ID of sourceNode
+    targetCell::T = 1 #ID of chosen cell target
+end
 
 ####################################################
 # Model Structure
@@ -231,6 +222,7 @@ mutable struct CellPotts{N}
     energy::Int #Total penality energy across graph
     visual::Array{Int,N} #An array of cell memberships for plotting
     stepCounter::Int #counts the number of MHSteps performed
+    stepInfo::MHStepInfo #Information about nodes choosen for flip attempts
 
     function CellPotts(M::ModelParameters{N}) where N
 
@@ -250,7 +242,7 @@ mutable struct CellPotts{N}
         cell = CellAttributes(graph, M)
 
         #Create an instance of the model with zero energy 
-        CPM = new{N}(M, cell, graph, 0, cellMembership, 0)
+        CPM = new{N}(M, cell, graph, 0, cellMembership, 0, MHStepInfo())
 
         #Calculate the energy from the given penalties
         #Update the energy with the given penalties
@@ -258,17 +250,6 @@ mutable struct CellPotts{N}
 
         return CPM
     end
-end
-
-####################################################
-# Variables for Markov Step 
-####################################################
-
-Base.@kwdef mutable struct MHStepInfo
-    sourceNode::Int = 1
-    sourceNodeNeighbors::Vector{Int} = [1]
-    sourceCell::Int = 1
-    targetCell::Int = 1
 end
 
 ####################################################
@@ -317,7 +298,7 @@ function (VP::VolumePenalty)(CPM::CellPotts)
     #Loop through cells, see how far they are from a desired volume, and put into appropriate slot
     for id in CPM.cell.ids 
         cellTypeIdx = CPM.cell.typeMap[ CPM.cell.types[id] ] # cell id (21) → cell type ("Medium") → cell type index (0)
-        ΔV[cellTypeIdx] += VP.λᵥ[cellTypeIdx] * (CPM.cell.volumes[id] - VP.desiredVolumes[id])^2
+        ΔV[cellTypeIdx] += VP.λᵥ[cellTypeIdx] * (CPM.cell.volumes[id] - CPM.cell.desiredVolumes[id])^2
     end
 
     #Calculate the penalty
@@ -325,7 +306,7 @@ function (VP::VolumePenalty)(CPM::CellPotts)
 end
 
 
-#----Calculate on after markov step----
+#----Calculate after markov step----
 
 function (AP::AdhesionPenalty)(CPM::CellPotts, stepInfo::MHStepInfo)
         
@@ -356,7 +337,7 @@ function (VP::VolumePenalty)(CPM::CellPotts, stepInfo::MHStepInfo)
     cellTypeIdx = [CPM.cell.typeMap[type] for type in CPM.cell.types[sourceTarget]] 
 
     #Extract the desired volumes
-    desiredVolumes = VP.desiredVolumes[sourceTarget]
+    desiredVolumes = CPM.cell.desiredVolumes[sourceTarget]
 
     #Extract the current volumes
     currentVolumes = CPM.cell.volumes[sourceTarget]
@@ -397,25 +378,18 @@ function UpdateConnections!(graph::NamedGraph; checkConnect::Bool=false)
     return nothing
 end
 
-function UpdateConnections!(graph::NamedGraph, stepInfo::MHStepInfo; checkConnect::Bool=false)
+#If not the source or target cell, then the articulations points will not change...right?
+function UpdateConnections!(graph::NamedGraph, stepInfo::MHStepInfo)
 
-    #Reset the articulation points (is this needed?)
-    graph.isArticulation .= falses(size(graph.isArticulation))
-
-    #Loop through cells to find articulation points
-    for σᵢ in unique(graph.σ)
+    #Loop through cells that were changed
+    for σᵢ in [stepInfo.sourceCell, stepInfo.targetCell]
         
         #Get the subgraph for a given cell ID
         cellIdx = findall(isequal(σᵢ), graph.σ)
-        subgraph = graph.network[cellIdx]
-
-        if checkConnect
-            if !is_connected(subgraph) #if not connected
-                error("some cells are disconnected, try rerunning or use a different cell initialization")
-            end
-        end
+        subgraph = graph.network[cellIdx] #<------------- THIS IS SLOW
 
         #Update the articulation points
+        graph.isArticulation[cellIdx] .= false
         graph.isArticulation[cellIdx[articulation(subgraph)]] .= true
     end
 
