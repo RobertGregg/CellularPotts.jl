@@ -1,0 +1,52 @@
+#################################################################
+# Blueprint to construct a Cellular Potts Model
+#################################################################
+
+
+#---Define the type of space you want the cells to occupy---
+
+
+Space:
+  dimensions: [100, 100]
+  wrapAround: true
+  neighborhood: Moore
+
+
+#---Define the types of cells you want to live in the space---
+
+
+#All cells require a desired cell volume (number of occupied spaces) 
+cell: &defaults
+  volume: 10
+
+#Cells can have new properties
+Epithelial:
+  <<: *defaults
+  IL6: 0.01
+
+#Cells can also modify default properties
+Macrophage:
+  <<: *defaults
+  volume: 50
+  IFNb: 0.01
+  active: false
+
+  
+#---What kinds of penalties do you want in your model?---
+
+
+Penalties:
+  Adhesion: {J:
+            - [0 , 20, 40]
+            - [20, 90, 20]
+            - [40, 20, 90]}
+  Volume: {lambda: 1}
+  Perimeter: {lambda: 1}
+
+
+#---Final Model Parameters---
+
+
+Model:
+  cellCounts: {Epithelial: 200, Macrophage: 50}
+  temperature: 20.0

@@ -6,7 +6,7 @@
     - count for number of cells
 =#
 
-function CellGUI(CPM::CellPotts{2})
+function CellGUI(cpm::CellPotts{2})
 
     #--------Simulation Screen--------
     #Start by creating a blank figure
@@ -14,8 +14,8 @@ function CellGUI(CPM::CellPotts{2})
 
     #Create observables that will change as the simulation progresses
     timestep = Node(1) #will increase by one every step
-    maxLength = 1000
-    energies = Node(fill(CPM.energy, maxLength)) #vector of past CPM emergies
+    maxLength = 1000 #Window history for plot
+    energies = Node(fill(cpm.energy, maxLength)) #vector of past cpm emergies
 
     #The energies plot updates overtime and needs dynamic axes limits
     lim = @lift begin
@@ -29,14 +29,15 @@ function CellGUI(CPM::CellPotts{2})
     #Name the axes on the figure
     axSim = fig[1, 1] = Axis(fig, title = "Simulation")
     axEnergy = fig[1, 2] = Axis(fig, title = "Energy", limits = lim, height = 300, tellheight = false, valign = :top)
+    # axEnergy = fig[1, 2] = Axis(fig, title = "Energy", height = 300, tellheight = false, valign = :top)
     colsize!(fig.layout, 1, Relative(2/3)) #Make cells heatmap plot relatively larger
 
     #The first plot will show a heatmap of the cell simulation
     # heatmap_node is an array that updates when timestep updates
     heatmap_node = @lift begin
         currentTime = $timestep
-        MHStep!(CPM)
-        CPM.visual
+        MHStep!(cpm)
+        cpm.visual
     end
     
     #Create the heatmap
@@ -47,22 +48,9 @@ function CellGUI(CPM::CellPotts{2})
     tightlimits!.(axSim)
     hidedecorations!.(axSim) #removes axis numbers
 
-    #Similiarly, overlay a heatmap showing the articulation points
-    artic_node = @lift begin
-        currentTime = $timestep
-        reshape(CPM.graph.isArticulation, CPM.M.graphDimension)
-    end
-
-    #Give transparency to the articulation points
-    cm = [RGBA(0,0,0,0.0), RGBA(1,0,0,0.5)]
-    heatmap!(axSim,
-            artic_node,
-            show_axis = false,
-            colormap = cm)
-
     #Finally, add the edge borders to the cells
-    edgeConnectors = Edge2Grid(CPM.M.graphDimension)
-    (m,n) = CPM.M.graphDimension
+    edgeConnectors = Edge2Grid(cpm.parameters.gridSize)
+    (m,n) = cpm.parameters.gridSize
 
     #Generate all of the edge Connections by putting a point on each cell corner
     horizontal = [Point2f0(x, y) => Point2f0(x+1, y) for x in 0.5:m-0.5, y in 0.5:m+0.5]
@@ -70,23 +58,23 @@ function CellGUI(CPM::CellPotts{2})
     points = vcat(horizontal[:],vertical[:])
 
     #Determine the transparency of the linesegments
-    gridflip = rotl90(CPM.visual) #https://github.com/JuliaPlots/Makie.jl/issues/205
+    gridflip = rotl90(cpm.visual) #https://github.com/JuliaPlots/Makie.jl/issues/205
 
     #Cell borders are outlined in black
     black = RGBA{Float64}(0.0,0.0,0.0,1.0);
     clear = RGBA{Float64}(0.0,0.0,0.0,0.0);
     
     #Loop through all the grid connected and assign the correct color
-    currentEdgeColors = [gridflip[edges[1]]==gridflip[edges[2]] ? clear : black for edges in edgeConnectors];
+    currentEdgeColors = [gridflip[edges[1]]==gridflip[edges[2]] ? black : black for edges in edgeConnectors];
 
     #For each time update, recolor all of the edges
     lineColors_node = @lift begin
         currentTime = $timestep
         
-        gridflip = rotl90(CPM.visual)
+        gridflip = rotl90(cpm.visual)
 
         for (i,edges) in enumerate(edgeConnectors)
-            currentEdgeColors[i] = gridflip[edges[1]]==gridflip[edges[2]] ? clear : black
+            currentEdgeColors[i] = gridflip[edges[1]]==gridflip[edges[2]] ? black : black
         end
 
         currentEdgeColors
@@ -108,7 +96,7 @@ function CellGUI(CPM::CellPotts{2})
     #Currently 2 buttons: a play/pause and a stop button
     #Place the buttons below the simulation and align to the left
     fig[2,1] = buttongrid = GridLayout(tellwidth = false, halign = :left)
-    buttonsLabels = ["▶","■","Divide!"]
+    buttonsLabels = ["▶","■","Divide!","Kill"]
 
     #Loop through and assign button labels, width, and color
     buttongrid[1,1:length(buttonsLabels)] = [Button(
@@ -118,10 +106,10 @@ function CellGUI(CPM::CellPotts{2})
         buttoncolor = :grey) for lab in buttonsLabels] 
 
     #Set the buttons to individual variables
-    playpause, stop, cellDivideButton = contents(buttongrid)
+    playpause, stop, cellDivideButton, cellDeathButton = contents(buttongrid)
 
     #If the play/pause button is clicked, change the label
-    lift(playpause.clicks) do clicks
+    on(playpause.clicks) do clicks
         if isodd(clicks)
             playpause.label = "𝅛𝅛"
         else
@@ -130,8 +118,13 @@ function CellGUI(CPM::CellPotts{2})
     end
 
     #partition a random cell when button is clicked 
-    lift(cellDivideButton.clicks) do clicks
-        CellDivision!(CPM,rand(1:maximum(CPM.cell.ids)))
+    on(cellDivideButton.clicks) do clicks
+        CellDivision!(cpm,rand(1:maximum(cpm.cells.ids)))
+    end
+
+    #Choose a random cell to kill
+    on(cellDeathButton.clicks) do clicks
+        CellDeath!(cpm,rand(1:maximum(cpm.cells.ids)))
     end
 
     display(fig)
@@ -143,7 +136,7 @@ function CellGUI(CPM::CellPotts{2})
         #Is the pause button pushed?
         if playpause.label[] == "▶"
             timestep[] += 1
-            appendEnergy!(energies,CPM)
+            appendEnergy!(energies,cpm)
             notify(timestep)
             notify(energies)
         end
@@ -160,9 +153,9 @@ function CellGUI(CPM::CellPotts{2})
 end
 
 
-function appendEnergy!(energies,CPM)
+function appendEnergy!(energies,cpm)
     popfirst!(energies[])
-    push!(energies[], CPM.energy)
+    push!(energies[], cpm.energy)
 end
 
 
@@ -192,8 +185,8 @@ function Edge2Grid(dim)
     return [[id1,id2] for (id1,id2) in zip([x1;y1],[x2;y2])]
 end
 
-
-function CellGUI(CPM::CellPotts{3})
+#3D method for GUI
+function CellGUI(cpm::CellPotts{3})
 
     timestep = Node(1)
     
@@ -210,19 +203,19 @@ function CellGUI(CPM::CellPotts{3})
    
     
 
-    lim = FRect3D((0,0,0), CPM.M.graphDimension)
+    lim = FRect3D((0,0,0), cpm.parameters.gridSize)
 
     mesh_node = @lift begin
         currentTime = $timestep
-        MHStep!(CPM)
+        MHStep!(cpm)
          #Positions for the voxels
          #use the cell indices to color the cell (could also use cell type)
-        [Point3f0(idx.I...) for idx in CartesianIndices(CPM.visual) if CPM.visual[idx] ≠ 0]
+        [Point3f0(idx.I...) for idx in CartesianIndices(cpm.visual) if cpm.visual[idx] ≠ 0]
     end
 
     color_node = @lift begin
         currentTime = $timestep
-        colors = filter(!isequal(0), CPM.visual)
+        colors = filter(!isequal(0), cpm.visual)
     end
     
 
@@ -244,3 +237,5 @@ function CellGUI(CPM::CellPotts{3})
             sleep(eps())
         end
 end
+
+
