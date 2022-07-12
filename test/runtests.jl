@@ -1,17 +1,42 @@
+using Revise
 using CellularPotts
 using Test
-using Random
+using BenchmarkTools
+using GLMakie
 
-@testset "constructor methods" begin
-    # We want to create a model in a variety of ways
+
+parameters = Parameters()
+
+cpm = CellPotts(parameters)
+
+initializeCells!(cpm)
+
+MHStep!(cpm)
+
+#@benchmark MHStep!(cpm)
+
+# @profview fp(cpm)
+
+
+function fp(cpm)
+    for i=1:10_000_000
+        MHStep!(cpm)
+    end
 end
 
 
 
+parameters = Parameters(
+    gridSize = (10,10),
+    state = InitialCellState(name=[:Epidermal], count=[4], volume=[10]),
+      penalties = [AdhesionPenalty([0 20; 20 100]), VolumePenalty([5]), PerimeterPenalty([5])]
+)
 
-M = ModelParameters()
-CPM = CellPotts(M)
+cpm = CellPotts(parameters)
 
-MHStep!(CPM)
+initializeCells!(cpm)
 
-CellGUI(CPM)
+
+CellGUI(cpm)
+
+
