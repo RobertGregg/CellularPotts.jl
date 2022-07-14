@@ -10,36 +10,62 @@
 #TODO Currently only work for 2D grids
 estPerimeter(V::Int) = iszero(V) ? 0 : 4ceil(Int,2sqrt(V)-3) + 2ceil(Int,2sqrt(V+1)-4) + 14
 
+#Returns a zero indexed array
+offset(x) = OffsetVector(x, 0:length(x)-1)
 
 
 ####################################################
 # Function to create a new cell state
 ####################################################
 
+
 function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
 
+    #Does not include Medium
     totalCells = sum(counts)
 
-    return DataFrame(
-        names = inverse_rle(names, counts),
-        ids = 1:totalCells,
-        volumes = zeros(T,totalCells),
-        desiredVolumes = inverse_rle(volumes, counts),
-        perimeters = zeros(T,totalCells),
-        desiredPerimeters = estPerimeter.(inverse_rle(volumes, counts))
-    )
+    #Add Medium
+    pushfirst!(names, :Medium)
+    pushfirst!(counts, 1)
+    pushfirst!(volumes, 0)
+    
+    
+    defaultColumns = [:names, :cellIDs, :typeIDs, :volumes, :desiredVolumes, :perimeters, :desiredPerimeters]
+    
+    lookup = Dict(defaultColumns .=> 1:length(defaultColumns))
+
+    data = [
+        inverse_rle(names, counts),
+        0:totalCells,
+        inverse_rle(0:length(names)-1, counts),
+        zeros(T,totalCells + 1),
+        inverse_rle(volumes, counts),
+        zeros(T,totalCells + 1),
+        estPerimeter.(inverse_rle(volumes, counts)) ]
+
+    dataOff = offset.(data)
+
+    return cellTable(defaultColumns, lookup, dataOff)
 end
 
 #Add property for one cell type
-function addCellProperty!(df::DataFrame, propertyname::Symbol, defaultValue, cellName::Symbol)
+function addCellProperty!(df::cellTable, propertyname::Symbol, defaultValue, cellName::Symbol)
 
-    df[!,propertyname] = [name == cellName ? defaultValue : missing for name in df.names]
+    push!(getfield(df, :columnNames), propertyname)
+    getfield(df, :lookup)[propertyname] = length(getfield(df, :columnNames))
+    push!(getfield(df, :data), [name == cellName ? defaultValue : missing for name in df.names])
+
+    return nothing
 end
 
 #Or for more than one cell type
 function addCellProperty!(df::DataFrame, propertyname::Symbol, defaultValue, cellName::Vector{Symbol})
 
-    df[!,propertyname] = [name ∈ cellName ? defaultValue : missing for name in df.names]
+    push!(getfield(df, :columnNames), propertyname)
+    getfield(df, :lookup)[propertyname] = length(getfield(df, :columnNames))
+    push!(getfield(df, :data), [name ∈ cellName ? defaultValue : missing for name in df.names])
+
+    return nothing
 end
 
 ####################################################
@@ -48,12 +74,12 @@ end
 
 #These could be static arrays?
 mutable struct MHStepInfo{T<:Integer}
-    sourceNode::T               #Index of node choosen
-    sourceNeighbors::Vector{T}  #Indicies for the neighboring nodes
-    sourceCell::T               #ID of sourceNode
-    targetCell::T               #ID of chosen cell target
-    sourceTargetCell::Vector{T} #Combine the source and target together
-    stepCounter::T              #Counts the number of MHSteps performed
+    sourceNode::T                 #Index of node choosen
+    neighborNodes::Vector{T}      #Indicies for the neighboring nodes
+    sourceCellID::T               #ID of sourceNode
+    targetCellID::T               #ID of chosen cell target
+    sourceTargetCellID::Vector{T} #Combine the source and target together
+    stepCounter::T                #Counts the number of MHSteps performed
 
     function MHStepInfo(T::DataType)
         return new{T}(zero(T), zeros(T,8), zero(T), zero(T), zeros(T,2), zero(T))
@@ -67,14 +93,14 @@ end
 
 mutable struct CellPotts{N, T<:Integer}
     space::CellSpace{N,T}
-    initialState::DataFrame
-    currentState::DataFrame
+    initialState::cellTable
+    currentState::cellTable
     penalties::Vector{Penalty}
     step::MHStepInfo{T}
     visual::Array{Int,N}
     temperature::Float64
 
-    function CellPotts(space::CellSpace{N,T}, initialCellState::DataFrame, penalties::Vector{Penalty}) where {N,T}
+    function CellPotts(space::CellSpace{N,T}, initialCellState::cellTable, penalties::Vector{Penalty}) where {N,T}
 
         return new{N,T}(
             space,
@@ -91,31 +117,72 @@ end
 # Helper functions for CellPotts
 ####################################################
 
-countCells(cpm::CellPotts) = nrow(cpm.currentState)
-countCellTypes(cpm::CellPotts) = length(unique(cpm.currentState.names))
+countCells(cpm::CellPotts) = length(cpm.currentState) - 1
+countCellTypes(cpm::CellPotts) = maximum(cpm.currentState.typeIDs)
+
 
 ####################################################
 # Penalty Functors
 ####################################################
 
-#TODO Do we really need OffSetArrays?
 function (AP::AdhesionPenalty)(cpm::CellPotts)
-    step = cpm.step
+    #calculate Δadhesion to see if the target will decrease model energy
+    return AP(cpm, cpm.step.targetCellID) - AP(cpm, cpm.step.sourceCellID)
+end
 
-    sourceAdhesion = 0
-    σᵢ = step.sourceCell
-    typeᵢ = cpm.currentState.names[σᵢ]
+#Moved out of main function to avoid code repeat
+function (AP::AdhesionPenalty)(cpm::CellPotts, σᵢ::T) where T<:Integer
 
-    for sourceNodeNeighbor in step.sourceNeighbors
-        #Given a node index, get the cell id and type
-        σⱼ = cpm.space.nodeIDs[sourceNodeNeighbor]
-        typeⱼ = cpm.space.nodeTypes[sourceNodeNeighbor]
+    #Initialize the penality
+    adhesion = 0
 
-        #Convert the type (string) to an index for J
-        (τᵢ, τⱼ) = ( cpm.cells.typeMap[typeᵢ], cpm.cells.typeMap[typeⱼ] )
+    τᵢ = cpm.currentState.typeIDs[σᵢ]
 
-        sourceAdhesion += AP.J[τᵢ, τⱼ] * (1-δ(σᵢ, σⱼ))
+    for neighbor in cpm.step.neighborNodes
+        #Given a node index, get the cellID
+        σⱼ = cpm.space.nodeIDs[neighbor]
+
+        #Convert the cellID to cellType
+        τⱼ = cpm.currentState.typeIDs[σⱼ]
+
+        #Adhesion is increased if adjacent cells are different types
+        adhesion += AP.J[τᵢ, τⱼ] * (1-δ(σᵢ, σⱼ))
     end
+
+    return adhesion
+end
+
+
+function (VP::VolumePenalty)(cpm::CellPotts)
+
+    σᵢ = cpm.step.sourceCellID
+    σⱼ = cpm.step.targetCellID
+    sourceVolume = VP(cpm, σᵢ) + VP(cpm, σⱼ)
+   
+    #Change the volumes and recalculate penalty
+    cpm.currentState.volumes[σᵢ] -= 1
+    cpm.currentState.volumes[σⱼ] += 1
+
+    targetVolume = VP(cpm, σᵢ) + VP(cpm, σⱼ)
+
+    #Reset the volumes
+    cpm.currentState.volumes[σᵢ] += 1
+    cpm.currentState.volumes[σⱼ] -= 1
+
+    return targetVolume - sourceVolume
+end
+
+#Moved out of main function to avoid code repeat
+function (VP::VolumePenalty)(cpm::CellPotts, σ::T) where T<:Integer
+
+    #TODO change with getindex to be like DataFrames
+    # (volume, desiredVolume) = cpm.currentState[σᵢ, [:volumes, :desiredVolumes]]
+    volume = cpm.currentState.volumes[σ]
+    desiredVolume = cpm.currentState.desiredVolumes[σ]
+
+    τⱼ = cpm.currentState.typeIDs[σ]
+
+    return VP.λᵥ[τⱼ] * (volume - desiredVolume)^2
 end
 
 ####################################################
@@ -138,11 +205,13 @@ function Base.show(io::IO, cpm::CellPotts)
     cellCounts = countmap(cpm.currentState.names)
     print("Cell Counts:")
     for (key, value) in cellCounts #remove medium
+        if key ≠ :Medium
             print(" [$(key) → $(value)]")
+        end
     end
 
     if length(cellCounts) > 1
-        println(" [Total → $(length(cpm.currentState.names))]")
+        println(" [Total → $(length(cpm.currentState.names)-1)]")
     else
         print("\n")
     end

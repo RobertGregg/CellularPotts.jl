@@ -509,17 +509,6 @@ function (PP::PerimeterPenalty)(cpm::CellPotts, stepInfo::MHStepInfo)
 end
 
 
-# julia> stepInfo.sourceNeighbors
-# 8-element Vector{Int64}:
-#  34
-#  35
-#  36
-#  44
-#  46
-#  54
-#  55
-#  56
-
 ####################################################
 # Override Base.show cpm
 ####################################################

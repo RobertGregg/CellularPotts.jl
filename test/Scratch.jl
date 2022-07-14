@@ -6,11 +6,11 @@ using CellularPotts
 space = CellSpace(100,100)
 
 initialCellState = newCellState(
-    [:Epidermal, :TCells],
+    [:Epithelial, :TCells],
     [75, 50],
     [100, 10])
 
-addCellProperty!(initialCellState, :isTumor, false, :Epidermal)
+addCellProperty!(initialCellState, :isTumor, false, :TCells)
 
 
 penalties = [
@@ -88,3 +88,72 @@ function plotCells(cpm::CellPotts)
 
     return fig
 end
+
+
+#####################################################################
+using Tables
+using OffsetArrays
+
+struct cellTable{T <: Vector{OffsetVector{T, AA} where {T, AA<:AbstractVector{T}}}} <: Tables.AbstractColumns
+    names::Vector{Symbol}
+    lookup::Dict{Symbol, Int}
+    data::T
+end
+
+# declare that cellTable is a table
+Tables.istable(::Type{<:cellTable}) = true
+# getter methods to avoid getproperty clash
+names(df::cellTable) = getfield(df, :names)
+data(df::cellTable) = getfield(df, :data)
+lookup(df::cellTable) = getfield(df, :lookup)
+# schema is column names and types
+Tables.schema(df::cellTable{T}) where {T} = Tables.Schema(names(df), eltype.(data(df)))
+
+# column interface
+Tables.columnaccess(::Type{<:cellTable}) = true
+Tables.columns(df::cellTable) = df
+# required Tables.AbstractColumns object methods
+Tables.getcolumn(df::cellTable, ::Type{T}, col::Int, nm::Symbol) where {T} = data(df)[col]
+Tables.getcolumn(df::cellTable, nm::Symbol) = data(df)[lookup(df)[nm]]
+Tables.getcolumn(df::cellTable, i::Int) = data(df)[i]
+Tables.columnnames(df::cellTable) = names(df)
+
+
+# declare that any cellTable defines its own `Tables.rows` method
+Tables.rowaccess(::Type{<:cellTable}) = true
+# just return itself, which means cellTable must iterate `Tables.AbstractRow`-compatible objects
+Tables.rows(df::cellTable) = df
+# the iteration interface, at a minimum, requires `eltype`, `length`, and `iterate`
+# for `cellTable` `eltype`, we're going to provide a custom row type
+Base.eltype(df::cellTable{T}) where {T} = CellRow{T}
+Base.length(df::cellTable) = length(data(df)[1])
+
+Base.iterate(df::cellTable, st=0) = st > length(df)-1 ? nothing : (CellRow(st, df), st + 1)
+
+# a custom row type; acts as a "view" into a row of an AbstractVecOrMat
+struct CellRow{T} <: Tables.AbstractRow
+    row::Int
+    source::cellTable{T}
+end
+# required `Tables.AbstractRow` interface methods (same as for `Tables.AbstractColumns` object before)
+# but this time, on our custom row type
+Tables.getcolumn(r::CellRow, ::Type, col::Int, nm::Symbol) = getfield(getfield(r, :source), :data)[col][getfield(r, :row)]
+Tables.getcolumn(r::CellRow, i::Int) = getfield(getfield(r, :source), :data)[i][getfield(df, :row)]
+Tables.getcolumn(r::CellRow, nm::Symbol) = getfield(getfield(r, :source), :data)[getfield(getfield(r, :source), :lookup)[nm]][getfield(r, :row)]
+Tables.columnnames(df::CellRow) = names(getfield(df, :source))
+
+
+
+exNames = [:Col1, :Col2, :Col3]
+exLookup = Dict(exNames .=> 1:3)
+
+v1 = OffsetVector([1,2,3],0:2)
+v2 = OffsetVector([4.0, 5.0, 6.0],0:2)
+v3 = OffsetVector(["7","8","9"],0:2)
+exData = [v1,v2,v3]
+
+df = cellTable(exNames,exLookup,exData)
+
+using CSV
+
+CSV.write("test.csv",df)

@@ -21,7 +21,7 @@ eltype(g::CellSpace{N,T}) where {N,T} = T
 edgetype(g::CellSpace) = SimpleEdge{eltype(g)}
 
 #collect(edges(g::CellSpace)) was giving Vector{Any}
-edges(g::CellSpace{N,T}) where {N,T<:Integer} = (SimpleEdge(i,j) for (i,v) in enumerate(g.fadjlist) for j in v if j>i)
+eltype(::Type{Graphs.SimpleGraphs.SimpleEdgeIter{CellSpace{N, T}}}) where {N, T} = Edge{T}
 
 ####################################################
 # Methods to add edges to the space
