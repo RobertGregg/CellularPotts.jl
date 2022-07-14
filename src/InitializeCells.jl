@@ -7,3 +7,6 @@
 
 
 #TODO Allow image input
+
+
+#Provide some defaults for an example

@@ -5,6 +5,9 @@ using BenchmarkTools
 using GLMakie
 
 
+
+
+
 parameters = Parameters()
 
 cpm = CellPotts(parameters)
@@ -39,4 +42,12 @@ initializeCells!(cpm)
 
 CellGUI(cpm)
 
+using CellularPotts
+using Graphs
+
+
+g = CellSpace(2,2;wrapAround=false,cellNeighbors=vonNeumannNeighbors)
+
+
+collect(edges(g))
 
