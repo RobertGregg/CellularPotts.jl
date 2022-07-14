@@ -51,15 +51,15 @@ Below is simply tracking the progress of the package and any notes to myself.
 - [ ] Create an Examples folder
 - [ ] How to save output?
 - [ ] Implement different ways to initialize cell locations
-- [ ] Allow cells to have different properties
+- [x] Allow cells to have different properties (used Tables.jl)
 
 ## Minor Improvements
 
-- [ ] Allow user defined parameters to cells (maybe input as a named tuple?)
+- [x] Allow user defined parameters to cells (used Tables.jl)
 - [ ] Allow cells of the same type to be different sizes (?)
 - [ ] For 3D gui, don't recreate voxels every iteration, just set color to clear
 - [ ] Could get a big speed improvement if you don't loop through all cells to update articulation points
   - Need to be clever about updating articulation points locally (is this possible?)
 - [ ] Don't loop through all of the cell borders when updating the GUI.
 - [ ] Use abstract typing (e.g. `AbstractVector` vs `Vector`) without creating type instability
-- [ ] Do we even need to track to total energy?
+- [x] Do we even need to track to total energy? (nope!)

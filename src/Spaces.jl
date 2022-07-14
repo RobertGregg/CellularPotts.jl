@@ -153,7 +153,6 @@ function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=mooreN
         fill(:Medium,nodes))
 end
 
-#TODO deal with CellSpace(n)
 
 #Allow CellSpace(n,n) in addition to CellSpace((n,n))
 CellSpace(gridSize::T...; wrapAround=true, cellNeighbors=mooreNeighbors) where T<:Integer = CellSpace(gridSize; wrapAround, cellNeighbors)
