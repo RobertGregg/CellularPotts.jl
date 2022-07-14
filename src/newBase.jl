@@ -375,7 +375,6 @@ end
 
 #----Calculate after markov step----
 
-#TODO: think of a clever way to avoid code repeat
 function (AP::AdhesionPenalty)(cpm::CellPotts, stepInfo::MHStepInfo)
 
     sourceAdhesion = 0

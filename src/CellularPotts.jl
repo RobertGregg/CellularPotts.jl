@@ -4,6 +4,7 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       GLMakie, #For plotting and making the GUI (also exports AbstractPlotting)
       Colors, #More color options for the cells (e.g. :Purples)
       StatsBase, Random, #Currently just used for countmap, inverse_rle; shuffle
+      DataFrames, #Hold information about the current cell state
       SparseArrays, #For creating large adjacency matrices
       LinearAlgebra, #Additional functionality for arrays
       Graphs, #Needed for creating graphs that look like graphDimension
@@ -28,9 +29,9 @@ import Base: eltype
 
 include("Spaces.jl")
 include("Penalties.jl")
-# include("newBase.jl")
+include("Base.jl")
+include("InitializeCells.jl")
 # include("CellActions.jl")
-# #include("InitializeCells.jl")
 # include("MarkovStep.jl")
 # include("Gui.jl")
 
@@ -39,18 +40,19 @@ export
 #Spaces
       vonNeumannNeighbors,
       mooreNeighbors,
-      CellSpace
-#newBase.jl
-#       InitialCellState,
-#       CellSummary,
-#       Penalty,
-#       AdhesionPenalty,
-#       VolumePenalty,
-#       PerimeterPenalty,
-#       Parameters,
-#       initializeCells!,
-#       CellPotts,
-#       genAdj,
+      CellSpace,
+#Base.jl
+      newCellState,
+      addCellProperty!,
+      CellPotts,
+      countCells,
+      countCellTypes,
+#Penalties.jl
+      Penalty,
+      AdhesionPenalty,
+      VolumePenalty,
+#InitializeCells.jl
+      addCellsRandom!
 # #CellActions.jl
 #       CellDivision!,
 #       CellDeath!,

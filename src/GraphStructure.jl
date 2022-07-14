@@ -20,10 +20,10 @@ function network{T}(n::Integer=0) where T <: Integer
 end
 
 #When generating a network given n number of nodes, provide type information
-network(n::T) where T <: Integer = network{T}(n)
+#network(n::T) where T <: Integer = network{T}(n)
 
 #Generate an empty network
-network() = network{Int}()
+#network() = network{Int}()
 
 #Copied from simplegraph to add edges to the graph
 function add_edge!(g::network{T}, e::SimpleEdge{T}) where T

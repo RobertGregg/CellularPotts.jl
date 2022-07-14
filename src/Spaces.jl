@@ -46,6 +46,26 @@ function has_edge(g::CellSpace{N,T}, e::SimpleEdge{T}) where {N,T}
     return has_edge(g, s, d)
 end
 
+
+#Copied from simplegraph to add edges to the graph
+function add_edge!(g::CellSpace{N,T}, e::SimpleEdge{T}) where {N,T}
+    s, d = T.(Tuple(e))
+    verts = vertices(g)
+    (s in verts && d in verts) || return false  # edge out of bounds
+    @inbounds list = g.fadjlist[s]
+    index = searchsortedfirst(list, d)
+    @inbounds (index <= length(list) && list[index] == d) && return false  # edge already in graph
+    insert!(list, index, d)
+
+    g.ne += 1
+    s == d && return true  # selfloop
+
+    @inbounds list = g.fadjlist[d]
+    index = searchsortedfirst(list, s)
+    insert!(list, index, s)
+    return true  # edge successfully added
+end
+
 ####################################################
 # Get node neighbors
 ####################################################
@@ -133,5 +153,13 @@ function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=mooreN
         fill(:Medium,nodes))
 end
 
+#TODO deal with CellSpace(n)
+
 #Allow CellSpace(n,n) in addition to CellSpace((n,n))
 CellSpace(gridSize::T...; wrapAround=true, cellNeighbors=mooreNeighbors) where T<:Integer = CellSpace(gridSize; wrapAround, cellNeighbors)
+
+#Needed for induced_subgraph (why?)
+function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
+    fadjlist = [Vector{T}() for _ in one(T):n]
+    return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(Int,n), fill(:Medium,n))
+end

@@ -65,7 +65,7 @@ function CellGUI(cpm::CellPotts{2})
     clear = RGBA{Float64}(0.0,0.0,0.0,0.0);
     
     #Loop through all the grid connected and assign the correct color
-    currentEdgeColors = [gridflip[edges[1]]==gridflip[edges[2]] ? black : black for edges in edgeConnectors];
+    currentEdgeColors = [gridflip[edges[1]]==gridflip[edges[2]] ? clear : black for edges in edgeConnectors];
 
     #For each time update, recolor all of the edges
     lineColors_node = @lift begin

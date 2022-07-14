@@ -6,7 +6,7 @@ mutable struct AdhesionPenalty <: Penalty
     J::Matrix{Int}
 
     function AdhesionPenalty(J::Matrix{Int})
-        issymmetric(J) && error("J needs to be symmetric")
+        !issymmetric(J) && error("J needs to be symmetric")
         return new(J)
     end
 end

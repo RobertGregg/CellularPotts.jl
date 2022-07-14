@@ -2,52 +2,22 @@ using Revise
 using CellularPotts
 using Test
 using BenchmarkTools
-using GLMakie
-
-
-
-
-
-parameters = Parameters()
-
-cpm = CellPotts(parameters)
-
-initializeCells!(cpm)
-
-MHStep!(cpm)
-
-#@benchmark MHStep!(cpm)
-
-# @profview fp(cpm)
-
-
-function fp(cpm)
-    for i=1:10_000_000
-        MHStep!(cpm)
-    end
-end
-
-
-
-parameters = Parameters(
-    gridSize = (10,10),
-    state = InitialCellState(name=[:Epidermal], count=[4], volume=[10]),
-      penalties = [AdhesionPenalty([0 20; 20 100]), VolumePenalty([5]), PerimeterPenalty([5])]
-)
-
-cpm = CellPotts(parameters)
-
-initializeCells!(cpm)
-
-
-CellGUI(cpm)
-
-using CellularPotts
 using Graphs
 
 
-g = CellSpace(2,2;wrapAround=false,cellNeighbors=vonNeumannNeighbors)
+@testset "Spaces or Graphs?" begin
+    g = CellSpace(3,3;wrapAround=false,cellNeighbors=vonNeumannNeighbors)
+
+    @test nv(g) == 9
+    @test ne(g) == 12
+    @test eltype(collect(edges(g))) == Graphs.SimpleGraphs.SimpleEdge{Int64}
+end
 
 
-collect(edges(g))
+df = newCellState(
+    [:Macrophage, :TCells, :BCells],
+    [10, 12, 15],
+    [9, 10, 11])
 
+
+addCellProperty!(df, :TNF, 0.0,[:Macrophage, :TCells])
