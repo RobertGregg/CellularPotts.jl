@@ -3,7 +3,7 @@
 
 #TODO getindex method?
 
-mutable struct cellTable{T <: Vector{OffsetVector{T, AA} where {T, AA<:AbstractVector{T}}}} <: AbstractColumns
+mutable struct cellTable{T} <: AbstractColumns
     columnNames::Vector{Symbol}
     lookup::Dict{Symbol, Int}
     data::T
@@ -13,7 +13,7 @@ end
 istable(::Type{<:cellTable}) = true
 
 # schema is column names and types
-schema(df::cellTable{T}) where {T} = Schema(getfield(df, :columnNames), eltype.(getfield(df, :data)))
+schema(df::cellTable{T}) where T = Schema(getfield(df, :columnNames), eltype.(getfield(df, :data)))
 
 # column interface
 columnaccess(::Type{<:cellTable}) = true
@@ -33,6 +33,7 @@ rows(df::cellTable) = df
 # for `cellTable` `eltype`, we're going to provide a custom row type
 Base.eltype(df::cellTable{T}) where {T} = CellRow{T}
 Base.length(df::cellTable) = length(getfield(df, :data)[1])
+Base.size(df::cellTable) = (length(df),length(getfield(df, :columnNames)))
 
 Base.iterate(df::cellTable, st=0) = st > length(df)-1 ? nothing : (CellRow(st, df), st + 1)
 
@@ -48,5 +49,11 @@ getcolumn(r::CellRow, i::Int) = getfield(getfield(r, :source), :data)[i][getfiel
 getcolumn(r::CellRow, nm::Symbol) = getfield(getfield(r, :source), :data)[getfield(getfield(r, :source), :lookup)[nm]][getfield(r, :row)]
 columnnames(df::CellRow) = getfield(getfield(df, :source), :columnNames)
 
-#TODO fix 0-index issue with pretty_table
-#pretty_table(cpm.currentState, header_crayon = crayon"yellow bold", vcrop_mode = :middle)
+#This is kind of hacky, but it works for now
+function Base.show(io::IO, intState::cellTable) 
+
+    data = OffsetArrays.no_offset_view.(getfield(intState,:data))
+    df = cellTable(getfield(intState, :columnNames), getfield(intState, :lookup), data)
+
+    pretty_table(df, header_crayon = crayon"yellow bold", vcrop_mode = :middle)
+end

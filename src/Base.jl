@@ -59,7 +59,7 @@ function addCellProperty!(df::cellTable, propertyname::Symbol, defaultValue, cel
 end
 
 #Or for more than one cell type
-function addCellProperty!(df::DataFrame, propertyname::Symbol, defaultValue, cellName::Vector{Symbol})
+function addCellProperty!(df::cellTable, propertyname::Symbol, defaultValue, cellName::Vector{Symbol})
 
     push!(getfield(df, :columnNames), propertyname)
     getfield(df, :lookup)[propertyname] = length(getfield(df, :columnNames))
@@ -78,11 +78,10 @@ mutable struct MHStepInfo{T<:Integer}
     neighborNodes::Vector{T}      #Indicies for the neighboring nodes
     sourceCellID::T               #ID of sourceNode
     targetCellID::T               #ID of chosen cell target
-    sourceTargetCellID::Vector{T} #Combine the source and target together
     stepCounter::T                #Counts the number of MHSteps performed
 
     function MHStepInfo(T::DataType)
-        return new{T}(zero(T), zeros(T,8), zero(T), zero(T), zeros(T,2), zero(T))
+        return new{T}(zero(T), zeros(T,8), zero(T), zero(T), zero(T))
     end
 end
 
@@ -222,5 +221,5 @@ function Base.show(io::IO, cpm::CellPotts)
     end
     print("\n")
     println("Temperature: ", cpm.temperature)
-    println("Steps: ", cpm.step.stepCounter)
+    print("Steps: ", cpm.step.stepCounter)
 end

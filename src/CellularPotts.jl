@@ -5,7 +5,7 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       Colors, #More color options for the cells (e.g. :Purples)
       StatsBase, Random, #Currently just used for countmap, inverse_rle; shuffle
       Tables, #Hold information about the current cell state
-      DataFrames,
+      PrettyTables, #Make nice tables for the cell state
       SparseArrays, #For creating large adjacency matrices
       LinearAlgebra, #Additional functionality for arrays
       Graphs, #Needed for creating graphs that look like graphDimension
@@ -25,7 +25,7 @@ import Graphs:
             has_edge,
             add_edge!
 
-import Base: eltype, length, iterate
+import Base: eltype, length, iterate, size
 
 import Tables:
             istable,
@@ -46,8 +46,8 @@ include("Penalties.jl")
 include("CellState.jl")
 include("Base.jl")
 include("InitializeCells.jl")
+include("MarkovStep.jl")
 # include("CellActions.jl")
-# include("MarkovStep.jl")
 # include("Gui.jl")
 
 export 
@@ -68,12 +68,12 @@ export
       AdhesionPenalty,
       VolumePenalty,
 #InitializeCells.jl
-      addCellsRandom!
+      addCellsRandom!,
+#MarkovStep.jl
+      MHStep!
 # #CellActions.jl
 #       CellDivision!,
 #       CellDeath!,
-# #MarkovStep.jl
-#       MHStep!,
 # #Gui.jl
 #       CellGUI
 end

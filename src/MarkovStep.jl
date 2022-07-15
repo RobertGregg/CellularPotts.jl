@@ -5,32 +5,28 @@
 function MHStep!(cpm::CellPotts)
 
     #unpack current step structure update
-    stepInfo = cpm.stepInfo
+    step = cpm.step
 
 
     #Loop through until a good source target is found
     searching = true
     while searching
         #Pick a random location on the graph
-        stepInfo.sourceNode = rand(1:nv(cpm.graph))
+        step.sourceNode = rand(1:nv(cpm.space))
         #What cell does it belong to?
-        stepInfo.sourceCell = cpm.graph.nodeIDs[stepInfo.sourceNode]
+        step.sourceCellID = cpm.space.nodeIDs[step.sourceNode]
 
         #Get all of the unique cell IDs neighboring this Node
-        stepInfo.sourceNeighbors = neighbors(cpm.graph, stepInfo.sourceNode)
+        step.neighborNodes = neighbors(cpm.space, step.sourceNode)
 
         #Choose a target
-        stepInfo.targetCell = cpm.graph.nodeIDs[rand(stepInfo.sourceNeighbors)]
-
-        #Collect the target and source into a vector
-        stepInfo.sourceTargetCell[1] = stepInfo.sourceCell
-        stepInfo.sourceTargetCell[2] = stepInfo.targetCell
+        step.targetCellID = cpm.space.nodeIDs[rand(step.neighborNodes)]
 
         #Some checks before attempting a flip
             #In the middle of a cell
-            inMiddle = checkMiddle(cpm, stepInfo)
+            inMiddle = checkMiddle(cpm, step)
             #target is the same as source cell 
-            isSource = stepInfo.targetCell == stepInfo.sourceCell
+            isSource = step.targetCellID == step.sourceCellID
 
         #if all checks pass, attempt flip
         if !(inMiddle | isSource) 
@@ -41,48 +37,43 @@ function MHStep!(cpm::CellPotts)
 
 
     #Calculate the change in energy when source node is modified
-    #ΔH =  sum(f(cpm, stepInfo) for f in cpm.parameters.penalties)
-    ΔH =  applyPenalties(cpm, stepInfo)
+    #ΔH =  sum(f(cpm, step) for f in cpm.parameters.penalties)
+    ΔH =  applyPenalties(cpm)
 
     #Calculate an acceptance ratio
-    acceptRatio = min(1.0,exp(-ΔH/cpm.parameters.temperature))
+    acceptRatio = min(1.0,exp(-ΔH/cpm.temperature))
 
 
     if rand() < acceptRatio #If the acceptance ratio is large enough
-
         #Need to update all cell and graph properties
         #---Cell properties---
 
         #Update cell volumes
-        cpm.cells.volumes[stepInfo.sourceCell] -= 1
-        cpm.cells.volumes[stepInfo.targetCell] += 1
+        cpm.currentState.volumes[step.sourceCellID] -= 1
+        cpm.currentState.volumes[step.targetCellID] += 1
 
-        #update cell perimeters
-        cpm.cells.volumes[stepInfo.sourceCell] -= 1
-        cpm.cells.volumes[stepInfo.targetCell] += 1
+        #TODO update cell perimeters
 
         #---Graph properties---
 
         #Cell IDs
-        cpm.graph.nodeIDs[stepInfo.sourceNode] = stepInfo.targetCell
-        cpm.graph.nodeTypes[stepInfo.sourceNode] = cpm.cells.names[stepInfo.targetCell]
+        cpm.space.nodeIDs[step.sourceNode] = step.targetCellID
+        cpm.space.nodeTypes[step.sourceNode] = cpm.currentState.names[step.targetCellID]
         
         #---Overall properties---
-        #Update energy
-        cpm.energy += ΔH
         #Update visual
-        cpm.visual[stepInfo.sourceNode] = stepInfo.targetCell
-        cpm.stepCounter += 1
+        cpm.visual[step.sourceNode] = step.targetCellID
+        cpm.step.stepCounter += 1
 
     end
 
     return nothing
 end
 
-function checkMiddle(cpm, stepInfo)
+function checkMiddle(cpm, step)
     
-    for neighbor in stepInfo.sourceNeighbors
-        if stepInfo.sourceCell ≠ cpm.graph.nodeIDs[neighbor]
+    for neighbor in step.neighborNodes
+        if step.sourceCellID ≠ cpm.space.nodeIDs[neighbor]
             return false
         end
     end
@@ -90,11 +81,11 @@ function checkMiddle(cpm, stepInfo)
     return true
 end
 
-function applyPenalties(cpm, stepInfo)
+function applyPenalties(cpm)
     ΔH = 0
 
-    for penalty in cpm.parameters.penalties
-        ΔH += penalty(cpm, stepInfo)
+    for penalty in cpm.penalties
+        ΔH += penalty(cpm)
     end
 
     return ΔH
