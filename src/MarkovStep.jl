@@ -64,7 +64,6 @@ function MHStep!(cpm::CellPotts)
         #Update visual
         cpm.visual[step.sourceNode] = step.targetCellID
         cpm.step.stepCounter += 1
-
     end
 
     return nothing

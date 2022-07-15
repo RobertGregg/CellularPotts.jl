@@ -3,6 +3,7 @@
 
 #TODO getindex method?
 
+#TODO T leads to abstract typing, need macro?
 mutable struct cellTable{T} <: AbstractColumns
     columnNames::Vector{Symbol}
     lookup::Dict{Symbol, Int}

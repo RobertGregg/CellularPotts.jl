@@ -12,6 +12,8 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       Metis, #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
       TimerOutputs #looking for allocations
 
+
+
 import Graphs:
             AbstractSimpleGraph,
             SimpleEdge,
@@ -67,6 +69,8 @@ export
       Penalty,
       AdhesionPenalty,
       VolumePenalty,
+#CellState.jl
+      cellTable,
 #InitializeCells.jl
       addCellsRandom!,
 #MarkovStep.jl

@@ -10,7 +10,7 @@
 #TODO Allow position input
 
 
-function addCellsRandom!(cpm::CellPotts{N,T}) where {N,T}
+function addCellsRandom!(cpm::CellPotts{N,T,V}) where {N,T,V}
 
     #Unpack the initial state and parameters
     space = cpm.space

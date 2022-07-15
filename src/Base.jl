@@ -90,18 +90,18 @@ end
 # Structure for the model
 ####################################################
 
-mutable struct CellPotts{N, T<:Integer}
+mutable struct CellPotts{N, T<:Integer, V}
     space::CellSpace{N,T}
-    initialState::cellTable
-    currentState::cellTable
+    initialState::cellTable{V}
+    currentState::cellTable{V}
     penalties::Vector{Penalty}
     step::MHStepInfo{T}
     visual::Array{Int,N}
     temperature::Float64
 
-    function CellPotts(space::CellSpace{N,T}, initialCellState::cellTable, penalties::Vector{Penalty}) where {N,T}
+    function CellPotts(space::CellSpace{N,T}, initialCellState::cellTable{V}, penalties::Vector{Penalty}) where {N,T,V}
 
-        return new{N,T}(
+        return new{N,T,V}(
             space,
             initialCellState,
             initialCellState,
