@@ -83,17 +83,13 @@ function positionCells!(cpm::CellPotts{N,T,V}) where {N,T,V}
 
     for (id, vol, pos) in zip(currState.cellIDs, currState.desiredVolumes, currState.positions)
 
+        if id == 0
+            continue
+        end
         #Determine how far nodes are from the position
         node = LinearIndices(space.gridSize)[pos...]
-        nodeDis = gdistances(space, node)
-
-        #Get a sorted permutation of the distance
-        sortedDis = sortperm(nodeDis)
-
-        #Assign 1:totalNodes to be filled with cells and the rest medium
-        networkIdx = sortedDis[1:vol]
-
-        cellMembership[networkIdx] .= id
+        
+        politeBFS(cellMembership, space, id, vol, node)
     end
 
 
@@ -126,3 +122,26 @@ function positionCells!(cpm::CellPotts{N,T,V}) where {N,T,V}
     return nothing
 end
 
+
+function politeBFS(cellMembership, space, id, vol, node)
+
+    queue = [node]
+    cellMembership[node] = id
+    cellSize = 1
+
+    while !isempty(queue)
+        nextNode = popfirst!(queue)
+        for neighbor in neighbors(space,nextNode)
+            if cellMembership[neighbor] == 0
+                cellMembership[neighbor] = id
+                cellSize += 1
+                if cellSize == vol
+                    return nothing
+                end
+                push!(queue, neighbor)
+            end
+        end
+    end
+
+    return nothing
+end

@@ -8,7 +8,7 @@ space = CellSpace(100,100)
 initialCellState = newCellState(
     [:Epithelial, :TCells],
     [75, 50],
-    [100, 10])
+    [10, 10])
 
 initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial)
 
@@ -33,7 +33,7 @@ CellGUI(cpm)
 
 
 function runModel(cpm)
-    for i=1:100000
+    for i=1:10000
         MHStep!(cpm)
     end
 end
