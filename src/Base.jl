@@ -70,7 +70,7 @@ function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{
 end
 
 #Add property for one cell type
-function addCellProperty!(df::cellTable, propertyName::Symbol, defaultValue, cellName::Symbol)
+function addCellProperty(df::cellTable, propertyName::Symbol, defaultValue, cellName::Symbol)
 
     newColumn = offset([name == cellName ? defaultValue : missing for name in df.names])
 
@@ -78,9 +78,18 @@ function addCellProperty!(df::cellTable, propertyName::Symbol, defaultValue, cel
 end
 
 #Or for more than one cell type
-function addCellProperty!(df::cellTable, propertyName::Symbol, defaultValue, cellName::Vector{Symbol})
+function addCellProperty(df::cellTable, propertyName::Symbol, defaultValue, cellName::Vector{Symbol})
 
     newColumn = offset([name ∈ cellName ? defaultValue : missing for name in df.names])
+
+    return merge(df, [propertyName => newColumn])
+end
+
+#Or for all cells
+function addCellProperty(df::cellTable, propertyName::Symbol, values::Vector{T}) where T
+
+    pushfirst!(values, first(values)) # note sure what to do about medium
+    newColumn = offset(values)
 
     return merge(df, [propertyName => newColumn])
 end

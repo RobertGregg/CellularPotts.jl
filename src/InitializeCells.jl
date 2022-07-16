@@ -10,7 +10,7 @@
 #TODO Allow position input
 
 
-function addCellsRandom!(cpm::CellPotts{N,T,V}) where {N,T,V}
+function positionCellsRandom!(cpm::CellPotts{N,T,V}) where {N,T,V}
 
     #Unpack the initial state and parameters
     space = cpm.space
@@ -70,3 +70,59 @@ function addCellsRandom!(cpm::CellPotts{N,T,V}) where {N,T,V}
 
     return nothing
 end
+
+
+function positionCells!(cpm::CellPotts{N,T,V}) where {N,T,V}
+
+    #Unpack the initial state and parameters
+    space = cpm.space
+    currState = cpm.currentState
+
+    #initialize matrix of cell IDs (σ)
+    cellMembership = zeros(T, space.gridSize)
+
+    for (id, vol, pos) in zip(currState.cellIDs, currState.desiredVolumes, currState.positions)
+
+        #Determine how far nodes are from the position
+        node = LinearIndices(space.gridSize)[pos...]
+        nodeDis = gdistances(space, node)
+
+        #Get a sorted permutation of the distance
+        sortedDis = sortperm(nodeDis)
+
+        #Assign 1:totalNodes to be filled with cells and the rest medium
+        networkIdx = sortedDis[1:vol]
+
+        cellMembership[networkIdx] .= id
+    end
+
+
+    #Update the network with the new cell locations
+    for (i, cellID) in enumerate(cellMembership)
+        if cellID ≠ 0
+            cpm.space.nodeIDs[i] = cellID
+            cpm.space.nodeTypes[i] = cpm.currentState.names[cellID]
+
+            #Update the cell summary volumes
+            cpm.currentState.volumes[cellID] += 1
+        end
+    end
+    
+    #Also update the cell perimeters
+    #Can't be done in previous loop b/c not all nodeIDs are updated
+    for (i, cellID) in enumerate(cellMembership)
+        if cellID ≠ 0
+            for n in neighbors(space, i)
+                if space.nodeIDs[n] ≠ cellID
+                    cpm.currentState.perimeters[cellID] += 1
+                end
+            end
+        end
+    end
+
+    #Fill the the array for the visual
+    cpm.visual = cellMembership
+
+    return nothing
+end
+

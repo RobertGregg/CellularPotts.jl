@@ -10,7 +10,12 @@ initialCellState = newCellState(
     [75, 50],
     [100, 10])
 
-addCellProperty!(initialCellState, :isTumor, false, :Epithelial)
+initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial)
+
+
+positions = [(rand(1:space.gridSize[1]), rand(1:space.gridSize[2])) for _ in 1:maximum(initialCellState.cellIDs)]
+
+initialCellState = addCellProperty(initialCellState, :positions, positions)
 
 
 penalties = [
@@ -22,7 +27,7 @@ penalties = [
 
 cpm = CellPotts(space, initialCellState, penalties);
 
-addCellsRandom!(cpm)
+positionCells!(cpm)
 
 CellGUI(cpm)
 

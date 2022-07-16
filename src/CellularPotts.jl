@@ -58,7 +58,7 @@ export
       CellSpace,
 #Base.jl
       newCellState,
-      addCellProperty!,
+      addCellProperty,
       getData,
       CellPotts,
       countCells,
@@ -68,10 +68,9 @@ export
       Penalty,
       AdhesionPenalty,
       VolumePenalty,
-#CellState.jl
-      #cellTable,
 #InitializeCells.jl
-      addCellsRandom!,
+      positionCellsRandom!,
+      positionCells!,
 #MarkovStep.jl
       MHStep!,
 # #CellActions.jl
