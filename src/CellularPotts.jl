@@ -4,7 +4,6 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       GLMakie, #For plotting and making the GUI (also exports AbstractPlotting)
       Colors, #More color options for the cells (e.g. :Purples)
       StatsBase, Random, #Currently just used for countmap, inverse_rle; shuffle
-      Tables, #Hold information about the current cell state
       PrettyTables, #Make nice tables for the cell state
       SparseArrays, #For creating large adjacency matrices
       LinearAlgebra, #Additional functionality for arrays
@@ -27,7 +26,7 @@ import Graphs:
             has_edge,
             add_edge!
 
-import Base: eltype, length, iterate, size
+import Base: eltype, getproperty, merge
 
 import Tables:
             istable,
@@ -45,12 +44,11 @@ import Tables:
 
 include("Spaces.jl")
 include("Penalties.jl")
-include("CellState.jl")
 include("Base.jl")
 include("InitializeCells.jl")
 include("MarkovStep.jl")
 # include("CellActions.jl")
-# include("Gui.jl")
+include("Gui_new.jl")
 
 export 
 
@@ -61,6 +59,7 @@ export
 #Base.jl
       newCellState,
       addCellProperty!,
+      getData,
       CellPotts,
       countCells,
       countCellTypes,
@@ -70,14 +69,14 @@ export
       AdhesionPenalty,
       VolumePenalty,
 #CellState.jl
-      cellTable,
+      #cellTable,
 #InitializeCells.jl
       addCellsRandom!,
 #MarkovStep.jl
-      MHStep!
+      MHStep!,
 # #CellActions.jl
 #       CellDivision!,
 #       CellDeath!,
-# #Gui.jl
-#       CellGUI
+#Gui.jl
+      CellGUI
 end

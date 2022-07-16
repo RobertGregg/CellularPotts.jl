@@ -6,8 +6,7 @@ function MHStep!(cpm::CellPotts)
 
     #unpack current step structure update
     step = cpm.step
-
-
+    
     #Loop through until a good source target is found
     searching = true
     while searching

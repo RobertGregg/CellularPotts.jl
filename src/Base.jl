@@ -13,11 +13,37 @@ estPerimeter(V::Int) = iszero(V) ? 0 : 4ceil(Int,2sqrt(V)-3) + 2ceil(Int,2sqrt(V
 #Returns a zero indexed array
 offset(x) = OffsetVector(x, 0:length(x)-1)
 
+#Check if any lengths in a collection are different
+#Works even if the you can't broadcast a function to the collection (e.g. Dict, NamedTuple)
+function differentSizes(x)
+    validLength = length(first(x))
+
+    for obj in x
+        if length(obj) ≠ validLength
+            return true
+        end
+    end
+
+    return false
+end
+
+####################################################
+# Table to hold cell information
+####################################################
+
+mutable struct cellTable{T<:NamedTuple}
+    data::T
+end
+
+getData(df::cellTable) = getfield(df,:data)
+
+getproperty(df::cellTable, name::Symbol) = getproperty(getData(df), name)
+
+merge(df::cellTable, newColumn) = cellTable( merge(getData(df), newColumn) )
 
 ####################################################
 # Function to create a new cell state
 ####################################################
-
 
 function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
 
@@ -26,47 +52,39 @@ function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{
 
     #Add Medium
     pushfirst!(names, :Medium)
-    pushfirst!(counts, 1)
-    pushfirst!(volumes, 0)
-    
-    
-    defaultColumns = [:names, :cellIDs, :typeIDs, :volumes, :desiredVolumes, :perimeters, :desiredPerimeters]
-    
-    lookup = Dict(defaultColumns .=> 1:length(defaultColumns))
+    pushfirst!(counts, one(T))
+    pushfirst!(volumes, zero(T))
 
-    data = [
-        inverse_rle(names, counts),
-        0:totalCells,
-        inverse_rle(0:length(names)-1, counts),
-        zeros(T,totalCells + 1),
-        inverse_rle(volumes, counts),
-        zeros(T,totalCells + 1),
-        estPerimeter.(inverse_rle(volumes, counts)) ]
+    data =  (;
+        names = inverse_rle(names, counts),  #inverse_rle(["a","b"], [2,3]) = ["a","a","b","b","b"] 
+        cellIDs = 0:totalCells, 
+        typeIDs = inverse_rle(0:length(names)-1, counts), 
+        volumes = zeros(T,totalCells + 1),
+        desiredVolumes = inverse_rle(volumes, counts),
+        perimeters = zeros(T,totalCells + 1),
+        desiredPerimeters = estPerimeter.(inverse_rle(volumes, counts))
+    )
 
-    dataOff = offset.(data)
-
-    return cellTable(defaultColumns, lookup, dataOff)
+    return cellTable(map(offset, data))
+     
 end
 
 #Add property for one cell type
-function addCellProperty!(df::cellTable, propertyname::Symbol, defaultValue, cellName::Symbol)
+function addCellProperty!(df::cellTable, propertyName::Symbol, defaultValue, cellName::Symbol)
 
-    push!(getfield(df, :columnNames), propertyname)
-    getfield(df, :lookup)[propertyname] = length(getfield(df, :columnNames))
-    push!(getfield(df, :data), [name == cellName ? defaultValue : missing for name in df.names])
+    newColumn = offset([name == cellName ? defaultValue : missing for name in df.names])
 
-    return nothing
+    return merge(df, [propertyName => newColumn])
 end
 
 #Or for more than one cell type
-function addCellProperty!(df::cellTable, propertyname::Symbol, defaultValue, cellName::Vector{Symbol})
+function addCellProperty!(df::cellTable, propertyName::Symbol, defaultValue, cellName::Vector{Symbol})
 
-    push!(getfield(df, :columnNames), propertyname)
-    getfield(df, :lookup)[propertyname] = length(getfield(df, :columnNames))
-    push!(getfield(df, :data), [name ∈ cellName ? defaultValue : missing for name in df.names])
+    newColumn = offset([name ∈ cellName ? defaultValue : missing for name in df.names])
 
-    return nothing
+    return merge(df, [propertyName => newColumn])
 end
+
 
 ####################################################
 # Variables for Markov Step 
@@ -116,7 +134,7 @@ end
 # Helper functions for CellPotts
 ####################################################
 
-countCells(cpm::CellPotts) = length(cpm.currentState) - 1
+countCells(cpm::CellPotts) = length(cpm.currentState.cellIDs) - 1
 countCellTypes(cpm::CellPotts) = maximum(cpm.currentState.typeIDs)
 
 
@@ -174,27 +192,22 @@ end
 #Moved out of main function to avoid code repeat
 function (VP::VolumePenalty)(cpm::CellPotts, σ::T) where T<:Integer
 
-    #TODO change with getindex to be like DataFrames
-    # (volume, desiredVolume) = cpm.currentState[σᵢ, [:volumes, :desiredVolumes]]
     volume = cpm.currentState.volumes[σ]
     desiredVolume = cpm.currentState.desiredVolumes[σ]
-
     τⱼ = cpm.currentState.typeIDs[σ]
 
     return VP.λᵥ[τⱼ] * (volume - desiredVolume)^2
 end
 
 ####################################################
-# Override Base.show cpm
+# Override Base.show
 ####################################################
 
 function Base.show(io::IO, cpm::CellPotts) 
     println("Cell Potts Model:")
     #Grid
     dim = length(cpm.space.gridSize)
-    if dim == 1
-        println("Grid: $(cpm.space.gridSize[1])×$(cpm.space.gridSize[1])")
-    elseif dim == 2
+    if dim == 2
         println("Grid: $(cpm.space.gridSize[1])×$(cpm.space.gridSize[2])")
     else
         println("Grid: $(cpm.space.gridSize[1])×$(cpm.space.gridSize[2])×$(cpm.space.gridSize[3])")
@@ -222,4 +235,19 @@ function Base.show(io::IO, cpm::CellPotts)
     print("\n")
     println("Temperature: ", cpm.temperature)
     print("Steps: ", cpm.step.stepCounter)
+end
+
+function Base.show(io::IO, intState::cellTable) 
+
+    data = map(OffsetArrays.no_offset_view, getfield(intState,:data))
+
+    hl = Highlighter(f = (data, i, j) -> i == 1,
+                         crayon = Crayon(background = :dark_gray))
+
+    pretty_table(
+        data,
+        header_crayon = crayon"yellow bold",
+        highlighters = hl,
+        display_size = (20,0),
+        vcrop_mode = :middle)
 end
