@@ -2,38 +2,38 @@ abstract type Penalty end
 
 #Offset arrays so the zeroth index refers to Medium
 
-mutable struct AdhesionPenalty <: Penalty
+struct AdhesionPenalty <: Penalty
     J::OffsetMatrix{Int, Matrix{Int}} #J[n,m] gives the adhesion penality for cells with types n and m
 
     function AdhesionPenalty(J::Matrix{Int})
         issymmetric(J) ? nothing : error("J needs to be symmetric")
         
-        Joff = OffsetArray(J, CartesianIndex(0, 0):CartesianIndex(size(J).-1))
+        Joff = OffsetArray(J, Origin(0))
         return new(Joff)
     end
 end
 
-mutable struct VolumePenalty <: Penalty
+struct VolumePenalty <: Penalty
     λᵥ::OffsetVector{Int,Vector{Int}}
 
     function VolumePenalty(λᵥ::Vector{Int})
-        λᵥOff = OffsetVector([0; λᵥ], 0:length(λᵥ))
+        λᵥOff = OffsetVector([0; λᵥ], Origin(0))
         return new(λᵥOff)
     end
 end
 
-mutable struct PerimeterPenalty <: Penalty
+struct PerimeterPenalty <: Penalty
     λₚ::OffsetVector{Int,Vector{Int}}
 
     function PerimeterPenalty(λᵥ::Vector{Int}) 
-        λᵥOff = OffsetVector([0; λᵥ], 0:length(λᵥ))
+        λᵥOff = OffsetVector([0; λᵥ], Origin(0))
 
         return new(λᵥOff, currentPerimeters)
     end
 end
 
 #TODO Migration should work without floats
-mutable struct MigrationPenalty{N} <: Penalty
+struct MigrationPenalty{N} <: Penalty
     memory::Array{Int,N}
     maxAct::Int
     λ::Int

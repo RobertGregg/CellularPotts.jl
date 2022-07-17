@@ -11,7 +11,7 @@
 estPerimeter(V::Int) = iszero(V) ? 0 : 4ceil(Int,2sqrt(V)-3) + 2ceil(Int,2sqrt(V+1)-4) + 14
 
 #Returns a zero indexed array
-offset(x) = OffsetVector(x, 0:length(x)-1)
+offset(x) = OffsetVector(x, Origin(0))
 
 #Check if any lengths in a collection are different
 #Works even if the you can't broadcast a function to the collection (e.g. Dict, NamedTuple)
@@ -235,6 +235,34 @@ function (VP::VolumePenalty)(cpm::CellPotts, σ::T) where T<:Integer
 end
 
 #TODO Add perimeter constraint
+function (PP::PerimeterPenalty)(cpm::CellPotts)
+
+    σᵢ = cpm.step.sourceCellID
+    σⱼ = cpm.step.targetCellID
+    sourcePerimeter = PP(cpm, σᵢ) + PP(cpm, σⱼ)
+   
+    #Change the volumes and recalculate penalty
+    cpm.currentState.volumes[σᵢ] -= 1
+    cpm.currentState.volumes[σⱼ] += 1
+
+    targetPerimeter = PP(cpm, σᵢ) + PP(cpm, σⱼ)
+
+    #Reset the volumes
+    cpm.currentState.volumes[σᵢ] += 1
+    cpm.currentState.volumes[σⱼ] -= 1
+
+    return targetPerimeter - sourcePerimeter
+end
+
+#Moved out of main function to avoid code repeat
+function (VP::VolumePenalty)(cpm::CellPotts, σ::T) where T<:Integer
+
+    perimeter = cpm.currentState.perimeters[σ]
+    desiredPerimeter = cpm.currentState.desiredPerimeters[σ]
+    τⱼ = cpm.currentState.typeIDs[σ]
+
+    return VP.λᵥ[τⱼ] * (perimeter - desiredPerimeter)^2
+end
 
 ####################################################
 # Override Base.show

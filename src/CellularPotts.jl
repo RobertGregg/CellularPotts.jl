@@ -9,7 +9,7 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       Graphs, #Needed for creating graphs that look like graphDimension
       Metis #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
 
-
+import OffsetArrays: Origin
 
 import Graphs:
             AbstractSimpleGraph,
