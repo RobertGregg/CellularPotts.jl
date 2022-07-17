@@ -124,6 +124,7 @@ end
 
 #Given n nodes, create an empty graph
 function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=mooreNeighbors) where {N, T<:Integer}
+    
     nodes = prod(gridSize)
     grid = reshape(1:nodes, gridSize...)
 

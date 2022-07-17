@@ -7,33 +7,29 @@
 function CellDivision!(cpm::CellPotts, σ::Int)
 
     #Find all the nodes with the same ID (σ) as input
-    cellIdx = findall(isequal(σ), cpm.graph.nodeIDs)
+    cellNodeIDs = findall(isequal(σ), cpm.space.nodeIDs)
 
     #Use Metis to evenly partition the cell into two subcells
-    newCellsIdx = Metis.partition(cpm.graph[cellIdx], 2) #Vector of ones and twos
-    newCellNodeIdx = cellIdx[newCellsIdx .== 2]
+    nodePartition = Metis.partition(cpm.space[cellNodeIDs], 2) #Vector of ones and twos
+    newCellNodeIDs = cellNodeIDs[nodePartition .== 2]
     
     #Now we just need to update the model to account for the new cell
 
-    #Update cell summary
-        push!(cpm.cells.names, cpm.cells.names[σ]) 
-        push!(cpm.cells.ids, cpm.cells.ids[end]+1) 
-        #Current volumes
-        cpm.cells.volumes[σ] = sum(x->x==1, newCellsIdx)
-        push!(cpm.cells.volumes, sum(x->x==2, newCellsIdx))
-        #Desired volumes 
-        push!(cpm.cells.desiredVolumes, cpm.cells.desiredVolumes[σ])
+    #Update old cell
+        cpm.currentState.volumes[σ] = count(isequal(1), nodePartition)
+    #Add new cell
+        cell = cpm.currentState[σ]
+        cell.cellIds[1] = maximum(cpm.currentState.cellIDs) + 1
+        cell.volumes[1] = count(isequal(2), nodePartition)
+        addNewCell(cpm.currState, cell)
+
 
     #Update graph attributes
-        cpm.graph.nodeIDs[newCellNodeIdx] .= cpm.cells.ids[end]
+        cpm.space.nodeIDs[newCellNodeIDs] .= cpm.currentState.cellIDs[end]
 
     #Global CellPotts attributes
-    #energy
-        for penalty in cpm.parameters.penalties
-            penalty(cpm)
-        end
     #visual
-        cpm.visual[newCellNodeIdx] .= cpm.cells.ids[end]
+        cpm.visual[newCellNodeIDs] .= cpm.currentState.cellIDs[end]
 
     return nothing
 end

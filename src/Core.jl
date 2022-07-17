@@ -31,15 +31,34 @@ end
 # Table to hold cell information
 ####################################################
 
+#Could use something like TypedDelegation.jl to pass functions to data
+
 mutable struct cellTable{T<:NamedTuple}
     data::T
 end
 
-getData(df::cellTable) = getfield(df,:data)
+####################################################
+# Same basic methods for cellTable
+####################################################
 
-getproperty(df::cellTable, name::Symbol) = getproperty(getData(df), name)
+countcells(df::cellTable) = length(df.cellIDs) - 1
+countcelltypes(df::cellTable) = length(unique(df.typeIDs)) - 1
 
-merge(df::cellTable, newColumn) = cellTable( merge(getData(df), newColumn) )
+#From Base, used for stuff like view(Array) to get the Array back
+parent(df::cellTable) = getfield(df,:data)
+
+getproperty(df::cellTable, name::Symbol) = getproperty(parent(df), name)
+
+merge(df::cellTable, newColumn) = cellTable( merge(parent(df), newColumn) )
+
+keys(df::cellTable) = keys(parent(df))
+values(df::cellTable) = values(parent(df))
+pairs(df::cellTable) = pairs(parent(df))
+
+#TODO maybe impliment a row object, or think about Tables.jl more
+iterate(df::cellTable, iter=1) = iter ≥ countcells(df) ? nothing : ((;((k,v[iter]) for (k,v) in pairs(df))...), iter + 1)
+getindex(df::cellTable, i::Int) = (;((k,[v[i]]) for (k,v) in pairs(df))...)
+
 
 ####################################################
 # Function to create a new cell state
@@ -57,7 +76,7 @@ function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{
 
     data =  (;
         names = inverse_rle(names, counts),  #inverse_rle(["a","b"], [2,3]) = ["a","a","b","b","b"] 
-        cellIDs = 0:totalCells, 
+        cellIDs = collect(0:totalCells), 
         typeIDs = inverse_rle(0:length(names)-1, counts), 
         volumes = zeros(T,totalCells + 1),
         desiredVolumes = inverse_rle(volumes, counts),
@@ -94,6 +113,13 @@ function addCellProperty(df::cellTable, propertyName::Symbol, values::Vector{T})
     return merge(df, [propertyName => newColumn])
 end
 
+
+function addNewCell(df::cellTable, cell::T) where T<:NamedTuple
+    #TODO Need some checks (e.g. all cells have unique ids, all the keys match)
+    for property in keys(df)
+        append!(parent(df)[property], cell[property])
+    end
+end
 
 ####################################################
 # Variables for Markov Step 
@@ -143,8 +169,8 @@ end
 # Helper functions for CellPotts
 ####################################################
 
-countCells(cpm::CellPotts) = length(cpm.currentState.cellIDs) - 1
-countCellTypes(cpm::CellPotts) = maximum(cpm.currentState.typeIDs)
+countcells(cpm::CellPotts) = countcells(cpm.currentState)
+countcelltypes(cpm::CellPotts) = countcelltypes(cpm.currentState)
 
 
 ####################################################
@@ -208,11 +234,13 @@ function (VP::VolumePenalty)(cpm::CellPotts, σ::T) where T<:Integer
     return VP.λᵥ[τⱼ] * (volume - desiredVolume)^2
 end
 
+#TODO Add perimeter constraint
+
 ####################################################
 # Override Base.show
 ####################################################
 
-function Base.show(io::IO, cpm::CellPotts) 
+function show(io::IO, cpm::CellPotts) 
     println("Cell Potts Model:")
     #Grid
     dim = length(cpm.space.gridSize)
@@ -246,7 +274,7 @@ function Base.show(io::IO, cpm::CellPotts)
     print("Steps: ", cpm.step.stepCounter)
 end
 
-function Base.show(io::IO, intState::cellTable) 
+function show(io::IO, intState::cellTable) 
 
     data = map(OffsetArrays.no_offset_view, getfield(intState,:data))
 
