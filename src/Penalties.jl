@@ -32,15 +32,9 @@ struct PerimeterPenalty <: Penalty
     end
 end
 
-#TODO Migration should work without floats
-struct MigrationPenalty{N} <: Penalty
-    memory::Array{Int,N}
+#TODO How to apply penalties to select cells?
+struct MigrationPenalty <: Penalty
     maxAct::Int
     λ::Int
-
-    function MigrationPenalty(maxAct::Int, λ::Int, gridSize::NTuple{N, Int}) where N
-        memory = zeros(Int, gridSize)
-
-        return new{N}(memory, maxAct, λ)
-    end
+    cellTypes::Vector{Symbol}
 end

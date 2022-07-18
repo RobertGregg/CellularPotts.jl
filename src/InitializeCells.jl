@@ -7,7 +7,6 @@
 
 
 #TODO Allow image input
-#TODO Allow position input
 
 
 function positionCellsRandom!(cpm::CellPotts{N,T,V}) where {N,T,V}

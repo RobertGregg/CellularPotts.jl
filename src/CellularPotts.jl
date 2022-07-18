@@ -64,6 +64,7 @@ export
       AdhesionPenalty,
       VolumePenalty,
       PerimeterPenalty,
+      MigrationPenalty,
 #InitializeCells.jl
       positionCellsRandom!,
       positionCells!,

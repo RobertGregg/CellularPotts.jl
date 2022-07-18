@@ -6,40 +6,25 @@ using CellularPotts
 space = CellSpace(100,100)
 
 initialCellState = newCellState(
-    [:Epithelial, :TCells, :BCells],
-    [75, 50, 40],
-    [10, 10, 10]);
+    [:Epithelial, :TCells],
+    [75, 50],
+    [100, 10]);
 
 initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial)
 
-
-positions = [(rand(1:space.gridSize[1]), rand(1:space.gridSize[2])) for _ in 1:maximum(initialCellState.cellIDs)]
-
-initialCellState = addCellProperty(initialCellState, :positions, positions)
-
-
 penalties = [
-    AdhesionPenalty([0 20 20 20;
-                    20 90 40 40;
-                    20 40 90 40;
-                    20 40 40 90]),
-    VolumePenalty([5,5,5]),
-    PerimeterPenalty([5,5,5])
+    AdhesionPenalty([0 20 20;
+                    20 90 40;
+                    20 40 90]),
+    VolumePenalty([5,5]),
+    PerimeterPenalty([5,5])
+    MigrationPenalty(10,1,[:TCells])
     ]
 
 
 cpm = CellPotts(space, initialCellState, penalties);
 
-positionCells!(cpm)
-
-CellGUI(cpm)
-
-
-function runModel(cpm)
-    for i=1:10000
-        MHStep!(cpm)
-    end
-end
+positionCellsRandom!(cpm)
 
 
 #####################################################################
@@ -107,3 +92,81 @@ function plotCells(cpm::CellPotts)
 
     return fig
 end
+
+
+#####################################################################
+using Revise
+using CellularPotts
+
+#Example Model
+
+space = CellSpace(100,100)
+
+initialCellState = newCellState(
+    [:Epithelial, :TCells, :BCells],
+    [75, 50, 40],
+    [10, 10, 10]);
+
+initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial)
+
+
+positions = [(rand(1:space.gridSize[1]), rand(1:space.gridSize[2])) for _ in 1:maximum(initialCellState.cellIDs)]
+
+initialCellState = addCellProperty(initialCellState, :positions, positions)
+
+
+penalties = [
+    AdhesionPenalty([0 20 20 20;
+                    20 90 40 40;
+                    20 40 90 40;
+                    20 40 40 90]),
+    VolumePenalty([5,5,5]),
+    PerimeterPenalty([5,5,5])
+    ]
+
+
+cpm = CellPotts(space, initialCellState, penalties);
+
+positionCells!(cpm)
+
+CellGUI(cpm)
+
+
+function runModel(cpm)
+    for i=1:10000
+        MHStep!(cpm)
+    end
+end
+
+
+#Testing sparse arrays
+using SparseArrays, Random
+
+n = 10_000
+idx = sort(randperm(n)[1:100])
+vals = rand(1_000_000:10_000_000, 100)
+v = sparsevec(idx, vals, n)
+
+v1 = copy(v)
+
+#43.184 ns
+function f1(V)
+    V.nzval .-= 1
+    dropzeros!(V)
+    return nothing
+end
+
+v2 = Vector(v)
+
+#5.900 μs
+function f2(V)
+    for (i,v) in enumerate(V)
+        if v > 0
+            V[i] -= 1
+        end
+    end
+    return nothing
+end
+
+
+
