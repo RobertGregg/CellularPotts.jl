@@ -71,7 +71,7 @@ function MHStep!(cpm::CellPotts)
         
         #---Overall properties---
         #Update visual
-        cpm.visual[step.sourceNode] = step.targetCellID
+        cpm.visual[step.sourceNode] = cpm.currentState.typeIDs[step.targetCellID]
         cpm.step.stepCounter += 1
     end
 

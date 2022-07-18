@@ -1,3 +1,4 @@
+#TODO either add removeCell() or condition for division to not select dead cells
 
 ####################################################
 # Cell Division
@@ -19,9 +20,9 @@ function CellDivision!(cpm::CellPotts, σ::Int)
         cpm.currentState.volumes[σ] = count(isequal(1), nodePartition)
     #Add new cell
         cell = cpm.currentState[σ]
-        cell.cellIds[1] = maximum(cpm.currentState.cellIDs) + 1
+        cell.cellIDs[1] = maximum(cpm.currentState.cellIDs) + 1
         cell.volumes[1] = count(isequal(2), nodePartition)
-        addNewCell(cpm.currState, cell)
+        addNewCell(cpm.currentState, cell)
 
 
     #Update graph attributes
@@ -29,7 +30,7 @@ function CellDivision!(cpm::CellPotts, σ::Int)
 
     #Global CellPotts attributes
     #visual
-        cpm.visual[newCellNodeIDs] .= cpm.currentState.cellIDs[end]
+        cpm.visual[newCellNodeIDs] .= cpm.currentState.typeIDs[end]
 
     return nothing
 end
@@ -42,6 +43,6 @@ end
 
 #Just set the desired volume to zero?
 function CellDeath!(cpm::CellPotts, σ::Int)
-    cpm.cells.desiredVolumes[σ] = 0
+    cpm.currentState.desiredVolumes[σ] = 0
     return nothing
 end

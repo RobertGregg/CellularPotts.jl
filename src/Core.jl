@@ -76,8 +76,8 @@ function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{
 
     data =  (;
         names = inverse_rle(names, counts),  #inverse_rle(["a","b"], [2,3]) = ["a","a","b","b","b"] 
-        cellIDs = collect(0:totalCells), 
-        typeIDs = inverse_rle(0:length(names)-1, counts), 
+        cellIDs = collect(0:totalCells),
+        typeIDs = inverse_rle(0:length(names)-1, counts), #look into enum?
         volumes = zeros(T,totalCells + 1),
         desiredVolumes = inverse_rle(volumes, counts),
         perimeters = zeros(T,totalCells + 1),

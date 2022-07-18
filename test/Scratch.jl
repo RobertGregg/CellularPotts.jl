@@ -6,9 +6,9 @@ using CellularPotts
 space = CellSpace(100,100)
 
 initialCellState = newCellState(
-    [:Epithelial, :TCells],
-    [75, 50],
-    [10, 10]);
+    [:Epithelial, :TCells, :BCells],
+    [75, 50, 40],
+    [10, 10, 10]);
 
 initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial)
 
@@ -19,11 +19,12 @@ initialCellState = addCellProperty(initialCellState, :positions, positions)
 
 
 penalties = [
-    AdhesionPenalty([0 20 40;
-                    20 90 20;
-                    40 20 90]),
-    VolumePenalty([5,5]),
-    PerimeterPenalty([5,5])
+    AdhesionPenalty([0 20 20 20;
+                    20 90 40 40;
+                    20 40 90 40;
+                    20 40 40 90]),
+    VolumePenalty([5,5,5]),
+    PerimeterPenalty([5,5,5])
     ]
 
 
@@ -42,7 +43,7 @@ end
 
 
 #####################################################################
-using GLMakie, Colors
+using GLMakie, Colors, ColorSchemes
 
 function Edge2Grid(dim)
     gridIndices = LinearIndices(dim)
@@ -68,10 +69,13 @@ function plotCells(cpm::CellPotts)
     fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf0(0.98, 0.98, 0.98))
     axSim = fig[1, 1] = Axis(fig, title = "Simulation")
 
+    cmap = ColorSchemes.nipy_spectral
+    distintCellTypes = countcelltypes(cpm) + 1
+
     heatmap!(axSim,
                 cpm.visual,
                 show_axis = false,
-                colormap = :Purples) #:Greys_3
+                colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true)) #:Greys_3
         tightlimits!.(axSim)
         hidedecorations!.(axSim) #removes axis numbers
 

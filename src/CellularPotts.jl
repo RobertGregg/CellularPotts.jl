@@ -3,6 +3,7 @@ module CellularPotts
 using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       GLMakie, #For plotting and making the GUI (also exports AbstractPlotting)
       Colors, #More color options for the cells (e.g. :Purples)
+      ColorSchemes, #For custom cell colors
       StatsBase, Random, #Currently just used for countmap, inverse_rle; shuffle
       PrettyTables, #Make nice tables for the cell state
       LinearAlgebra, #Additional functionality for arrays
@@ -53,8 +54,8 @@ export
       newCellState,
       addCellProperty,
       addNewCell,
-      countCells,
-      countCellTypes,
+      countcells,
+      countcelltypes,
       CellPotts,
       getTypeID,
       perimeterLocal,

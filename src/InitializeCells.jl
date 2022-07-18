@@ -66,8 +66,8 @@ function positionCellsRandom!(cpm::CellPotts{N,T,V}) where {N,T,V}
     end
 
     #Fill the the array for the visual
-    cpm.visual = cellMembership
-
+    cpm.visual = [cpm.currentState.typeIDs[i] for i in cellMembership]
+    
     return nothing
 end
 
@@ -117,7 +117,7 @@ function positionCells!(cpm::CellPotts{N,T,V}) where {N,T,V}
     end
 
     #Fill the the array for the visual
-    cpm.visual = cellMembership
+    cpm.visual =  [cpm.currentState.typeIDs[i] for i in cellMembership]
 
     return nothing
 end

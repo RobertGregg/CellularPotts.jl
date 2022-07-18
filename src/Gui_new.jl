@@ -1,5 +1,4 @@
 
-
 function CellGUI(cpm::CellPotts)
 
     fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf0(0.98, 0.98, 0.98))
@@ -10,14 +9,21 @@ function CellGUI(cpm::CellPotts)
     # heatmap_node is an array that updates when timestep updates
     heatmap_node = @lift begin
         currentTime = $timestep
-        MHStep!(cpm)
+        for i = 1:prod(cpm.space.gridSize)
+            MHStep!(cpm)
+        end
         cpm.visual
     end
+
+    # cmap = ColorSchemes.nipy_spectral
+    # cmap = ColorSchemes.linear_bgyw_20_98_c66_n256
+    cmap = ColorSchemes.tol_muted
+    distintCellTypes = countcelltypes(cpm) + 1
 
     heatmap!(axSim,
              heatmap_node,
              show_axis = false,
-             colormap = :Purples) #:Greys_3
+             colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true)) #:Greys_3
         tightlimits!.(axSim)
         hidedecorations!.(axSim) #removes axis numbers
 
@@ -87,12 +93,12 @@ function CellGUI(cpm::CellPotts)
 
     #partition a random cell when button is clicked 
     on(cellDivideButton.clicks) do clicks
-        CellDivision!(cpm,rand(1:maximum(cpm.cells.ids)))
+        CellDivision!(cpm,rand(cpm.currentState.cellIDs))
     end
 
     #Choose a random cell to kill
     on(cellDeathButton.clicks) do clicks
-        CellDeath!(cpm,rand(1:maximum(cpm.cells.ids)))
+        CellDeath!(cpm,rand(cpm.currentState.cellIDs))
     end
 
     display(fig)
