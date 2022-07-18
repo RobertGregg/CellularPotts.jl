@@ -8,7 +8,7 @@ space = CellSpace(100,100)
 initialCellState = newCellState(
     [:Epithelial, :TCells],
     [75, 50],
-    [10, 10])
+    [10, 10]);
 
 initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial)
 
@@ -22,7 +22,9 @@ penalties = [
     AdhesionPenalty([0 20 40;
                     20 90 20;
                     40 20 90]),
-    VolumePenalty([5,5])]
+    VolumePenalty([5,5]),
+    PerimeterPenalty([5,5])
+    ]
 
 
 cpm = CellPotts(space, initialCellState, penalties);

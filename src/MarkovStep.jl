@@ -51,7 +51,17 @@ function MHStep!(cpm::CellPotts)
         cpm.currentState.volumes[step.sourceCellID] -= 1
         cpm.currentState.volumes[step.targetCellID] += 1
 
-        #TODO update cell perimeters
+        #Update cell perimeters
+        Δpᵢ = -perimeterLocal(cpm.space, step.sourceNode, step.sourceCellID)
+        Δpⱼ = -perimeterLocal(cpm.space, step.sourceNode, step.targetCellID)
+
+        cpm.space.nodeIDs[step.sourceNode] = step.targetCellID
+
+        Δpᵢ += perimeterLocal(cpm.space, step.sourceNode, step.sourceCellID)
+        Δpⱼ += perimeterLocal(cpm.space, step.sourceNode, step.targetCellID)
+
+        cpm.currentState.perimeters[step.sourceCellID] -= Δpᵢ
+        cpm.currentState.perimeters[step.targetCellID] += Δpⱼ
 
         #---Graph properties---
 

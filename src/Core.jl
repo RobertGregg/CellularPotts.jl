@@ -174,7 +174,7 @@ countcelltypes(cpm::CellPotts) = countcelltypes(cpm.currentState)
 
 
 ####################################################
-# Penalty Functors
+# Adhesion Functor
 ####################################################
 
 function (AP::AdhesionPenalty)(cpm::CellPotts)
@@ -204,6 +204,9 @@ function (AP::AdhesionPenalty)(cpm::CellPotts, σᵢ::T) where T<:Integer
     return adhesion
 end
 
+####################################################
+# Volume Functor
+####################################################
 
 function (VP::VolumePenalty)(cpm::CellPotts)
 
@@ -234,36 +237,79 @@ function (VP::VolumePenalty)(cpm::CellPotts, σ::T) where T<:Integer
     return VP.λᵥ[τⱼ] * (volume - desiredVolume)^2
 end
 
-#TODO Add perimeter constraint
+####################################################
+# Perimeter Functor
+####################################################
+
 function (PP::PerimeterPenalty)(cpm::CellPotts)
 
+    node = cpm.step.sourceNode
     σᵢ = cpm.step.sourceCellID
     σⱼ = cpm.step.targetCellID
     sourcePerimeter = PP(cpm, σᵢ) + PP(cpm, σⱼ)
+
+    #Unlike volumes which change by ±1, perimeter is more complicated
+    Δpᵢ = -perimeterLocal(cpm.space, node, σᵢ)
+    Δpⱼ = -perimeterLocal(cpm.space, node, σⱼ)
+
+    cpm.space.nodeIDs[node] = σⱼ
+
+    Δpᵢ += perimeterLocal(cpm.space, node, σᵢ)
+    Δpⱼ += perimeterLocal(cpm.space, node, σⱼ)
+
    
-    #Change the volumes and recalculate penalty
-    cpm.currentState.volumes[σᵢ] -= 1
-    cpm.currentState.volumes[σⱼ] += 1
+    #Change the perimeters and recalculate penalty
+    cpm.currentState.perimeters[σᵢ] -= Δpᵢ
+    cpm.currentState.perimeters[σⱼ] += Δpⱼ
 
     targetPerimeter = PP(cpm, σᵢ) + PP(cpm, σⱼ)
 
-    #Reset the volumes
-    cpm.currentState.volumes[σᵢ] += 1
-    cpm.currentState.volumes[σⱼ] -= 1
+    #Reset the perimeters (and space)
+    cpm.currentState.perimeters[σᵢ] += Δpᵢ
+    cpm.currentState.perimeters[σⱼ] -= Δpⱼ
+
+    cpm.space.nodeIDs[node] = σᵢ
 
     return targetPerimeter - sourcePerimeter
 end
 
 #Moved out of main function to avoid code repeat
-function (VP::VolumePenalty)(cpm::CellPotts, σ::T) where T<:Integer
+function (PP::PerimeterPenalty)(cpm::CellPotts, σ::T) where T<:Integer
 
     perimeter = cpm.currentState.perimeters[σ]
     desiredPerimeter = cpm.currentState.desiredPerimeters[σ]
     τⱼ = cpm.currentState.typeIDs[σ]
 
-    return VP.λᵥ[τⱼ] * (perimeter - desiredPerimeter)^2
+    return PP.λₚ[τⱼ] * (perimeter - desiredPerimeter)^2
 end
 
+
+function perimeterLocal(space::CellSpace, n₀::T, σ::T) where T<: Integer
+    
+    perimeter = zero(T)
+
+    #Loop through the neighbors and calculate each neighbor perimeter penality
+    for n₁ in neighbors(space,n₀)
+        if space.nodeIDs[n₁] == σ
+            for n₂ in neighbors(space,n₁)
+                if space.nodeIDs[n₂] ≠ space.nodeIDs[n₁]
+                    perimeter += 1
+                end
+            end
+        end
+    end
+
+    #The source/target node only contributes if the current space node matches
+    if space.nodeIDs[n₀] == σ
+        for n₁ in neighbors(space,n₀)
+            if space.nodeIDs[n₁] ≠ space.nodeIDs[n₀]
+                perimeter += 1
+            end
+        end
+    end
+
+    return perimeter
+end
 ####################################################
 # Override Base.show
 ####################################################

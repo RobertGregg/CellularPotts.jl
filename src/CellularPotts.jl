@@ -57,11 +57,12 @@ export
       countCellTypes,
       CellPotts,
       getTypeID,
-      articulationSub,
+      perimeterLocal,
 #Penalties.jl
       Penalty,
       AdhesionPenalty,
       VolumePenalty,
+      PerimeterPenalty,
 #InitializeCells.jl
       positionCellsRandom!,
       positionCells!,

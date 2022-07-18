@@ -87,6 +87,7 @@ function vonNeumannNeighbors(J::CartesianIndex{2})
                  J+Δy]
 end
 
+#3D Version
 function vonNeumannNeighbors(J::CartesianIndex{3})
     Δx = CartesianIndex(1,0,0)
     Δy = CartesianIndex(0,1,0)
@@ -107,6 +108,7 @@ function mooreNeighbors(J::CartesianIndex{2})
             J-Δx+Δy,J+Δy,J+Δx+Δy]
 end
 
+#3D Version
 function mooreNeighbors(J::CartesianIndex{3})
     Δx = CartesianIndex(1,0,0)
     Δy = CartesianIndex(0,1,0)

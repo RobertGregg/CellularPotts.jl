@@ -28,7 +28,7 @@ struct PerimeterPenalty <: Penalty
     function PerimeterPenalty(λᵥ::Vector{Int}) 
         λᵥOff = OffsetVector([0; λᵥ], Origin(0))
 
-        return new(λᵥOff, currentPerimeters)
+        return new(λᵥOff)
     end
 end
 
