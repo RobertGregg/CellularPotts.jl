@@ -19,11 +19,12 @@ function MHStep!(cpm::CellPotts)
         step.neighborNodes = neighbors(cpm.space, step.sourceNode)
 
         #Choose a target
-        step.targetCellID = cpm.space.nodeIDs[rand(step.neighborNodes)]
+        step.targetNode = rand(step.neighborNodes)
+        step.targetCellID = cpm.space.nodeIDs[step.targetNode]
 
         #Some checks before attempting a flip
             #In the middle of a cell
-            inMiddle = checkMiddle(cpm, step)
+            inMiddle = all(isequal(step.sourceCellID, cpm.space.nodeIDs[n]) for n in step.neighborNodes)
             #target is the same as source cell 
             isSource = step.targetCellID == step.sourceCellID
 
@@ -47,21 +48,9 @@ function MHStep!(cpm::CellPotts)
         #Need to update all cell and graph properties
         #---Cell properties---
 
-        #Update cell volumes
-        cpm.currentState.volumes[step.sourceCellID] -= 1
-        cpm.currentState.volumes[step.targetCellID] += 1
-
-        #Update cell perimeters
-        Δpᵢ = -perimeterLocal(cpm.space, step.sourceNode, step.sourceCellID)
-        Δpⱼ = -perimeterLocal(cpm.space, step.sourceNode, step.targetCellID)
-
-        cpm.space.nodeIDs[step.sourceNode] = step.targetCellID
-
-        Δpᵢ += perimeterLocal(cpm.space, step.sourceNode, step.sourceCellID)
-        Δpⱼ += perimeterLocal(cpm.space, step.sourceNode, step.targetCellID)
-
-        cpm.currentState.perimeters[step.sourceCellID] -= Δpᵢ
-        cpm.currentState.perimeters[step.targetCellID] += Δpⱼ
+        for penalty in values(cpm.penalties)
+            updateStep!(cpm, step, penalty)
+        end
 
         #---Graph properties---
 
@@ -78,22 +67,40 @@ function MHStep!(cpm::CellPotts)
     return nothing
 end
 
-function checkMiddle(cpm, step)
-    
-    for neighbor in step.neighborNodes
-        if step.sourceCellID ≠ cpm.space.nodeIDs[neighbor]
-            return false
-        end
-    end
 
-    return true
+updateStep!(cpm::CellPotts, step::MHStepInfo, AP::AdhesionPenalty) = nothing
+
+function updateStep!(cpm::CellPotts, step::MHStepInfo, VP::VolumePenalty)
+    #Update cell volumes
+    cpm.currentState.volumes[step.sourceCellID] -= 1
+    cpm.currentState.volumes[step.targetCellID] += 1
+    return nothing
+end
+
+function updateStep!(cpm::CellPotts, step::MHStepInfo, PP::PerimeterPenalty)
+    #Update cell perimeters
+    cpm.currentState.perimeters[step.sourceCellID] -= PP.Δpᵢ
+    cpm.currentState.perimeters[step.targetCellID] += PP.Δpⱼ
+    return nothing
+end
+
+
+function updateStep!(cpm::CellPotts, step::MHStepInfo, MP::MigrationPenalty)
+    
+    #Reduce the node Mo=emory by 1 and remove zeros
+    MP.nodeMemory.nzval .-= 1
+    dropzeros!(MP.nodeMemory)
+    
+    #Update cell volumes
+    MP.nodeMemory[cpm.step.targetNode] += MP.maxAct
+    return nothing
 end
 
 function applyPenalties(cpm)
     ΔH = 0
 
-    for penalty in cpm.penalties
-        ΔH += penalty(cpm)
+    for p in keys(cpm.penalties)
+        ΔH += addPenalty!(cpm, cpm.penalties[p])
     end
 
     return ΔH

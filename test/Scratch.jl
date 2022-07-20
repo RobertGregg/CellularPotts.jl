@@ -10,21 +10,31 @@ initialCellState = newCellState(
     [75, 50],
     [100, 10]);
 
-initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial)
+initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial);
 
-penalties = [
+# penalties = createPenalties([
+#     AdhesionPenalty([0 20 20;
+#                     20 90 40;
+#                     20 40 90]),
+#     VolumePenalty([5,5]),
+#     PerimeterPenalty([5,5]),
+#     MigrationPenalty(10,1,[:TCells], space.gridSize)
+#     ])
+
+penalties = createPenalties([
     AdhesionPenalty([0 20 20;
                     20 90 40;
                     20 40 90]),
     VolumePenalty([5,5]),
     PerimeterPenalty([5,5])
-    MigrationPenalty(10,1,[:TCells])
-    ]
+    ])
 
 
 cpm = CellPotts(space, initialCellState, penalties);
 
 positionCellsRandom!(cpm)
+
+MHStep!(cpm)
 
 
 #####################################################################
@@ -138,35 +148,156 @@ function runModel(cpm)
     end
 end
 
+abstract type S end
 
-#Testing sparse arrays
-using SparseArrays, Random
-
-n = 10_000
-idx = sort(randperm(n)[1:100])
-vals = rand(1_000_000:10_000_000, 100)
-v = sparsevec(idx, vals, n)
-
-v1 = copy(v)
-
-#43.184 ns
-function f1(V)
-    V.nzval .-= 1
-    dropzeros!(V)
-    return nothing
+mutable struct model 
+    i::Int
 end
 
-v2 = Vector(v)
+mutable struct S1 <: S
+    a::Int
+end
 
-#5.900 μs
-function f2(V)
-    for (i,v) in enumerate(V)
-        if v > 0
-            V[i] -= 1
+mutable struct S2 <: S
+    b::Int
+end
+
+mutable struct S3 <: S
+    c::Int
+end
+
+mutable struct S4 <: S
+    d::Int
+end
+
+
+
+function f(m::model, s::S1)
+    return m.i + s.a
+end
+
+function f(m::model, s::S2)
+    return m.i + s.b^2
+end
+
+function f(m::model, s::S3)
+    return m.i + s.c^3
+end
+
+function f(m::model, s::S4)
+    return m.i + s.d^4
+end
+
+m = model(1)
+
+ss1 = Dict(:s1 => S1(5), :s2 => S2(5), :s3 => S3(5), :s4 => S4(5))
+
+ss2 = (s1 = S1(5), s2 = S2(5), s3 = S3(5), :s4 => S4(5))
+
+ss3 = [S1(5), S2(5), S3(5), S4(5)]
+
+function g1(m::model, ss)
+    total = 0
+    for s in values(ss)
+        total += f(m,s)
+    end
+
+    return total
+end
+
+function g1(m::model, ss::T) where T<:AbstractVector
+    total = 0
+    @inbounds for s in ss
+        total += f(m,s)
+    end
+
+    return total
+end
+
+
+
+function g2(m::model, ss)
+    total = 0
+    @inbounds for i in keys(ss)
+        total += f(m,ss[i])
+    end
+
+    return total
+end
+
+
+function g2(m::model, ss::T) where T<:AbstractVector
+    total = 0
+    @inbounds for i in eachindex(ss)
+        total += f(m,ss[i])
+    end
+
+    return total
+end
+
+
+
+#####################################################################
+using StatsBase, StatsPlots, Combinatorics
+
+
+mRange = 0:20
+neighborCount = 8
+
+n = length(with_replacement_combinations(mRange,neighborCount))
+
+m = zeros(n)
+g = zeros(n)
+g1 = zeros(Int,n)
+
+for (i,v) = enumerate(with_replacement_combinations(mRange,neighborCount))
+    m[i] = mean(v)
+    g[i] = geomean(v)
+    g1[i] = any(iszero,v) ? 0 : sum(v) ÷ 8
+end
+
+density(m)
+density!(g)
+
+
+plot(
+    g1,
+    g,
+    seriestype = :histogram2d,
+    c = :vik,
+    nbins = 21,
+    show_empty_bins = :true,
+    aspect_ratio=:equal,
+    xlims = (0,20),
+    ylims = (0,20),
+    xlabel = "My Mean",
+    ylabel = "Geometric Mean",
+       )
+
+plot!(0:20,0:20, legend=false)
+
+
+histogram(g, normalize=:probability)
+histogram!(m, normalize=:probability)
+
+#####################################################################
+
+
+v = rand(1:2,1_000_000)
+idx = findall(isequal(1),v)
+
+function f1(v,idx)
+    for i in idx
+        if v[i] ≠ 1
+            return false
         end
     end
-    return nothing
+
+    return true
 end
 
+function f2(v,idx)
+    return @inbounds all(isequal(1), view(v,idx))
+end
 
-
+f3(v,idx) = all(v[i] == 1 for i in idx)

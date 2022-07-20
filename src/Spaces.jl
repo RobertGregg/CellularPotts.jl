@@ -10,7 +10,6 @@ mutable struct CellSpace{N, T<:Integer} <: AbstractSimpleGraph{T}
     wrapAround::Bool              #Does the grid wrap around
     nodeIDs::Vector{T}            #Cell's ID for each node
     nodeTypes::Vector{Symbol}     #Cell's type for each node
-    nodeMemory::SparseVector{T,T} #Tracks feedback for cell migration (sparse?)
 end
 
 #CellSpaces are not directed
@@ -154,8 +153,7 @@ function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=mooreN
         gridSize,
         wrapAround,
         zeros(T,nodes),
-        fill(:Medium,nodes),
-        spzeros(T,nodes))
+        fill(:Medium,nodes))
 end
 
 

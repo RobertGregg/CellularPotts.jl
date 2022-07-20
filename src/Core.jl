@@ -11,7 +11,7 @@
 estPerimeter(V::Int) = iszero(V) ? 0 : 4ceil(Int,2sqrt(V)-3) + 2ceil(Int,2sqrt(V+1)-4) + 14
 
 #Returns a zero indexed array
-offset(x) = OffsetVector(x, Origin(0))
+offset(x) = OffsetArray(x, Origin(0))
 
 #Check if any lengths in a collection are different
 #Works even if the you can't broadcast a function to the collection (e.g. Dict, NamedTuple)
@@ -121,6 +121,58 @@ function addNewCell(df::cellTable, cell::T) where T<:NamedTuple
     end
 end
 
+
+####################################################
+# Penalties
+####################################################
+
+abstract type Penalty end
+
+#Offset arrays so the zeroth index refers to Medium
+
+struct AdhesionPenalty <: Penalty
+    J::OffsetMatrix{Int, Matrix{Int}} #J[n,m] gives the adhesion penality for cells with types n and m
+
+    function AdhesionPenalty(J::Matrix{Int})
+        issymmetric(J) ? nothing : error("J needs to be symmetric")
+        
+        return new(offset(J))
+    end
+end
+
+struct VolumePenalty <: Penalty
+    λᵥ::OffsetVector{Int,Vector{Int}}
+
+    function VolumePenalty(λᵥ::Vector{Int})
+        λᵥOff = offset([0; λᵥ])
+        return new(λᵥOff)
+    end
+end
+
+mutable struct PerimeterPenalty <: Penalty
+    λₚ::OffsetVector{Int,Vector{Int}}
+    Δpᵢ::Int
+    Δpⱼ::Int
+
+    function PerimeterPenalty(λᵥ::Vector{Int}) 
+        λₚOff = offset([0; λᵥ])
+        return new(λₚOff)
+    end
+end
+
+mutable struct MigrationPenalty <: Penalty
+    maxAct::Int
+    λ::Int
+    cellTypes::Vector{Symbol}
+    nodeMemory::SparseVector{Int,Int}
+
+    function MigrationPenalty(maxAct::T, λ::T, cellTypes::Vector{S}, gridSize::NTuple{N,T}) where {T<:Integer, S<:Symbol, N}
+        return new(maxAct, λ, cellTypes, spzeros(T,prod(gridSize)))
+    end
+end
+
+
+
 ####################################################
 # Variables for Markov Step 
 ####################################################
@@ -128,13 +180,14 @@ end
 #These could be static arrays?
 mutable struct MHStepInfo{T<:Integer}
     sourceNode::T                 #Index of node choosen
+    targetNode::T                 #Index of node choosen
     neighborNodes::Vector{T}      #Indicies for the neighboring nodes
     sourceCellID::T               #ID of sourceNode
     targetCellID::T               #ID of chosen cell target
     stepCounter::T                #Counts the number of MHSteps performed
 
     function MHStepInfo(T::DataType)
-        return new{T}(zero(T), zeros(T,8), zero(T), zero(T), zero(T))
+        return new{T}(zero(T), zero(T), zeros(T,8), zero(T), zero(T), zero(T))
     end
 end
 
@@ -143,18 +196,18 @@ end
 # Structure for the model
 ####################################################
 
-mutable struct CellPotts{N, T<:Integer, V}
+mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, P<:Penalty}
     space::CellSpace{N,T}
     initialState::cellTable{V}
     currentState::cellTable{V}
-    penalties::Vector{Penalty}
+    penalties::Dict{Symbol,P}
     step::MHStepInfo{T}
     visual::Array{Int,N}
     temperature::Float64
 
-    function CellPotts(space::CellSpace{N,T}, initialCellState::cellTable{V}, penalties::Vector{Penalty}) where {N,T,V}
+    function CellPotts(space::CellSpace{N,T}, initialCellState::cellTable{V}, penalties::Dict{Symbol,P}) where {N,T,V,P}
 
-        return new{N,T,V}(
+        return new{N,T,V,P}(
             space,
             initialCellState,
             initialCellState,
@@ -172,144 +225,6 @@ end
 countcells(cpm::CellPotts) = countcells(cpm.currentState)
 countcelltypes(cpm::CellPotts) = countcelltypes(cpm.currentState)
 
-
-####################################################
-# Adhesion Functor
-####################################################
-
-function (AP::AdhesionPenalty)(cpm::CellPotts)
-    #calculate Δadhesion to see if the target will decrease model energy
-    return AP(cpm, cpm.step.targetCellID) - AP(cpm, cpm.step.sourceCellID)
-end
-
-#Moved out of main function to avoid code repeat
-function (AP::AdhesionPenalty)(cpm::CellPotts, σᵢ::T) where T<:Integer
-
-    #Initialize the penality
-    adhesion = 0
-
-    τᵢ = cpm.currentState.typeIDs[σᵢ]
-
-    for neighbor in cpm.step.neighborNodes
-        #Given a node index, get the cellID
-        σⱼ = cpm.space.nodeIDs[neighbor]
-
-        #Convert the cellID to cellType
-        τⱼ = cpm.currentState.typeIDs[σⱼ]
-
-        #Adhesion is increased if adjacent cells are different types
-        adhesion += AP.J[τᵢ, τⱼ] * (1-δ(σᵢ, σⱼ))
-    end
-
-    return adhesion
-end
-
-####################################################
-# Volume Functor
-####################################################
-
-function (VP::VolumePenalty)(cpm::CellPotts)
-
-    σᵢ = cpm.step.sourceCellID
-    σⱼ = cpm.step.targetCellID
-    sourceVolume = VP(cpm, σᵢ) + VP(cpm, σⱼ)
-   
-    #Change the volumes and recalculate penalty
-    cpm.currentState.volumes[σᵢ] -= 1
-    cpm.currentState.volumes[σⱼ] += 1
-
-    targetVolume = VP(cpm, σᵢ) + VP(cpm, σⱼ)
-
-    #Reset the volumes
-    cpm.currentState.volumes[σᵢ] += 1
-    cpm.currentState.volumes[σⱼ] -= 1
-
-    return targetVolume - sourceVolume
-end
-
-#Moved out of main function to avoid code repeat
-function (VP::VolumePenalty)(cpm::CellPotts, σ::T) where T<:Integer
-
-    volume = cpm.currentState.volumes[σ]
-    desiredVolume = cpm.currentState.desiredVolumes[σ]
-    τⱼ = cpm.currentState.typeIDs[σ]
-
-    return VP.λᵥ[τⱼ] * (volume - desiredVolume)^2
-end
-
-####################################################
-# Perimeter Functor
-####################################################
-
-function (PP::PerimeterPenalty)(cpm::CellPotts)
-
-    node = cpm.step.sourceNode
-    σᵢ = cpm.step.sourceCellID
-    σⱼ = cpm.step.targetCellID
-    sourcePerimeter = PP(cpm, σᵢ) + PP(cpm, σⱼ)
-
-    #Unlike volumes which change by ±1, perimeter is more complicated
-    Δpᵢ = -perimeterLocal(cpm.space, node, σᵢ)
-    Δpⱼ = -perimeterLocal(cpm.space, node, σⱼ)
-
-    cpm.space.nodeIDs[node] = σⱼ
-
-    Δpᵢ += perimeterLocal(cpm.space, node, σᵢ)
-    Δpⱼ += perimeterLocal(cpm.space, node, σⱼ)
-
-   
-    #Change the perimeters and recalculate penalty
-    cpm.currentState.perimeters[σᵢ] -= Δpᵢ
-    cpm.currentState.perimeters[σⱼ] += Δpⱼ
-
-    targetPerimeter = PP(cpm, σᵢ) + PP(cpm, σⱼ)
-
-    #Reset the perimeters (and space)
-    cpm.currentState.perimeters[σᵢ] += Δpᵢ
-    cpm.currentState.perimeters[σⱼ] -= Δpⱼ
-
-    cpm.space.nodeIDs[node] = σᵢ
-
-    return targetPerimeter - sourcePerimeter
-end
-
-#Moved out of main function to avoid code repeat
-function (PP::PerimeterPenalty)(cpm::CellPotts, σ::T) where T<:Integer
-
-    perimeter = cpm.currentState.perimeters[σ]
-    desiredPerimeter = cpm.currentState.desiredPerimeters[σ]
-    τⱼ = cpm.currentState.typeIDs[σ]
-
-    return PP.λₚ[τⱼ] * (perimeter - desiredPerimeter)^2
-end
-
-
-function perimeterLocal(space::CellSpace, n₀::T, σ::T) where T<: Integer
-    
-    perimeter = zero(T)
-
-    #Loop through the neighbors and calculate each neighbor perimeter penality
-    for n₁ in neighbors(space,n₀)
-        if space.nodeIDs[n₁] == σ
-            for n₂ in neighbors(space,n₁)
-                if space.nodeIDs[n₂] ≠ space.nodeIDs[n₁]
-                    perimeter += 1
-                end
-            end
-        end
-    end
-
-    #The source/target node only contributes if the current space node matches
-    if space.nodeIDs[n₀] == σ
-        for n₁ in neighbors(space,n₀)
-            if space.nodeIDs[n₁] ≠ space.nodeIDs[n₀]
-                perimeter += 1
-            end
-        end
-    end
-
-    return perimeter
-end
 ####################################################
 # Override Base.show
 ####################################################
@@ -340,8 +255,8 @@ function show(io::IO, cpm::CellPotts)
     end
 
     print("Model Penalties:")
-    for p in typeof.(cpm.penalties)
-        print(" $(p)")
+    for p in keys(cpm.penalties)
+        print(" $(replace(String(p),"Penalty"=>""))")
     end
     print("\n")
     println("Temperature: ", cpm.temperature)

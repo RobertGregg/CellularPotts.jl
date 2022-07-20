@@ -7,6 +7,7 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       StatsBase, Random, #Currently just used for countmap, inverse_rle; shuffle
       PrettyTables, #Make nice tables for the cell state
       LinearAlgebra, #Additional functionality for arrays
+      SparseArrays, #Improve speed for some large arrays
       Graphs, #Needed for creating graphs that look like graphDimension
       Metis #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
 
@@ -37,8 +38,8 @@ import Base: eltype,
              pairs
 
 include("Spaces.jl")
-include("Penalties.jl")
 include("Core.jl")
+include("Penalties.jl")
 include("InitializeCells.jl")
 include("MarkovStep.jl")
 include("CellActions.jl")
@@ -59,17 +60,20 @@ export
       CellPotts,
       getTypeID,
       perimeterLocal,
-#Penalties.jl
       Penalty,
       AdhesionPenalty,
       VolumePenalty,
       PerimeterPenalty,
       MigrationPenalty,
+#Penalties.jl
+      createPenalties,
+      addPenalty!,
 #InitializeCells.jl
       positionCellsRandom!,
       positionCells!,
 #MarkovStep.jl
       MHStep!,
+      applyPenalties,
 # #CellActions.jl
        CellDivision!,
        CellDeath!,
