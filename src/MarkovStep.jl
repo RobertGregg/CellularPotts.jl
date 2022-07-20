@@ -8,6 +8,7 @@ function MHStep!(cpm::CellPotts)
     step = cpm.step
     
     #Loop through until a good source target is found
+    #TODO If there are no cells, this will run forever
     searching = true
     while searching
         #Pick a random location on the graph
@@ -48,8 +49,8 @@ function MHStep!(cpm::CellPotts)
         #Need to update all cell and graph properties
         #---Cell properties---
 
-        for penalty in values(cpm.penalties)
-            updateStep!(cpm, step, penalty)
+        for i in eachindex(cpm.penalties)
+            updateStep!(cpm, step, cpm.penalties[i])
         end
 
         #---Graph properties---
@@ -99,8 +100,8 @@ end
 function applyPenalties(cpm)
     ΔH = 0
 
-    for p in keys(cpm.penalties)
-        ΔH += addPenalty!(cpm, cpm.penalties[p])
+    for i in eachindex(cpm.penalties)
+        ΔH += addPenalty!(cpm, cpm.penalties[i])
     end
 
     return ΔH

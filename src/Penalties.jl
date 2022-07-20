@@ -1,13 +1,4 @@
 ####################################################
-# Instaniate the penalties into a dictionary
-####################################################
-
-function createPenalties(penalties::Vector{T}) where T<:Penalty
-    penaltyKeys = Symbol.(typeof.(values(penalties)))
-    return Dict(penaltyKeys .=> penalties)
-end
-
-####################################################
 # Adhesion
 ####################################################
 

@@ -196,22 +196,23 @@ end
 # Structure for the model
 ####################################################
 
-mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, P<:Penalty}
+mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     space::CellSpace{N,T}
     initialState::cellTable{V}
     currentState::cellTable{V}
-    penalties::Dict{Symbol,P}
+    penalties::Vector{U}
     step::MHStepInfo{T}
     visual::Array{Int,N}
     temperature::Float64
 
-    function CellPotts(space::CellSpace{N,T}, initialCellState::cellTable{V}, penalties::Dict{Symbol,P}) where {N,T,V,P}
+    function CellPotts(space::CellSpace{N,T}, initialCellState::cellTable{V}, penalties::Vector{P}) where {N,T,V,P}
 
-        return new{N,T,V,P}(
+        U = Union{typeof.(penalties)...}
+        return new{N,T,V,U}(
             space,
             initialCellState,
             initialCellState,
-            penalties,
+            U[p for p in penalties],
             MHStepInfo(T),
             zeros(T,space.gridSize),
             20.0)
@@ -254,10 +255,10 @@ function show(io::IO, cpm::CellPotts)
         print("\n")
     end
 
-    print("Model Penalties:")
-    for p in keys(cpm.penalties)
-        print(" $(replace(String(p),"Penalty"=>""))")
-    end
+    # print("Model Penalties:")
+    # for p in cpm.penalties
+    #     print(" $(replace(String(p),"Penalty"=>""))")
+    # end
     print("\n")
     println("Temperature: ", cpm.temperature)
     print("Steps: ", cpm.step.stepCounter)

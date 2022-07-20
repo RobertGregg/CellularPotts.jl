@@ -12,22 +12,22 @@ initialCellState = newCellState(
 
 initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial);
 
-# penalties = createPenalties([
-#     AdhesionPenalty([0 20 20;
-#                     20 90 40;
-#                     20 40 90]),
-#     VolumePenalty([5,5]),
-#     PerimeterPenalty([5,5]),
-#     MigrationPenalty(10,1,[:TCells], space.gridSize)
-#     ])
-
-penalties = createPenalties([
+penalties = [
     AdhesionPenalty([0 20 20;
                     20 90 40;
                     20 40 90]),
     VolumePenalty([5,5]),
-    PerimeterPenalty([5,5])
-    ])
+    PerimeterPenalty([5,5]),
+    MigrationPenalty(10,1,[:TCells], space.gridSize)
+    ]
+
+# penalties = [
+#     AdhesionPenalty([0 20 20;
+#                     20 90 40;
+#                     20 40 90]),
+#     VolumePenalty([5,5]),
+#     PerimeterPenalty([5,5])
+#     ]
 
 
 cpm = CellPotts(space, initialCellState, penalties);
@@ -150,7 +150,7 @@ end
 
 
 #####################################################################
-using ManualDispatch, BenchmarkTools
+using BenchmarkTools
 
 
 abstract type S end
