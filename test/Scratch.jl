@@ -148,6 +148,11 @@ function runModel(cpm)
     end
 end
 
+
+#####################################################################
+using ManualDispatch, BenchmarkTools
+
+
 abstract type S end
 
 mutable struct model 
@@ -199,7 +204,26 @@ ss3 = [S1(5), S2(5), S3(5), S4(5)]
 function g1(m::model, ss)
     total = 0
     for s in values(ss)
-        total += f(m,s)
+        if s isa S1
+            total += f(m,s)
+        elseif s isa S2
+            total += f(m,s)
+        elseif s isa S3
+            total += f(m,s)
+        elseif s isa S4
+            total += f(m,s)
+        end
+    end
+
+    return total
+end
+
+
+function g3(m::model, ss)
+    total = 0
+
+    for s in values(ss)
+        total += @unionsplit((S1,S2,S3,S4), f(m,s))
     end
 
     return total
@@ -218,7 +242,7 @@ end
 
 function g2(m::model, ss)
     total = 0
-    @inbounds for i in keys(ss)
+    for i in keys(ss)
         total += f(m,ss[i])
     end
 
