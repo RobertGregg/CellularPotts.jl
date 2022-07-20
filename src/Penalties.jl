@@ -144,15 +144,15 @@ end
 # Migration
 ####################################################
 
-# function addPenalty!(cpm::CellPotts, MP::MigrationPenalty)
+function addPenalty!(cpm::CellPotts, MP::MigrationPenalty)
 
-#     return MP.λ * (addPenalty!(cpm, MP, cpm.step.targetNode) - addPenalty!(cpm, MP, cpm.step.sourceNode))
-# end
+    return MP.λ * (addPenalty!(cpm, MP, cpm.step.targetNode) - addPenalty!(cpm, MP, cpm.step.sourceNode))
+end
 
 
-# function addPenalty!(cpm::CellPotts, MP::MigrationPenalty, σ::T) where T<:Integer
+function addPenalty!(cpm::CellPotts, MP::MigrationPenalty, σ::T) where T<:Integer
 
-#     memoryNeighbors = view(MP.nodeMemory, neighbors(cpm.space,σ))
-#     numNeighbors = length(memoryNeighbors)
-#     return any(iszero,memoryNeighbors) ? 0 : sum(memoryNeighbors) ÷ numNeighbors
-# end
+    memoryNeighbors = view(MP.nodeMemory, neighbors(cpm.space,σ))
+    numNeighbors = length(memoryNeighbors)
+    return any(iszero,memoryNeighbors) ? 0 : sum(memoryNeighbors) ÷ numNeighbors
+end
