@@ -277,11 +277,28 @@ g1 = zeros(Int,n)
 for (i,v) = enumerate(with_replacement_combinations(mRange,neighborCount))
     m[i] = mean(v)
     g[i] = geomean(v)
-    g1[i] = any(iszero,v) ? 0 : sum(v) ÷ 8
+    g1[i] = any(iszero,v) ? 0 : sum(v) ÷ neighborCount
 end
 
 density(m)
 density!(g)
+
+
+plot(
+    m,
+    g,
+    seriestype = :histogram2d,
+    c = :vik,
+    nbins = 21,
+    show_empty_bins = :true,
+    aspect_ratio=:equal,
+    xlims = (0,20),
+    ylims = (0,20),
+    xlabel = "Arithmetic Mean",
+    ylabel = "Geometric Mean",
+       )
+
+plot!(0:20,0:20, legend=false)
 
 
 plot(
@@ -300,28 +317,7 @@ plot(
 
 plot!(0:20,0:20, legend=false)
 
-
 histogram(g, normalize=:probability)
 histogram!(m, normalize=:probability)
 
 #####################################################################
-
-
-v = rand(1:2,1_000_000)
-idx = findall(isequal(1),v)
-
-function f1(v,idx)
-    for i in idx
-        if v[i] ≠ 1
-            return false
-        end
-    end
-
-    return true
-end
-
-function f2(v,idx)
-    return @inbounds all(isequal(1), view(v,idx))
-end
-
-f3(v,idx) = all(v[i] == 1 for i in idx)

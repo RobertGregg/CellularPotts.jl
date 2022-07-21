@@ -9,9 +9,7 @@ function CellGUI(cpm::CellPotts)
     # heatmap_node is an array that updates when timestep updates
     heatmap_node = @lift begin
         currentTime = $timestep
-        for i = 1:prod(cpm.space.gridSize)
-            MHStep!(cpm)
-        end
+        ModelStep!(cpm)
         cpm.visual
     end
 

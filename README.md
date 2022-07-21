@@ -14,7 +14,7 @@ The goal of this package is to develop a cellular, agent-based modeling approach
 
 Researchers and developers have been able to accomplish a lot with their respective softwares and I would urge anyone to check them out. My favorites are [Morpheus](https://morpheus.gitlab.io/), [Artistoo](https://artistoo.net/), and [CompuCell3D](https://compucell3d.org/). This package takes a lot of inspiration from their design and pedagogical examples.
 
-Careful attention has been taken to ensure this package is as performant as I can possibly make it (particually with type stability and allocations). For example, stepping the model forward in time produces not allocations. However, if you spot something egregious in the codebase, feel free to raise an issue or pull request.
+Careful attention has been taken to ensure this package is as performant as I can possibly make it (particually with type stability and allocations). For example, stepping the model forward in time produces no allocations. However, if you spot something egregious in the codebase, feel free to raise an issue or pull request.
 
 Also of note, **this package is still in major development and is not currently recommended for general use**. I'm still working out how to best organize datastructures and functionally. However, still feel free to try it if you're curious. 
 

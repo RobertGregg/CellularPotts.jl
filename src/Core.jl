@@ -13,51 +13,37 @@ estPerimeter(V::Int) = iszero(V) ? 0 : 4ceil(Int,2sqrt(V)-3) + 2ceil(Int,2sqrt(V
 #Returns a zero indexed array
 offset(x) = OffsetArray(x, Origin(0))
 
-#Check if any lengths in a collection are different
-#Works even if the you can't broadcast a function to the collection (e.g. Dict, NamedTuple)
-function differentSizes(x)
-    validLength = length(first(x))
-
-    for obj in x
-        if length(obj) ≠ validLength
-            return true
-        end
-    end
-
-    return false
-end
-
 ####################################################
 # Table to hold cell information
 ####################################################
 
 #Could use something like TypedDelegation.jl to pass functions to data
 
-mutable struct cellTable{T<:NamedTuple}
+mutable struct CellTable{T<:NamedTuple}
     data::T
 end
 
 ####################################################
-# Same basic methods for cellTable
+# Same basic methods for CellTable
 ####################################################
 
-countcells(df::cellTable) = length(df.cellIDs) - 1
-countcelltypes(df::cellTable) = length(unique(df.typeIDs)) - 1
+countcells(df::CellTable) = length(df.cellIDs) - 1
+countcelltypes(df::CellTable) = length(unique(df.typeIDs)) - 1
 
 #From Base, used for stuff like view(Array) to get the Array back
-parent(df::cellTable) = getfield(df,:data)
+parent(df::CellTable) = getfield(df,:data)
 
-getproperty(df::cellTable, name::Symbol) = getproperty(parent(df), name)
+getproperty(df::CellTable, name::Symbol) = getproperty(parent(df), name)
 
-merge(df::cellTable, newColumn) = cellTable( merge(parent(df), newColumn) )
+merge(df::CellTable, newColumn) = CellTable( merge(parent(df), newColumn) )
 
-keys(df::cellTable) = keys(parent(df))
-values(df::cellTable) = values(parent(df))
-pairs(df::cellTable) = pairs(parent(df))
+keys(df::CellTable) = keys(parent(df))
+values(df::CellTable) = values(parent(df))
+pairs(df::CellTable) = pairs(parent(df))
 
 #TODO maybe impliment a row object, or think about Tables.jl more
-iterate(df::cellTable, iter=1) = iter ≥ countcells(df) ? nothing : ((;((k,v[iter]) for (k,v) in pairs(df))...), iter + 1)
-getindex(df::cellTable, i::Int) = (;((k,[v[i]]) for (k,v) in pairs(df))...)
+iterate(df::CellTable, iter=1) = iter ≥ countcells(df) ? nothing : ((;((k,v[iter]) for (k,v) in pairs(df))...), iter + 1)
+getindex(df::CellTable, i::Int) = (;((k,[v[i]]) for (k,v) in pairs(df))...)
 
 
 ####################################################
@@ -84,12 +70,12 @@ function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{
         desiredPerimeters = estPerimeter.(inverse_rle(volumes, counts))
     )
 
-    return cellTable(map(offset, data))
+    return CellTable(map(offset, data))
      
 end
 
 #Add property for one cell type
-function addCellProperty(df::cellTable, propertyName::Symbol, defaultValue, cellName::Symbol)
+function addCellProperty(df::CellTable, propertyName::Symbol, defaultValue, cellName::Symbol)
 
     newColumn = offset([name == cellName ? defaultValue : missing for name in df.names])
 
@@ -97,7 +83,7 @@ function addCellProperty(df::cellTable, propertyName::Symbol, defaultValue, cell
 end
 
 #Or for more than one cell type
-function addCellProperty(df::cellTable, propertyName::Symbol, defaultValue, cellName::Vector{Symbol})
+function addCellProperty(df::CellTable, propertyName::Symbol, defaultValue, cellName::Vector{Symbol})
 
     newColumn = offset([name ∈ cellName ? defaultValue : missing for name in df.names])
 
@@ -105,7 +91,7 @@ function addCellProperty(df::cellTable, propertyName::Symbol, defaultValue, cell
 end
 
 #Or for all cells
-function addCellProperty(df::cellTable, propertyName::Symbol, values::Vector{T}) where T
+function addCellProperty(df::CellTable, propertyName::Symbol, values::Vector{T}) where T
 
     pushfirst!(values, first(values)) # note sure what to do about medium
     newColumn = offset(values)
@@ -114,7 +100,7 @@ function addCellProperty(df::cellTable, propertyName::Symbol, values::Vector{T})
 end
 
 
-function addNewCell(df::cellTable, cell::T) where T<:NamedTuple
+function addNewCell(df::CellTable, cell::T) where T<:NamedTuple
     #TODO Need some checks (e.g. all cells have unique ids, all the keys match)
     for property in keys(df)
         append!(parent(df)[property], cell[property])
@@ -198,15 +184,16 @@ end
 
 mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     space::CellSpace{N,T}
-    initialState::cellTable{V}
-    currentState::cellTable{V}
+    initialState::CellTable{V}
+    currentState::CellTable{V}
     penalties::Vector{U}
     step::MHStepInfo{T}
     visual::Array{Int,N}
     temperature::Float64
 
-    function CellPotts(space::CellSpace{N,T}, initialCellState::cellTable{V}, penalties::Vector{P}) where {N,T,V,P}
+    function CellPotts(space::CellSpace{N,T}, initialCellState::CellTable{V}, penalties::Vector{P}) where {N,T,V,P}
 
+        #See https://github.com/JuliaLang/julia/pull/44131 for why Unions are used
         U = Union{typeof.(penalties)...}
         return new{N,T,V,U}(
             space,
@@ -255,16 +242,17 @@ function show(io::IO, cpm::CellPotts)
         print("\n")
     end
 
-    # print("Model Penalties:")
-    # for p in cpm.penalties
-    #     print(" $(replace(String(p),"Penalty"=>""))")
-    # end
+    print("Model Penalties:")
+    for p in Base.uniontypes(eltype(cpm.penalties))
+        p = Symbol(p)
+        print(" $(replace(String(p),"Penalty"=>""))")
+    end
     print("\n")
     println("Temperature: ", cpm.temperature)
     print("Steps: ", cpm.step.stepCounter)
 end
 
-function show(io::IO, intState::cellTable) 
+function show(io::IO, intState::CellTable) 
 
     data = map(OffsetArrays.no_offset_view, getfield(intState,:data))
 

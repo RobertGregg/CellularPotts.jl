@@ -1,3 +1,5 @@
+#Note, the Types definitions are in Core.jl (e.g. struct AdhesionPenalty ... end)
+
 ####################################################
 # Adhesion
 ####################################################
