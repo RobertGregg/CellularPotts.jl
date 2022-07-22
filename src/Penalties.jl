@@ -1,11 +1,4 @@
-####################################################
-# Instaniate the penalties into a dictionary
-####################################################
-
-function createPenalties(penalties::Vector{T}) where T<:Penalty
-    penaltyKeys = Symbol.(typeof.(values(penalties)))
-    return Dict(penaltyKeys .=> penalties)
-end
+#Note, the Types definitions are in Core.jl (e.g. struct AdhesionPenalty ... end)
 
 ####################################################
 # Adhesion

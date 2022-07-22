@@ -20,7 +20,7 @@ function CellDivision!(cpm::CellPotts, σ::Int)
         cpm.currentState.volumes[σ] = count(isequal(1), nodePartition)
     #Add new cell
         cell = cpm.currentState[σ]
-        cell.cellIDs[1] = maximum(cpm.currentState.cellIDs) + 1
+        cell.cellIDs[1] = maximum(cpm.currentState.cellIDs) + 1 #now have n+1 cells
         cell.volumes[1] = count(isequal(2), nodePartition)
         addNewCell(cpm.currentState, cell)
 

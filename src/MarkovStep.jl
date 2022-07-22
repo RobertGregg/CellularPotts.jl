@@ -4,39 +4,36 @@
 
 function MHStep!(cpm::CellPotts)
 
-    #unpack current step structure update
+    #unpack current step structure
     step = cpm.step
     
-    #Loop through until a good source target is found
-    searching = true
-    while searching
-        #Pick a random location on the graph
-        step.sourceNode = rand(1:nv(cpm.space))
-        #What cell does it belong to?
-        step.sourceCellID = cpm.space.nodeIDs[step.sourceNode]
 
-        #Get all of the unique cell IDs neighboring this Node
-        step.neighborNodes = neighbors(cpm.space, step.sourceNode)
+    #Pick a random location on the graph
+    step.sourceNode = rand(1:nv(cpm.space))
+    #What cell does it belong to?
+    step.sourceCellID = cpm.space.nodeIDs[step.sourceNode]
 
-        #Choose a target
-        step.targetNode = rand(step.neighborNodes)
-        step.targetCellID = cpm.space.nodeIDs[step.targetNode]
+    #Get all of the unique cell IDs neighboring this Node
+    step.neighborNodes = neighbors(cpm.space, step.sourceNode)
 
-        #Some checks before attempting a flip
-            #In the middle of a cell
-            inMiddle = all(isequal(step.sourceCellID, cpm.space.nodeIDs[n]) for n in step.neighborNodes)
-            #target is the same as source cell 
-            isSource = step.targetCellID == step.sourceCellID
+    #Choose a target
+    step.targetNode = rand(step.neighborNodes)
+    step.targetCellID = cpm.space.nodeIDs[step.targetNode]
 
-        #if all checks pass, attempt flip
-        if !(inMiddle | isSource) 
-            searching = false
-        end
-    end    
+    #Some checks before attempting a flip
+    #In the middle of a cell
+    if all(isequal(step.sourceCellID, cpm.space.nodeIDs[n]) for n in step.neighborNodes)
+        return nothing
+    end
+
+    #target is the same as source cell 
+    if step.targetCellID == step.sourceCellID
+        return nothing
+    end
 
 
 
-    #Calculate the change in energy when source node is modified
+    #Calculate the change in energy when target node is modified
     #ΔH =  sum(f(cpm, step) for f in cpm.parameters.penalties)
     ΔH =  applyPenalties(cpm)
 
@@ -48,8 +45,8 @@ function MHStep!(cpm::CellPotts)
         #Need to update all cell and graph properties
         #---Cell properties---
 
-        for penalty in values(cpm.penalties)
-            updateStep!(cpm, step, penalty)
+        for i in eachindex(cpm.penalties)
+            updateStep!(cpm, step, cpm.penalties[i])
         end
 
         #---Graph properties---
@@ -63,8 +60,20 @@ function MHStep!(cpm::CellPotts)
         #---Overall properties---
         #Update visual
         cpm.visual[step.sourceNode] = cpm.currentState.typeIDs[step.targetCellID]
-        cpm.step.stepCounter += 1
     end
+
+    return nothing
+end
+
+
+####################################################
+# Model Step
+####################################################
+function ModelStep!(cpm::CellPotts)
+    for _ in 1:prod(cpm.space.gridSize)
+        MHStep!(cpm)
+    end
+    cpm.step.stepCounter += 1
 
     return nothing
 end
@@ -101,8 +110,8 @@ end
 function applyPenalties(cpm)
     ΔH = 0
 
-    for p in keys(cpm.penalties)
-        ΔH += addPenalty!(cpm, cpm.penalties[p])
+    for i in eachindex(cpm.penalties)
+        ΔH += addPenalty!(cpm, cpm.penalties[i])
     end
 
     return ΔH

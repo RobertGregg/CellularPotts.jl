@@ -131,7 +131,7 @@ function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=mooreN
     grid = reshape(1:nodes, gridSize...)
 
     neighborIndices = vec([cellNeighbors(n) for n in CartesianIndices(grid)])
-    fadjlist = [zeros(T, 3^N - 1) for _ in 1:nodes]
+    fadjlist = [zeros(T, 3^N - 1) for _ in 1:nodes] #assumes worse case senario (i.e. mooreNeighbors)
 
     for (i,n) in enumerate(neighborIndices)
         if wrapAround

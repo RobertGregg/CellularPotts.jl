@@ -66,7 +66,6 @@ export
       PerimeterPenalty,
       MigrationPenalty,
 #Penalties.jl
-      createPenalties,
       addPenalty!,
 #InitializeCells.jl
       positionCellsRandom!,
@@ -74,6 +73,7 @@ export
 #MarkovStep.jl
       MHStep!,
       applyPenalties,
+      ModelStep!,
 # #CellActions.jl
        CellDivision!,
        CellDeath!,
