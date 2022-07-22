@@ -121,6 +121,11 @@ function addNewCell(df::cellTable, cell::T) where T<:NamedTuple
     end
 end
 
+function removeCell(df::cellTable, σ::T) where T<:Integer
+    for property in keys(df)
+        deleteat!(parent(df)[property], σ)
+    end
+end
 
 ####################################################
 # Penalties
@@ -177,18 +182,15 @@ end
 # Variables for Markov Step 
 ####################################################
 
-#These could be static arrays?
-mutable struct MHStepInfo{T<:Integer}
-    sourceNode::T                 #Index of node choosen
-    targetNode::T                 #Index of node choosen
-    neighborNodes::Vector{T}      #Indicies for the neighboring nodes
-    sourceCellID::T               #ID of sourceNode
-    targetCellID::T               #ID of chosen cell target
-    stepCounter::T                #Counts the number of MHSteps performed
-
-    function MHStepInfo(T::DataType)
-        return new{T}(zero(T), zero(T), zeros(T,8), zero(T), zero(T), zero(T))
-    end
+#T[] could be static arrays, would need to provide # of neighbors
+Base.@kwdef mutable struct MHStepInfo{T<:Integer}
+    sourceNode = zero(T)      #Index of node choosen
+    targetNode = zero(T)      #Index of node choosen
+    sourceNeighborNodes = T[] #Indicies for the neighboring nodes
+    targetNeighborNodes = T[] #Indicies for the neighboring nodes
+    sourceCellID = zero(T)    #ID of sourceNode
+    targetCellID = zero(T)    #ID of chosen cell target
+    stepCounter = zero(T)     #Counts the number of MHSteps performed
 end
 
 
@@ -212,7 +214,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, P<:Penalty}
             initialCellState,
             initialCellState,
             penalties,
-            MHStepInfo(T),
+            MHStepInfo{T}(),
             zeros(T,space.gridSize),
             20.0)
     end

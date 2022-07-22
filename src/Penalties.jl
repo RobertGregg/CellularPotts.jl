@@ -17,11 +17,11 @@ end
 
 function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty, σᵢ::T) where T<:Integer
     #Initialize the penality
-    adhesion = 0
+    adhesion = zero(T)
 
     τᵢ = cpm.currentState.typeIDs[σᵢ]
 
-    for neighbor in cpm.step.neighborNodes
+    for neighbor in cpm.step.targetNeighborNodes
         #Given a node index, get the cellID
         σⱼ = cpm.space.nodeIDs[neighbor]
 
@@ -119,8 +119,11 @@ function perimeterLocal(space::CellSpace, n₀::T, σ::T) where T<: Integer
 
     #Loop through the neighbors and calculate each neighbor perimeter penality
     for n₁ in neighbors(space,n₀)
+        #Only add perimeter penality for the given cellID
         if space.nodeIDs[n₁] == σ
+            #To calculate each neighbor perimeter penality, loop through it's neighbors
             for n₂ in neighbors(space,n₁)
+                #Penalize Perimeter if the pixels do not match
                 if space.nodeIDs[n₂] ≠ space.nodeIDs[n₁]
                     perimeter += 1
                 end
@@ -144,6 +147,12 @@ end
 # Migration
 ####################################################
 
+#=
+The orginal method to calculate migration penality using geometric mean. This is problematic because it introduces floating point calculations. Here we instead calculate an integer rounded arithmetic mean and map any neighorbood containing zeros to zero. This mimics the desired behavior of the geometric mean where neighborhoods “with holes” (i.e., lattice sites with activity value zero) are ignored.
+
+This change might become moot when chemotaxis is introduced. Gradient field with unavoidably introduce floating point calculations.
+=#
+
 function addPenalty!(cpm::CellPotts, MP::MigrationPenalty)
 
     return MP.λ * (addPenalty!(cpm, MP, cpm.step.targetNode) - addPenalty!(cpm, MP, cpm.step.sourceNode))
@@ -156,3 +165,7 @@ function addPenalty!(cpm::CellPotts, MP::MigrationPenalty, σ::T) where T<:Integ
     numNeighbors = length(memoryNeighbors)
     return any(iszero,memoryNeighbors) ? 0 : sum(memoryNeighbors) ÷ numNeighbors
 end
+
+####################################################
+# Chemotaxis
+####################################################

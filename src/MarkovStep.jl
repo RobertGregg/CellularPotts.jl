@@ -58,6 +58,8 @@ function MHStep!(cpm::CellPotts)
         cpm.space.nodeIDs[step.sourceNode] = step.targetCellID
         cpm.space.nodeTypes[step.sourceNode] = cpm.currentState.names[step.targetCellID]
         
+        #TODO Add articulation point updater 
+        
         #---Overall properties---
         #Update visual
         cpm.visual[step.sourceNode] = cpm.currentState.typeIDs[step.targetCellID]

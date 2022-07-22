@@ -7,6 +7,16 @@
 
 
 #TODO Allow image input
+#need two inputs:
+    #1) image colored by cell ID
+    #2) image colored by cell type
+function PositionCellImage(cellMembership<:AbstractArray{T}) where T
+    
+    space = CellSpace(size(cellMembership)...)
+
+
+end
+
 
 #Once the cells are positioned, update the model
 function updateCellMembership!(cpm, cellMembership)
