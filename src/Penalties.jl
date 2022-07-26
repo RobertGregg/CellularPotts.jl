@@ -5,7 +5,7 @@
 ####################################################
 
 function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty)
-    return addPenalty!(cpm, AP, cpm.step.targetCellID) - addPenalty!(cpm, AP, cpm.step.sourceCellID)
+    return addPenalty!(cpm, AP, cpm.step.sourceCellID) - addPenalty!(cpm, AP, cpm.step.targetCellID) 
 end
 
 function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty, σᵢ::T) where T<:Integer
@@ -38,14 +38,14 @@ function addPenalty!(cpm::CellPotts, VP::VolumePenalty)
     sourceVolume = addPenalty!(cpm, VP, σᵢ) + addPenalty!(cpm, VP, σⱼ)
    
     #Change the volumes and recalculate penalty
-    cpm.currentState.volumes[σᵢ] -= 1
-    cpm.currentState.volumes[σⱼ] += 1
+    cpm.currentState.volumes[σᵢ] += 1
+    cpm.currentState.volumes[σⱼ] -= 1
 
     targetVolume = addPenalty!(cpm, VP, σᵢ) + addPenalty!(cpm, VP, σⱼ)
 
     #Reset the volumes
-    cpm.currentState.volumes[σᵢ] += 1
-    cpm.currentState.volumes[σⱼ] -= 1
+    cpm.currentState.volumes[σᵢ] -= 1
+    cpm.currentState.volumes[σⱼ] += 1
 
     return targetVolume - sourceVolume
 end
@@ -82,16 +82,16 @@ function addPenalty!(cpm::CellPotts, PP::PerimeterPenalty)
 
    
     #Change the perimeters and recalculate penalty
-    cpm.currentState.perimeters[σᵢ] -= PP.Δpᵢ
-    cpm.currentState.perimeters[σⱼ] += PP.Δpⱼ
+    cpm.currentState.perimeters[σᵢ] += PP.Δpᵢ
+    cpm.currentState.perimeters[σⱼ] -= PP.Δpⱼ
 
     targetPerimeter = addPenalty!(cpm, PP, σᵢ) + addPenalty!(cpm, PP, σⱼ)
 
     #Reset the perimeters (and space)
-    cpm.currentState.perimeters[σᵢ] += PP.Δpᵢ
-    cpm.currentState.perimeters[σⱼ] -= PP.Δpⱼ
+    cpm.currentState.perimeters[σᵢ] -= PP.Δpᵢ
+    cpm.currentState.perimeters[σⱼ] += PP.Δpⱼ
 
-    cpm.space.nodeIDs[node] = σᵢ
+    cpm.space.nodeIDs[node] = σⱼ
 
     return targetPerimeter - sourcePerimeter
 end

@@ -65,12 +65,12 @@ function plotCells(cpm::CellPotts)
     axSim = fig[1, 1] = Axis(fig, title = "Simulation")
 
     cmap = ColorSchemes.nipy_spectral
-    distintCellTypes = countcelltypes(cpm) + 1
+    #distintCellTypes = countcelltypes(cpm) + 1
 
     heatmap!(axSim,
                 cpm.visual,
                 show_axis = false,
-                colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true)) #:Greys_3
+                colormap = :Greys_3) #cgrad(cmap, distintCellTypes, categorical=true, rev=true)
         tightlimits!.(axSim)
         hidedecorations!.(axSim) #removes axis numbers
 
@@ -110,28 +110,21 @@ using CellularPotts
 
 #Example Model
 
-space = CellSpace(100,100)
+space = CellSpace(200,200)
 
 initialCellState = newCellState(
-    [:Epithelial, :TCells, :BCells],
-    [75, 50, 40],
-    [10, 10, 10]);
+    [:Epithelial],
+    [500],
+    [1]);
 
-initialCellState = addCellProperty(initialCellState, :isTumor, false, :Epithelial)
-
-
-positions = [(rand(1:space.gridSize[1]), rand(1:space.gridSize[2])) for _ in 1:maximum(initialCellState.cellIDs)]
+positions = [(100,100)]
 
 initialCellState = addCellProperty(initialCellState, :positions, positions)
 
-
 penalties = [
-    AdhesionPenalty([0 20 20 20;
-                    20 90 40 40;
-                    20 40 90 40;
-                    20 40 40 90]),
-    VolumePenalty([5,5,5]),
-    PerimeterPenalty([5,5,5])
+    AdhesionPenalty([0 20;
+                    20 100]),
+    VolumePenalty([50])
     ]
 
 

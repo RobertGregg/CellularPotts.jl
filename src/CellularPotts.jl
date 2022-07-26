@@ -72,7 +72,7 @@ export
       positionCells!,
 #MarkovStep.jl
       MHStep!,
-      applyPenalties,
+      calculateΔH,
       ModelStep!,
 # #CellActions.jl
        CellDivision!,

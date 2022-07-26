@@ -91,12 +91,12 @@ function CellGUI(cpm::CellPotts)
 
     #partition a random cell when button is clicked 
     on(cellDivideButton.clicks) do clicks
-        CellDivision!(cpm,rand(cpm.currentState.cellIDs))
+        CellDivision!(cpm,rand(1:countcells(cpm)))
     end
 
     #Choose a random cell to kill
     on(cellDeathButton.clicks) do clicks
-        CellDeath!(cpm,rand(cpm.currentState.cellIDs))
+        CellDeath!(cpm,rand(1:countcells(cpm)))
     end
 
     display(fig)

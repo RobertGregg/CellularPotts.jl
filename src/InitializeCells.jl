@@ -10,12 +10,6 @@
 #need two inputs:
     #1) image colored by cell ID
     #2) image colored by cell type
-function PositionCellImage(cellMembership<:AbstractArray{T}) where T
-    
-    space = CellSpace(size(cellMembership)...)
-
-
-end
 
 
 #Once the cells are positioned, update the model
@@ -45,7 +39,8 @@ function updateCellMembership!(cpm, cellMembership)
 
     #Fill the the array for the visual
     #cpm.space.nodeTypes are symbols so cpm.visual ≠ cpm.space.nodeTypes
-    cpm.visual = [cpm.currentState.typeIDs[i] for i in cellMembership]
+    #cpm.visual = [cpm.currentState.typeIDs[i] for i in cellMembership]
+    cpm.visual = cellMembership
 end
 
 

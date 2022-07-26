@@ -7,35 +7,37 @@ function MHStep!(cpm::CellPotts)
     #unpack current step structure
     step = cpm.step
     
-
     #Pick a random location on the graph
     step.sourceNode = rand(1:nv(cpm.space))
     #What cell does it belong to?
     step.sourceCellID = cpm.space.nodeIDs[step.sourceNode]
 
-    #Get all of the unique cell IDs neighboring this Node
-    step.neighborNodes = neighbors(cpm.space, step.sourceNode)
+    #Get all cell IDs neighboring this Node
+    step.sourceNeighborNodes = neighbors(cpm.space, step.sourceNode)
 
     #Choose a target
-    step.targetNode = rand(step.neighborNodes)
+    step.targetNode = rand(step.sourceNeighborNodes)
     step.targetCellID = cpm.space.nodeIDs[step.targetNode]
-
+    
     #Some checks before attempting a flip
-    #In the middle of a cell
-    if all(isequal(step.sourceCellID, cpm.space.nodeIDs[n]) for n in step.neighborNodes)
-        return nothing
-    end
 
-    #target is the same as source cell 
+    #target and source same cell? 
     if step.targetCellID == step.sourceCellID
         return nothing
     end
 
+    #In the middle of a cell?
+    if all(isequal(step.sourceCellID, cpm.space.nodeIDs[n]) for n in step.sourceNeighborNodes)
+        return nothing
+    end
 
+    #Get all cell nodes neighboring for target node
+    step.targetNeighborNodes = neighbors(cpm.space, step.targetNode)
 
     #Calculate the change in energy when target node is modified
     #ΔH =  sum(f(cpm, step) for f in cpm.parameters.penalties)
-    ΔH =  applyPenalties(cpm)
+    ΔH =  calculateΔH(cpm)
+
 
     #Calculate an acceptance ratio
     acceptRatio = min(1.0,exp(-ΔH/cpm.temperature))
@@ -52,14 +54,14 @@ function MHStep!(cpm::CellPotts)
         #---Graph properties---
 
         #Cell IDs
-        cpm.space.nodeIDs[step.sourceNode] = step.targetCellID
-        cpm.space.nodeTypes[step.sourceNode] = cpm.currentState.names[step.targetCellID]
+        cpm.space.nodeIDs[step.targetNode] = step.sourceCellID
+        cpm.space.nodeTypes[step.targetNode] = cpm.currentState.names[step.sourceCellID]
         
         #TODO Add articulation point updater 
         
         #---Overall properties---
         #Update visual
-        cpm.visual[step.sourceNode] = cpm.currentState.typeIDs[step.targetCellID]
+        cpm.visual[step.targetNode] = cpm.currentState.typeIDs[step.sourceCellID]
     end
 
     return nothing
@@ -78,27 +80,29 @@ function ModelStep!(cpm::CellPotts)
     return nothing
 end
 
+#18.424 ms, Memory estimate: 1.29 MiB, allocs estimate: 82158.
+
 
 updateStep!(cpm::CellPotts, step::MHStepInfo, AP::AdhesionPenalty) = nothing
 
 function updateStep!(cpm::CellPotts, step::MHStepInfo, VP::VolumePenalty)
     #Update cell volumes
-    cpm.currentState.volumes[step.sourceCellID] -= 1
-    cpm.currentState.volumes[step.targetCellID] += 1
+    cpm.currentState.volumes[step.sourceCellID] += 1
+    cpm.currentState.volumes[step.targetCellID] -= 1
     return nothing
 end
 
 function updateStep!(cpm::CellPotts, step::MHStepInfo, PP::PerimeterPenalty)
     #Update cell perimeters
-    cpm.currentState.perimeters[step.sourceCellID] -= PP.Δpᵢ
-    cpm.currentState.perimeters[step.targetCellID] += PP.Δpⱼ
+    cpm.currentState.perimeters[step.sourceCellID] += PP.Δpᵢ
+    cpm.currentState.perimeters[step.targetCellID] -= PP.Δpⱼ
     return nothing
 end
 
-
+#TODO should only update every model step?
 function updateStep!(cpm::CellPotts, step::MHStepInfo, MP::MigrationPenalty)
     
-    #Reduce the node Mo=emory by 1 and remove zeros
+    #Reduce the node Moemory by 1 and remove zeros
     MP.nodeMemory.nzval .-= 1
     dropzeros!(MP.nodeMemory)
     
@@ -107,9 +111,10 @@ function updateStep!(cpm::CellPotts, step::MHStepInfo, MP::MigrationPenalty)
     return nothing
 end
 
-function applyPenalties(cpm)
+function calculateΔH(cpm)
     ΔH = 0
 
+    #loop though indices to exploit known union types
     for i in eachindex(cpm.penalties)
         ΔH += addPenalty!(cpm, cpm.penalties[i])
     end
