@@ -50,6 +50,34 @@ getindex(df::CellTable, i::Int) = (;((k,[v[i]]) for (k,v) in pairs(df))...)
 # Function to create a new cell state
 ####################################################
 
+"""
+    newCellState(names, volumes, counts)
+Create a new `cellTable` where each row corresponds to a cell.
+
+By default, this function generates a table with the following columns:
+
+======================================================================
+
+names`::Vector{Symbol}`: List of names given to cells (e.g. `:TCell`)
+
+cellIDs`::Vector{<:Integer}`: A unqiue number given to a cell
+
+typeIDs`::Vector{<:Integer}`: A number corresponding to the cell's name
+
+volumes`::Vector{<:Integer}`: Number of grid squares occupied 
+
+desiredVolumes`::Vector{<:Integer}`: Desired number of grid square
+
+perimeters`::Vector{<:Integer}`: Cell boarder penality
+
+desiredPerimeters`::Vector{<:Integer}`: Desired cell boarder penality
+
+======================================================================
+
+The first row in the table is reserved for `:Medium` which is the name given to grid locations not belonging to any cell and is given an index of 0 (The first cell is given an index of 1).
+    
+Of note, `desiredPerimeters` is calculated as the minimal perimeter given the cell's volume. 
+"""
 function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
 
     #Does not include Medium

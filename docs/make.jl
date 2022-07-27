@@ -2,7 +2,7 @@ using Documenter
 using CellularPotts
 
 makedocs(
-    sitename = "CellularPotts",
+    sitename = "CellularPotts.jl",
     format = Documenter.HTML(),
     modules = [CellularPotts]
 )
