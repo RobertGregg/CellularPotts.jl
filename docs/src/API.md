@@ -1,4 +1,4 @@
-# Core functions
+# API
 
 _CellularPotts.jl_ includes the following core functions.
 

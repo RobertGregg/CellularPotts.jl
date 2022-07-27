@@ -4,7 +4,10 @@ using CellularPotts
 makedocs(
     sitename = "CellularPotts.jl",
     format = Documenter.HTML(),
-    modules = [CellularPotts]
+    modules = [CellularPotts],
+    pages = [
+        "Introduction" => "index.md",
+        "API.md"]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.

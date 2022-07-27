@@ -19,6 +19,12 @@ offset(x) = OffsetArray(x, Origin(0))
 
 #Could use something like TypedDelegation.jl to pass functions to data
 
+"""
+    CellTable
+An concrete type that stores a table where each row is a cell and each column is a cell property.
+
+This table can be genereated using the `newCellState()` function.
+"""
 mutable struct CellTable{T<:NamedTuple}
     data::T
 end
@@ -55,28 +61,17 @@ getindex(df::CellTable, i::Int) = (;((k,[v[i]]) for (k,v) in pairs(df))...)
 Create a new `cellTable` where each row corresponds to a cell.
 
 By default, this function generates a table with the following columns:
-
-======================================================================
-
-names`::Vector{Symbol}`: List of names given to cells (e.g. `:TCell`)
-
-cellIDs`::Vector{<:Integer}`: A unqiue number given to a cell
-
-typeIDs`::Vector{<:Integer}`: A number corresponding to the cell's name
-
-volumes`::Vector{<:Integer}`: Number of grid squares occupied 
-
-desiredVolumes`::Vector{<:Integer}`: Desired number of grid square
-
-perimeters`::Vector{<:Integer}`: Cell boarder penality
-
-desiredPerimeters`::Vector{<:Integer}`: Desired cell boarder penality
-
-======================================================================
+ - names`::Vector{Symbol}`: List of names given to cells (e.g. `:TCell`)
+ - cellIDs`::Vector{<:Integer}`: A unqiue number given to a cell
+ - typeIDs`::Vector{<:Integer}`: A number corresponding to the cell's name
+ - volumes`::Vector{<:Integer}`: Number of grid squares occupied 
+ - desiredVolumes`::Vector{<:Integer}`: Desired number of grid square
+ - perimeters`::Vector{<:Integer}`: Cell border penality
+ - desiredPerimeters`::Vector{<:Integer}`: Desired cell border penality
 
 The first row in the table is reserved for `:Medium` which is the name given to grid locations not belonging to any cell and is given an index of 0 (The first cell is given an index of 1).
     
-Of note, `desiredPerimeters` is calculated as the minimal perimeter given the cell's volume. 
+Of note, `desiredPerimeters` are calculated as the minimal perimeter given the cell's volume. 
 """
 function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
 
@@ -103,6 +98,18 @@ function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{
 end
 
 #Add property for one cell type
+"""
+    addCellProperty(df::CellTable, propertyName, defaultValue, cellName)
+    addCellProperty(df::CellTable, propertyName, values)
+
+Given a `cellTable`, add a new column called `propertyName` with a given default value.
+
+A `cellTable` is generated using the `newCellState()` function.
+
+`cellName` can be the name of one cell type or a vector of cell types. Cells not included in `cellName` will be given a value of `missing`.
+
+If cellNames are not specified, a vector of `values` can be supplied for every cell type.  
+"""
 function addCellProperty(df::CellTable, propertyName::Symbol, defaultValue, cellName::Symbol)
 
     newColumn = offset([name == cellName ? defaultValue : missing for name in df.names])
@@ -128,6 +135,11 @@ function addCellProperty(df::CellTable, propertyName::Symbol, values::Vector{T})
 end
 
 
+"""
+    addNewCell(df::CellTable, cell<:NamedTuple)
+
+Given a `cellTable`, add a new row corresponding to a new cell in the mode. Property names in the for the cell need to match column names in the cellTable
+"""
 function addNewCell(df::CellTable, cell::T) where T<:NamedTuple
     #TODO Need some checks (e.g. all cells have unique ids, all the keys match)
     for property in keys(df)
@@ -135,9 +147,14 @@ function addNewCell(df::CellTable, cell::T) where T<:NamedTuple
     end
 end
 
-function removeCell(df::CellTable, σ::T) where T<:Integer
+"""
+    removeCell(df::CellTable, cellID)
+
+Given a `cellTable`, remove the cell with provided `cellID`.
+"""
+function removeCell(df::CellTable, cellID::T) where T<:Integer
     for property in keys(df)
-        deleteat!(parent(df)[property], σ)
+        deleteat!(parent(df)[property], cellID)
     end
 end
 
@@ -145,12 +162,26 @@ end
 # Penalties
 ####################################################
 
+"""
+    Penalty
+An abstract type representing a constraint imposed onto the cellular potts model.
+
+To add a new penalty, a new struct subtyping `Penalty` needs to be defined and the `addPenalty!()` function needs to be extended to include the new penalty.
+
+**Note**: variables associated with a new penalty may need to be offset such that index 0 maps to :Medium, index 1 maps to :Cell1, etc.
+"""
 abstract type Penalty end
 
-#Offset arrays so the zeroth index refers to Medium
+"""
+    AdhesionPenalty(J::Matrix{Int})
+An concrete type that penalizes neighboring grid locations from different cells.
 
+Requires a symmetric matrix `J` where `J[n,m]` gives the adhesion penality for cells with types n and m. `J` is zero-indexed meaning `J[0,1]` and `J[1,0]` corresponds to the `:Medium` ↔ `:Cell1` adhesion penalty.
+
+**Note**: `J` is automatically transformed to be a zero-indexed offset array.
+"""
 struct AdhesionPenalty <: Penalty
-    J::OffsetMatrix{Int, Matrix{Int}} #J[n,m] gives the adhesion penality for cells with types n and m
+    J::OffsetMatrix{Int, Matrix{Int}}
 
     function AdhesionPenalty(J::Matrix{Int})
         issymmetric(J) ? nothing : error("J needs to be symmetric")
@@ -159,6 +190,14 @@ struct AdhesionPenalty <: Penalty
     end
 end
 
+"""
+    VolumePenalty(λᵥ::Vector{Int})
+An concrete type that penalizes cells that deviate from their desired volume.
+
+Requires a vector `λᵥ` with n penalties where n is the number of cell types. `λᵥ` is zero-indexed meaning `λᵥ[0]` corresponds to the `:Medium` volume penalty (which is set to zero).
+
+**Note**: `λᵥ` is automatically transformed to be a zero-indexed offset array and does not require the volume penalty for `:Medium`.
+"""
 struct VolumePenalty <: Penalty
     λᵥ::OffsetVector{Int,Vector{Int}}
 
@@ -168,17 +207,37 @@ struct VolumePenalty <: Penalty
     end
 end
 
+"""
+    PerimeterPenalty(λᵥ::Vector{Int})
+An concrete type that penalizes cells that deviate from their desired perimeter.
+
+Requires a vector `λₚ` with n penalties where n is the number of cell types. `λₚ` is zero-indexed meaning `λₚ[0]` corresponds to the `:Medium` perimeter penalty (which is set to zero).
+
+**Note**: `λₚ` is automatically transformed to be a zero-indexed offset array and does not require the perimeter penalty for `:Medium`.
+"""
 mutable struct PerimeterPenalty <: Penalty
     λₚ::OffsetVector{Int,Vector{Int}}
     Δpᵢ::Int
     Δpⱼ::Int
 
-    function PerimeterPenalty(λᵥ::Vector{Int}) 
-        λₚOff = offset([0; λᵥ])
-        return new(λₚOff)
+    function PerimeterPenalty(λₚ::Vector{Int}) 
+        λₚOff = offset([0; λₚ])
+        return new(λₚOff, 0, 0)
     end
 end
 
+"""
+    MigrationPenalty(maxAct, λ, cellTypes, gridSize)
+An concrete type that encourages cells to protude and drag themselves forward.
+
+Two integer parameters control how cells protude:
+ - `maxAct`: A maximum activity a grid location can have
+ - `λ`: A parameter that controls the strength of this penalty
+
+Increasing `maxAct` will cause grid locations to more likely protrude. Increasing `λ` will cause those protusions to reach farther away. 
+
+`MigrationPenalty` also requires a list of cell types to apply the penalty to and the grid size (Space.gridSize).
+"""
 mutable struct MigrationPenalty <: Penalty
     maxAct::Int
     λ::Int
@@ -213,6 +272,15 @@ MHStepInfo() = MHStepInfo(0,0,[0],[0],0,0,0)
 # Structure for the model
 ####################################################
 
+"""
+    CellPotts(space, initialCellState, penalties)
+A data container that holds information to run the cellular potts simulation.
+
+Requires three inputs:
+ - `space`: a region where cells can exist, generated using `CellSpace()`.
+ - `initialCellState`: a table where rows are cells and columns are cell properties, generated using `newCellState()`.
+ - `penalties`: a vector of penalties to append to the model.
+"""
 mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     space::CellSpace{N,T}
     initialState::CellTable{V}
@@ -241,7 +309,20 @@ end
 # Helper functions for CellPotts
 ####################################################
 
+"""
+    countcells(cpm::CellPotts)
+    countcells(df::CellTable)
+
+Count the number of cells in the model 
+"""
 countcells(cpm::CellPotts) = countcells(cpm.currentState)
+
+"""
+    countcelltypes(cpm::CellPotts)
+    countcelltypes(df::CellTable)
+
+Count the number of cell types in the model 
+"""
 countcelltypes(cpm::CellPotts) = countcelltypes(cpm.currentState)
 
 ####################################################

@@ -1,3 +1,3 @@
-# CellularPotts.jl
+# Introduction
 
 Documentation for CellularPotts.jl
