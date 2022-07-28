@@ -97,6 +97,7 @@ function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{
      
 end
 
+#TODO make the different options for addCellProperty cleaner
 #Add property for one cell type
 """
     addCellProperty(df::CellTable, propertyName, defaultValue, cellName)
