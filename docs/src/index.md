@@ -12,6 +12,13 @@ pkg> add CellularPotts
 
 <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif" alt="" width="445">
 
+![](https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif)
+
+<img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true" alt="" width="445">
+
+![](https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true)
+
+
 In this example, we'll specify a single stationary cell in the center of the grid. 
 
 We start by loading in the `CellularPotts.jl` package and creating a space where cells can exist.
