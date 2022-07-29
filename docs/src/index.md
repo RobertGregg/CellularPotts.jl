@@ -10,11 +10,9 @@ pkg> add CellularPotts
 
 # Simple example
 
-<img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif" alt="" width="445">
-
-![](https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif)
-
+```@raw html
 <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true" alt="" width="445">
+```
 
 ![](https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true)
 
