@@ -64,6 +64,24 @@ function CellGUI(cpm::CellPotts)
             linewidth = 2
         )
 
+    #Active cell movement
+    migrationIndex = findfirst(x->typeof(x)==MigrationPenalty, cpm.penalties)
+    if !isnothing(migrationIndex)
+
+        heatmap_Gm = @lift begin
+            currentTime = $timestep
+            Matrix(cpm.penalties[migrationIndex].nodeMemory)
+        end
+        
+        #transparent colors
+        colmap = RGBA.(colormap("Reds"),0.5)
+
+        heatmap!(axSim,
+                heatmap_Gm,
+                show_axis = false,
+                colormap = colmap)
+    end
+
     #--------Buttons--------
     #Currently 2 buttons: a play/pause and a stop button
     #Place the buttons below the simulation and align to the left

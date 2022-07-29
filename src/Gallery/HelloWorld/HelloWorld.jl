@@ -1,22 +1,22 @@
+using Revise
 using CellularPotts
 
 
-space = CellSpace(200,200)
+space = CellSpace(50,50)
 
 initialCellState = newCellState(
     [:Epithelial],
     [500],
     [1]);
 
-positions = [(100,100)]
+positions = [(25,25)]
 
 initialCellState = addCellProperty(initialCellState, :positions, positions)
 
 penalties = [
     AdhesionPenalty([0 20;
                     20 100]),
-    VolumePenalty([50]),
-    PerimeterPenalty([5])
+    VolumePenalty([5])
     ]
 
 
@@ -24,6 +24,4 @@ cpm = CellPotts(space, initialCellState, penalties);
 
 positionCells!(cpm)
 
-ModelStep!(cpm)
-
-CellGUI(cpm)
+recordCPM("HelloWorld.gif",cpm)

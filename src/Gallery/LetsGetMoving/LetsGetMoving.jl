@@ -1,3 +1,4 @@
+using Revise
 using CellularPotts
 
 
@@ -13,15 +14,17 @@ positions = [(100,100)]
 initialCellState = addCellProperty(initialCellState, :positions, positions)
 
 penalties = [
-    AdhesionPenalty([0 20;
-                    20 100]),
-    VolumePenalty([50]),
-    PerimeterPenalty([5]),
-    MigrationPenalty(20,1,[:Epithelial], space.gridSize)
+    AdhesionPenalty([0 10;
+                    10 0]),
+    VolumePenalty([5]),
+    PerimeterPenalty([2]),
+    MigrationPenalty([30],[300], space.gridSize)
     ]
 
 
 cpm = CellPotts(space, initialCellState, penalties);
+
+cpm.temperature = 10.0
 
 positionCells!(cpm)
 

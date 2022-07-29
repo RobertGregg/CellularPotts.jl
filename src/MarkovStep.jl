@@ -1,41 +1,52 @@
 ####################################################
+# Helper Functions
+####################################################
+
+function calculateΔH(cpm::CellPotts)
+    ΔH = 0
+
+    #loop though indices to exploit known union types
+    for i in eachindex(cpm.penalties)
+        ΔH += addPenalty!(cpm, cpm.penalties[i])
+    end
+
+    return ΔH
+end
+
+####################################################
 # Metropolis–Hasting Step
 ####################################################
 
 function MHStep!(cpm::CellPotts)
-
-    #unpack current step structure
-    step = cpm.step
     
     #Pick a random location on the graph
-    step.sourceNode = rand(1:nv(cpm.space))
+    cpm.step.sourceNode = rand(1:nv(cpm.space))
     #What cell does it belong to?
-    step.sourceCellID = cpm.space.nodeIDs[step.sourceNode]
+    cpm.step.sourceCellID = cpm.space.nodeIDs[cpm.step.sourceNode]
 
     #Get all cell IDs neighboring this Node
-    step.sourceNeighborNodes = neighbors(cpm.space, step.sourceNode)
+    cpm.step.sourceNeighborNodes = neighbors(cpm.space, cpm.step.sourceNode)
 
     #Choose a target
-    step.targetNode = rand(step.sourceNeighborNodes)
-    step.targetCellID = cpm.space.nodeIDs[step.targetNode]
+    cpm.step.targetNode = rand(cpm.step.sourceNeighborNodes)
+    cpm.step.targetCellID = cpm.space.nodeIDs[cpm.step.targetNode]
     
     #Some checks before attempting a flip
 
     #target and source same cell? 
-    if step.targetCellID == step.sourceCellID
+    if cpm.step.targetCellID == cpm.step.sourceCellID
         return nothing
     end
 
-    #In the middle of a cell?
-    if all(isequal(step.sourceCellID, cpm.space.nodeIDs[n]) for n in step.sourceNeighborNodes)
+    #sourceCell surrounded by only sourceCells?
+    if all(isequal(cpm.step.sourceCellID, cpm.space.nodeIDs[n]) for n in cpm.step.sourceNeighborNodes)
         return nothing
     end
 
     #Get all cell nodes neighboring for target node
-    step.targetNeighborNodes = neighbors(cpm.space, step.targetNode)
+    cpm.step.targetNeighborNodes = neighbors(cpm.space, cpm.step.targetNode)
 
     #Calculate the change in energy when target node is modified
-    #ΔH =  sum(f(cpm, step) for f in cpm.parameters.penalties)
     ΔH =  calculateΔH(cpm)
 
 
@@ -48,20 +59,20 @@ function MHStep!(cpm::CellPotts)
         #---Cell properties---
 
         for i in eachindex(cpm.penalties)
-            updateStep!(cpm, step, cpm.penalties[i])
+            updateMHStep!(cpm, cpm.penalties[i])
         end
 
         #---Graph properties---
 
         #Cell IDs
-        cpm.space.nodeIDs[step.targetNode] = step.sourceCellID
-        cpm.space.nodeTypes[step.targetNode] = cpm.currentState.names[step.sourceCellID]
+        cpm.space.nodeIDs[cpm.step.targetNode] = cpm.step.sourceCellID
+        cpm.space.nodeTypes[cpm.step.targetNode] = cpm.currentState.names[cpm.step.sourceCellID]
         
         #TODO Add articulation point updater 
         
         #---Overall properties---
         #Update visual
-        cpm.visual[step.targetNode] = cpm.currentState.typeIDs[step.sourceCellID]
+        cpm.visual[cpm.step.targetNode] = cpm.currentState.typeIDs[cpm.step.sourceCellID]
     end
 
     return nothing
@@ -72,52 +83,69 @@ end
 # Model Step
 ####################################################
 function ModelStep!(cpm::CellPotts)
+
+    #Repeat MHStep! for each pixel in the model
     for _ in 1:prod(cpm.space.gridSize)
         MHStep!(cpm)
     end
+
+    #Increment the step counter
     cpm.step.stepCounter += 1
 
+    #Model updates after MCS
+    for i in eachindex(cpm.penalties)
+        updateModelStep!(cpm, cpm.penalties[i])
+    end
+
     return nothing
 end
 
-#18.424 ms, Memory estimate: 1.29 MiB, allocs estimate: 82158.
 
+####################################################
+# How penalties update after each MHStep!
+####################################################
 
-updateStep!(cpm::CellPotts, step::MHStepInfo, AP::AdhesionPenalty) = nothing
+updateMHStep!(cpm::CellPotts, AP::AdhesionPenalty) = nothing
 
-function updateStep!(cpm::CellPotts, step::MHStepInfo, VP::VolumePenalty)
+function updateMHStep!(cpm::CellPotts, VP::VolumePenalty)
     #Update cell volumes
-    cpm.currentState.volumes[step.sourceCellID] += 1
-    cpm.currentState.volumes[step.targetCellID] -= 1
+    cpm.currentState.volumes[cpm.step.sourceCellID] += 1
+    cpm.currentState.volumes[cpm.step.targetCellID] -= 1
     return nothing
 end
 
-function updateStep!(cpm::CellPotts, step::MHStepInfo, PP::PerimeterPenalty)
+function updateMHStep!(cpm::CellPotts, PP::PerimeterPenalty)
     #Update cell perimeters
-    cpm.currentState.perimeters[step.sourceCellID] += PP.Δpᵢ
-    cpm.currentState.perimeters[step.targetCellID] -= PP.Δpⱼ
+    cpm.currentState.perimeters[cpm.step.sourceCellID] += PP.Δpᵢ
+    cpm.currentState.perimeters[cpm.step.targetCellID] -= PP.Δpⱼ
     return nothing
 end
 
-#TODO should only update every model step?
-function updateStep!(cpm::CellPotts, step::MHStepInfo, MP::MigrationPenalty)
+
+function updateMHStep!(cpm::CellPotts, MP::MigrationPenalty)
+
+    #Get typeID
+    τ = cpm.currentState.typeIDs[cpm.step.sourceCellID]
+
+    #Update cell activity
+    MP.nodeMemory[cpm.step.targetNode] = MP.maxAct[τ]
+    return nothing
+end
+
+####################################################
+# How penalties update after each ModelStep!
+####################################################
+
+updateModelStep!(cpm::CellPotts, AP::AdhesionPenalty) = nothing
+updateModelStep!(cpm::CellPotts, VP::VolumePenalty) = nothing
+updateModelStep!(cpm::CellPotts, PP::PerimeterPenalty) = nothing
+
+function updateModelStep!(cpm::CellPotts, MP::MigrationPenalty)
     
-    #Reduce the node Moemory by 1 and remove zeros
+    #Reduce the node Memory by 1 and remove zeros
+    dropzeros!(MP.nodeMemory)
     MP.nodeMemory.nzval .-= 1
     dropzeros!(MP.nodeMemory)
     
-    #Update cell volumes
-    MP.nodeMemory[cpm.step.targetNode] += MP.maxAct
     return nothing
-end
-
-function calculateΔH(cpm)
-    ΔH = 0
-
-    #loop though indices to exploit known union types
-    for i in eachindex(cpm.penalties)
-        ΔH += addPenalty!(cpm, cpm.penalties[i])
-    end
-
-    return ΔH
 end
