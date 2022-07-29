@@ -5,17 +5,16 @@ CPMs simulate a collection of cells interacting with one another. These interact
 # Installation
 
 ```
-pkg> add CellularPotts
+using Pkg; Pkg.add("CellularPotts")
 ```
 
 # Simple example
 
-```@raw html
-<img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true" alt="" width="445">
+```@raw
+<p style="text-align:center;">
+    <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true" alt="" width="445">
+</p>
 ```
-
-![](https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true)
-
 
 In this example, we'll specify a single stationary cell in the center of the grid. 
 
@@ -48,7 +47,7 @@ The inputs are simple in this case. We want one cell type called "Epithelial" wi
 The table `newCellState()` generates has each row representing a cell and each column listing a property given to that cell. Other information, like the column's type, is also provided.
 
 ```
-julia> initialCellState
+initialCellState
 ┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┐
 │      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │
 │     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │
@@ -70,7 +69,7 @@ initialCellState = addCellProperty(initialCellState, :positions, positions)
 Looking at our updated table, we can see the newly added property.
 
 ```
-julia> initialCellState
+initialCellState
 ┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┬─────────────────────┐
 │      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │           positions │
 │     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │ Tuple{Int64, Int64} │
@@ -82,7 +81,7 @@ julia> initialCellState
 
 Now that we have a space and a cell to fill it with, we need to provide a list of model penalties. A number of default penalties exist and you can even create your own custom penalties. Here we only include an `AdhesionPenalty` which encourages grid locations with the same cell type to stick together and a `VolumePenalty` which penalizes cells that deviate from their desired volume.
 
-```
+```julia
 penalties = [
     AdhesionPenalty([ 0  20;
                      20  0]),
@@ -95,9 +94,8 @@ penalties = [
 Now we can take these three objects and create a Cellular Potts Model object.
 
 ```
-julia> cpm = CellPotts(space, initialCellState, penalties);
+cpm = CellPotts(space, initialCellState, penalties)
 
-julia> cpm
 Cell Potts Model:
 Grid: 50×50
 Cell Counts: [Epithelial → 1] [Total → 1]
@@ -114,10 +112,8 @@ Our cell still needs to be placed into the space. This can be done using the `po
 positionCells!(cpm)
 ```
 
-Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI()` function, or recorded as a gif using `cpmSaveGif`
+Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`
 
 ```
-cpmSaveGif()
+recordCPM("HelloWorld.gif", cpm)
 ```
-
- 

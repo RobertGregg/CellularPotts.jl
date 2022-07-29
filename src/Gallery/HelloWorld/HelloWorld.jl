@@ -24,4 +24,4 @@ cpm = CellPotts(space, initialCellState, penalties);
 
 positionCells!(cpm)
 
-recordCPM("HelloWorld.gif",cpm)
+recordCPM("HelloWorld.gif", cpm)
