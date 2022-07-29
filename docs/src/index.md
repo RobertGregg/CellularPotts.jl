@@ -10,7 +10,7 @@ using Pkg; Pkg.add("CellularPotts")
 
 # Simple example
 
-```@raw
+```@raw html
 <p style="text-align:center;">
     <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true" alt="" width="445">
 </p>
