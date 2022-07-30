@@ -44,6 +44,7 @@ include("InitializeCells.jl")
 include("MarkovStep.jl")
 include("CellActions.jl")
 include("Gui_new.jl")
+include("recordSimulation.jl")
 
 export 
 
@@ -75,9 +76,13 @@ export
       MHStep!,
       calculateΔH,
       ModelStep!,
-# #CellActions.jl
+      updateMHStep!,
+      updateModelStep!,
+#CellActions.jl
        CellDivision!,
        CellDeath!,
 #Gui.jl
-      CellGUI
+      CellGUI,
+#recordSimulation.jl
+      recordCPM
 end

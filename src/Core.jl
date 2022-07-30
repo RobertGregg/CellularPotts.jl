@@ -228,7 +228,7 @@ mutable struct PerimeterPenalty <: Penalty
 end
 
 """
-    MigrationPenalty(maxAct, λ, cellTypes, gridSize)
+    MigrationPenalty(maxAct, λ, gridSize)
 An concrete type that encourages cells to protude and drag themselves forward.
 
 Two integer parameters control how cells protude:
@@ -240,13 +240,14 @@ Increasing `maxAct` will cause grid locations to more likely protrude. Increasin
 `MigrationPenalty` also requires a list of cell types to apply the penalty to and the grid size (Space.gridSize).
 """
 mutable struct MigrationPenalty <: Penalty
-    maxAct::Int
-    λ::Int
-    cellTypes::Vector{Symbol}
-    nodeMemory::SparseVector{Int,Int}
+    maxAct::OffsetVector{Int,Vector{Int}}
+    λ::OffsetVector{Int,Vector{Int}}
+    nodeMemory::SparseMatrixCSC{Int,Int}
 
-    function MigrationPenalty(maxAct::T, λ::T, cellTypes::Vector{S}, gridSize::NTuple{N,T}) where {T<:Integer, S<:Symbol, N}
-        return new(maxAct, λ, cellTypes, spzeros(T,prod(gridSize)))
+    function MigrationPenalty(maxAct::Vector{T}, λ::Vector{T}, gridSize::NTuple{N,T}) where {T<:Integer, N}
+        maxActoff = offset([0; maxAct])
+        λOff = offset([0; λ])
+        return new(maxActoff, λOff, spzeros(T,gridSize))
     end
 end
 

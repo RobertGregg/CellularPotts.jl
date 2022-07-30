@@ -148,15 +148,33 @@ This change might become moot when chemotaxis is introduced. Gradient fields wit
 
 function addPenalty!(cpm::CellPotts, MP::MigrationPenalty)
 
-    return MP.λ * (addPenalty!(cpm, MP, cpm.step.targetNode) - addPenalty!(cpm, MP, cpm.step.sourceNode))
+    return addPenalty!(cpm, MP, cpm.step.sourceNode, cpm.step.sourceCellID) - addPenalty!(cpm, MP, cpm.step.targetNode, cpm.step.targetCellID) 
 end
 
 
-function addPenalty!(cpm::CellPotts, MP::MigrationPenalty, σ::T) where T<:Integer
+function addPenalty!(cpm::CellPotts, MP::MigrationPenalty, node::T, σ::T) where T<:Integer
 
-    memoryNeighbors = view(MP.nodeMemory, neighbors(cpm.space,σ))
-    numNeighbors = length(memoryNeighbors)
-    return any(iszero,memoryNeighbors) ? 0 : sum(memoryNeighbors) ÷ numNeighbors
+    
+    average = MP.nodeMemory[node]
+    nodeCount = 1
+
+    for neighbor in neighbors(cpm.space,node)
+        nodeMemory = MP.nodeMemory[neighbor]
+        if nodeMemory == 0
+            return 0
+        end
+
+        if σ == cpm.space.nodeIDs[neighbor]
+            average += nodeMemory
+            nodeCount += 1
+        end
+    end
+
+    geoIntMean =  average ÷ nodeCount
+    
+    τ = cpm.currentState.typeIDs[σ]
+
+    return (MP.λ[τ] ÷ MP.maxAct) * geoIntMean
 end
 
 ####################################################

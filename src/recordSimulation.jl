@@ -1,0 +1,72 @@
+function recordCPM(file::String, cpm::CellPotts)
+    fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf0(0.98, 0.98, 0.98))
+    axSim = fig[1, 1] = Axis(fig)
+
+    timestep = Node(0) #will increase by one every step
+
+    # heatmap_node is an array that updates when timestep updates
+    heatmap_node = @lift begin
+        currentTime = $timestep
+        ModelStep!(cpm)
+        cpm.visual
+    end
+
+    cmap = ColorSchemes.tol_muted
+    distintCellTypes = countcelltypes(cpm) + 1
+
+    heatmap!(axSim,
+             heatmap_node,
+             show_axis = false,
+             colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true)) #:Greys_3
+        tightlimits!.(axSim)
+        hidedecorations!.(axSim) #removes axis numbers
+
+
+        edgeConnectors = Edge2Grid(cpm.space.gridSize)
+    (m,n) = cpm.space.gridSize
+
+    #Generate all of the edge Connections by putting a point on each cell corner
+    horizontal = [Point2f0(x, y) => Point2f0(x+1, y) for x in 0.5:m-0.5, y in 0.5:m+0.5]
+    vertical = [Point2f0(x, y) => Point2f0(x, y+1) for y in 0.5:n-0.5, x in 0.5:n+0.5]
+    points = vcat(horizontal[:],vertical[:])
+
+    #Determine the transparency of the linesegments
+    gridflip = rotl90(cpm.visual) #https://github.com/JuliaPlots/Makie.jl/issues/205
+
+    #Cell borders are outlined in black
+    black = RGBA{Float64}(0.0,0.0,0.0,1.0);
+    clear = RGBA{Float64}(0.0,0.0,0.0,0.0);
+
+    #Loop through all the grid connected and assign the correct color
+    currentEdgeColors = [gridflip[edges[1]]==gridflip[edges[2]] ? clear : black for edges in edgeConnectors];
+
+    #For each time update, recolor all of the edges
+    lineColors_node = @lift begin
+        currentTime = $timestep
+        
+        gridflip = rotl90(cpm.visual)
+
+        for (i,edges) in enumerate(edgeConnectors)
+            currentEdgeColors[i] = gridflip[edges[1]]==gridflip[edges[2]] ? clear : black
+        end
+
+        currentEdgeColors
+    end
+
+    linesegments!(
+            axSim,
+            points,
+            color = lineColors_node,
+            linewidth = 2
+        )
+
+    
+    framerate = 60
+    timestamps = 0:300
+    
+    record(fig, file, timestamps; framerate = framerate, compression = 1) do t
+        timestep[] += 1
+    end
+
+
+end
