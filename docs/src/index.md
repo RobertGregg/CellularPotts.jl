@@ -4,8 +4,9 @@ CPMs simulate a collection of cells interacting with one another. These interact
 
 # Installation
 
-```
-using Pkg; Pkg.add("CellularPotts")
+```julia
+using Pkg
+Pkg.add("CellularPotts")
 ```
 
 # Simple example
@@ -20,7 +21,7 @@ In this example, we'll specify a single stationary cell in the center of the gri
 
 We start by loading in the `CellularPotts.jl` package and creating a space where cells can exist.
 
-```
+```julia
 using CellularPotts
 
 space = CellSpace(50,50; wrapAround=true, cellNeighbors=mooreNeighbors)
@@ -30,7 +31,7 @@ Here we create a 50 by 50 square grid with periodic boundary conditions where gr
 
 Next we need to initialize a table of cell information to put into this space.
 
-```
+```julia
 initialCellState = newCellState([:Epithelial], [500], [1]); 
 ```
 
@@ -61,7 +62,7 @@ The first row will always show properties for "Medium", the name given to grid l
 
 Additional properties can be added to our cells. In this model we can provide a property called positions with a single default value
 
-```
+```julia
 positions = [(25,25)]
 initialCellState = addCellProperty(initialCellState, :positions, positions)
 ```
@@ -108,12 +109,12 @@ Calling this object gives a quick summary of the model's current state. Note tha
 
 Our cell still needs to be placed into the space. This can be done using the `positionCellsRandom!()` function or because we have a "positions" property, we can use the `positionCells!()` function.
 
-```
+```julia
 positionCells!(cpm)
 ```
 
 Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`
 
-```
+```julia
 recordCPM("HelloWorld.gif", cpm)
 ```
