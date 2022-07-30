@@ -18,7 +18,7 @@ offset(x) = OffsetArray(x, Origin(0))
 ####################################################
 
 #Could use something like TypedDelegation.jl to pass functions to data
-
+#TODO use Tables.jl
 """
     CellTable
 An concrete type that stores a table where each row is a cell and each column is a cell property.
@@ -47,7 +47,6 @@ keys(df::CellTable) = keys(parent(df))
 values(df::CellTable) = values(parent(df))
 pairs(df::CellTable) = pairs(parent(df))
 
-#TODO maybe impliment a row object, or think about Tables.jl more
 iterate(df::CellTable, iter=1) = iter ≥ countcells(df) ? nothing : ((;((k,v[iter]) for (k,v) in pairs(df))...), iter + 1)
 getindex(df::CellTable, i::Int) = (;((k,[v[i]]) for (k,v) in pairs(df))...)
 
@@ -56,6 +55,7 @@ getindex(df::CellTable, i::Int) = (;((k,[v[i]]) for (k,v) in pairs(df))...)
 # Function to create a new cell state
 ####################################################
 
+#TODO rename as "createNewTable"
 """
     newCellState(names, volumes, counts)
 Create a new `cellTable` where each row corresponds to a cell.

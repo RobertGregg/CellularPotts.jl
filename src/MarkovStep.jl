@@ -99,7 +99,6 @@ function updateStep!(cpm::CellPotts, step::MHStepInfo, PP::PerimeterPenalty)
     return nothing
 end
 
-#TODO should only update every model step?
 function updateStep!(cpm::CellPotts, step::MHStepInfo, MP::MigrationPenalty)
     
     #Reduce the node Moemory by 1 and remove zeros
