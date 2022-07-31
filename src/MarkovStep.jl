@@ -56,17 +56,16 @@ function MHStep!(cpm::CellPotts)
 
     if rand() < acceptRatio #If the acceptance ratio is large enough
         #Need to update all cell and graph properties
-        #---Cell properties---
-
-        for i in eachindex(cpm.penalties)
-            updateMHStep!(cpm, cpm.penalties[i])
-        end
-
         #---Graph properties---
 
         #Cell IDs
         cpm.space.nodeIDs[cpm.step.targetNode] = cpm.step.sourceCellID
         cpm.space.nodeTypes[cpm.step.targetNode] = cpm.currentState.names[cpm.step.sourceCellID]
+
+        #---Cell properties---
+        for i in eachindex(cpm.penalties)
+            updateMHStep!(cpm, cpm.penalties[i])
+        end
         
         #TODO Add articulation point updater 
         
@@ -124,11 +123,20 @@ end
 
 function updateMHStep!(cpm::CellPotts, MP::MigrationPenalty)
 
-    #Get typeID
-    τ = cpm.currentState.typeIDs[cpm.step.sourceCellID]
+    # target: Cell→Medium then do not update nodeMemory
+    # target: Medium→Cell then nodeMemory gets maxAct
+    # target: Cell→Cell then nodeMemory gets maxAct
+
 
     #Update cell activity
-    MP.nodeMemory[cpm.step.targetNode] = MP.maxAct[τ]
+    if cpm.step.sourceCellID == 0
+        MP.nodeMemory[cpm.step.targetNode] = 0
+        return nothing
+    end
+    
+
+    MP.nodeMemory[cpm.step.targetNode] = MP.maxAct
+
     return nothing
 end
 

@@ -60,6 +60,24 @@ function recordCPM(file::String, cpm::CellPotts)
             linewidth = 2
         )
 
+
+    #Active cell movement
+    migrationIndex = findfirst(x->typeof(x)==MigrationPenalty, cpm.penalties)
+    if !isnothing(migrationIndex)
+
+        heatmap_Gm = @lift begin
+            currentTime = $timestep
+            Matrix(cpm.penalties[migrationIndex].nodeMemory)
+        end
+        
+        #transparent colors
+        colmap = RGBA.(colormap("Purples"),0.5)
+
+        heatmap!(axSim,
+                heatmap_Gm,
+                show_axis = false,
+                colormap = colmap)
+    end
     
     framerate = 60
     timestamps = 0:300

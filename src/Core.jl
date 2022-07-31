@@ -240,14 +240,13 @@ Increasing `maxAct` will cause grid locations to more likely protrude. Increasin
 `MigrationPenalty` also requires a list of cell types to apply the penalty to and the grid size (Space.gridSize).
 """
 mutable struct MigrationPenalty <: Penalty
-    maxAct::OffsetVector{Int,Vector{Int}}
+    maxAct::Int
     λ::OffsetVector{Int,Vector{Int}}
     nodeMemory::SparseMatrixCSC{Int,Int}
 
-    function MigrationPenalty(maxAct::Vector{T}, λ::Vector{T}, gridSize::NTuple{N,T}) where {T<:Integer, N}
-        maxActoff = offset([0; maxAct])
+    function MigrationPenalty(maxAct::T, λ::Vector{T}, gridSize::NTuple{N,T}) where {T<:Integer, N}
         λOff = offset([0; λ])
-        return new(maxActoff, λOff, spzeros(T,gridSize))
+        return new(maxAct, λOff, spzeros(T,gridSize))
     end
 end
 

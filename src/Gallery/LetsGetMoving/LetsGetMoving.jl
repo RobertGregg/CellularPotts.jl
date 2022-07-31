@@ -14,11 +14,11 @@ positions = [(100,100)]
 initialCellState = addCellProperty(initialCellState, :positions, positions)
 
 penalties = [
-    AdhesionPenalty([0 10;
-                    10 0]),
-    VolumePenalty([5]),
-    PerimeterPenalty([2]),
-    MigrationPenalty([30],[300], space.gridSize)
+    AdhesionPenalty([0 30;
+                    30 100]),
+    VolumePenalty([8]),
+    PerimeterPenalty([8]),
+    MigrationPenalty(50, [100], space.gridSize)
     ]
 
 
@@ -28,6 +28,5 @@ cpm.temperature = 10.0
 
 positionCells!(cpm)
 
-ModelStep!(cpm)
-
 CellGUI(cpm)
+recordCPM("LetsGetMoving1.gif", cpm)

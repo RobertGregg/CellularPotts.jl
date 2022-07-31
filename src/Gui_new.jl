@@ -74,7 +74,7 @@ function CellGUI(cpm::CellPotts)
         end
         
         #transparent colors
-        colmap = RGBA.(colormap("Reds"),0.5)
+        colmap = RGBA.(colormap("Purples"),0.5)
 
         heatmap!(axSim,
                 heatmap_Gm,
