@@ -2,13 +2,11 @@
 # Determine cell subgraph
 ####################################################
 
-using LightGraphs
+using Graphs
 using CellularPotts
-M = ModelParameters()
-CPM = CellPotts(M)
 
-g = CPM.graph.network
-cellIdx = findall(isequal(1), CPM.graph.σ)
+g = CellSpace(50,50)
+cellIdx = rand(1:50^2,100) |> sort
 
 #This function attempts to find a subgraph of the a faster, however performance is about the same 😖
 function induced_subgraph_mod(g::T, vlist::AbstractVector{U}) where T <: AbstractGraph where U <: Integer
@@ -27,23 +25,27 @@ function induced_subgraph_mod(g::T, vlist::AbstractVector{U}) where T <: Abstrac
     return SimpleGraph( sum(length,fadjlist) ÷ 2, fadjlist)
 end
 
-induced_subgraph_mod(g,cellIdx)
+g1 = induced_subgraph_mod(g,cellIdx)
 
 
-####################################################
-# Use a macro to create custom cell types
-####################################################
 
-#Cells need rules and properties!
+function DFS(g::SimpleGraph)
+    src = first(vertices(g))
+    n = nv(g)
+    stack = Int[]
+    visited = falses(n)
+    depth = zeros(Int,n)
+    low = zeros(Int,n)
 
-#This is from Agents.jl to create a custom struct with some defaults
-macro agent(name, base, fields)
-    base_type = Core.eval(@__MODULE__, base)
-    base_fieldnames = fieldnames(base_type)
-    base_types = [t for t in base_type.types]
-    base_fields = [:($f::$T) for (f, T) in zip(base_fieldnames, base_types)]
-    res = :(mutable struct $(esc(name)) <: AbstractAgent end)
-    push!(res.args[end].args, base_fields...)
-    push!(res.args[end].args, map(esc, fields.args)...)
-    return res
+    push!(stack, src)
+
+    while !isempty(stack)
+        currentNode = pop!(stack)
+        if !visited[currentNode]
+            visited[currentNode] = true
+            for neighbor in neighbors(g, currentNode)
+                push!(stack, neighbor)
+            end
+        end
+    end
 end

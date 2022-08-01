@@ -81,6 +81,7 @@ end
 ####################################################
 # Model Step
 ####################################################
+
 function ModelStep!(cpm::CellPotts)
 
     #Repeat MHStep! for each pixel in the model
@@ -104,7 +105,8 @@ end
 # How penalties update after each MHStep!
 ####################################################
 
-updateMHStep!(cpm::CellPotts, AP::AdhesionPenalty) = nothing
+#Default to nothing
+updateMHStep!(cpm::CellPotts, penalty::Penalty) = nothing
 
 function updateMHStep!(cpm::CellPotts, VP::VolumePenalty)
     #Update cell volumes
@@ -123,20 +125,13 @@ end
 
 function updateMHStep!(cpm::CellPotts, MP::MigrationPenalty)
 
-    # target: Cell→Medium then do not update nodeMemory
-    # target: Medium→Cell then nodeMemory gets maxAct
-    # target: Cell→Cell then nodeMemory gets maxAct
-
-
-    #Update cell activity
+    #Medium should have no MigrationPenalty
     if cpm.step.sourceCellID == 0
         MP.nodeMemory[cpm.step.targetNode] = 0
-        return nothing
+    else
+        MP.nodeMemory[cpm.step.targetNode] = MP.maxAct
     end
     
-
-    MP.nodeMemory[cpm.step.targetNode] = MP.maxAct
-
     return nothing
 end
 
@@ -144,14 +139,15 @@ end
 # How penalties update after each ModelStep!
 ####################################################
 
-updateModelStep!(cpm::CellPotts, AP::AdhesionPenalty) = nothing
-updateModelStep!(cpm::CellPotts, VP::VolumePenalty) = nothing
-updateModelStep!(cpm::CellPotts, PP::PerimeterPenalty) = nothing
+#Default to nothing
+updateModelStep!(cpm::CellPotts, penalty::Penalty) = nothing
 
 function updateModelStep!(cpm::CellPotts, MP::MigrationPenalty)
     
-    #Reduce the node Memory by 1 and remove zeros
+    #Remove zeros from Medium copying into cells
     dropzeros!(MP.nodeMemory)
+
+    #Reduce the node Memory by 1 and remove zeros
     MP.nodeMemory.nzval .-= 1
     dropzeros!(MP.nodeMemory)
     
