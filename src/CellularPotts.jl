@@ -38,6 +38,7 @@ import Base: eltype,
              pairs
 
 include("Spaces.jl")
+include("ArticulationPoints.jl")
 include("Core.jl")
 include("Penalties.jl")
 include("InitializeCells.jl")
@@ -48,10 +49,12 @@ include("recordSimulation.jl")
 
 export 
 
-#Spaces
+#Spaces.jl
       vonNeumannNeighbors,
       mooreNeighbors,
       CellSpace,
+#ArticulationPoints.jl
+      ArticulationUtility,
 #Core.jl
       CellTable,
       countcells,

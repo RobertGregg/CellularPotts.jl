@@ -70,7 +70,7 @@ function positionCellsRandom!(cpm::CellPotts{N,T,V}) where {N,T,V}
     networkIdx = sortedDis[1:totalNodes] 
 
     #Partition the identified nodes by the number of cells needed
-    if countcelltypes(cpm) == 1 #There is only one cell (no need to partition)
+    if countcells(cpm) == 1 #There is only one cell (no need to partition)
         cellMembership[networkIdx] .= 1
     else
         cellMembership[networkIdx] = Metis.partition(cpm.space[networkIdx], countcells(cpm))

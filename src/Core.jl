@@ -289,6 +289,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     penalties::Vector{U}
     step::MHStepInfo{T}
     visual::Array{Int,N}
+    getArticulation::ArticulationUtility
     temperature::Float64
 
     function CellPotts(space::CellSpace{N,T}, initialCellState::CellTable{V}, penalties::Vector{P}) where {N,T,V,P}
@@ -302,6 +303,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
             U[p for p in penalties],
             MHStepInfo(),
             zeros(T,space.gridSize),
+            ArticulationUtility(nv(space)),
             20.0)
     end
 end

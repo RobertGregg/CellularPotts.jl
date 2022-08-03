@@ -43,6 +43,11 @@ function MHStep!(cpm::CellPotts)
         return nothing
     end
 
+    #Test if the target cell is an articulation point
+    if cpm.step.targetNode ∈ cpm.getArticulation(cpm.space, cpm.step.targetCellID)
+        return nothing
+    end
+
     #Get all cell nodes neighboring for target node
     cpm.step.targetNeighborNodes = neighbors(cpm.space, cpm.step.targetNode)
 

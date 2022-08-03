@@ -14,7 +14,7 @@ The goal of this package is to develop a cellular, agent-based modeling approach
 
 Researchers and developers have been able to accomplish a lot with their respective softwares and I would urge anyone to check them out. My favorites are [Morpheus](https://morpheus.gitlab.io/), [Artistoo](https://artistoo.net/), and [CompuCell3D](https://compucell3d.org/). This package takes a lot of inspiration from their design and pedagogical examples.
 
-Careful attention has been taken to ensure this package is as performant as I can possibly make it (particually with type stability and allocations). For example, stepping the model forward in time produces no allocations. However, if you spot something egregious in the codebase, feel free to raise an issue or pull request.
+Careful attention has been taken to ensure this package is as performant as I can possibly make it (particularly with type stability and allocations). For example, stepping the model forward in time produces no allocations. However, if you spot something egregious in the codebase, feel free to raise an issue or pull request.
 
 Also of note, **this package is still in major development and is not currently recommended for general use**. I'm still working out how to best organize datastructures and functionally. However, still feel free to try it if you're curious. 
 
@@ -25,7 +25,7 @@ Below is simply tracking the progress of the package and any notes to myself.
 - Best way to implement gradient field?
   - How will the gradient act "inside" a cell? Will it be constant there?
   - How will cells update the gradient? Just at their border?
-- Should the cell age be tracked for division?
+- Should cell age be tracked for division?
 - What is the difference b/w Rect3D and FRect3D?
 - How to hook into Agents.jl?
 
@@ -39,27 +39,38 @@ Below is simply tracking the progress of the package and any notes to myself.
 ## Major Improvements
 
 - [ ] Introduce more cell properties
+  
   - [x] Division
   - [x] Death
-  - [ ] Active movement
+  - [x] Active movement
   - [ ] Movement up gradients
+
 - [ ] Integrate hybrid modeling schemes
+  
   - [ ] ODE Modeling (intracellular)
+  
   - [ ] PDE Modeling (extracellular)
   
   - Maybe use [Neural networks](https://github.com/SciML/NeuralPDE.jl) to speed up the PDE computation?
-- [ ] Create an Examples folder
+
+- [x] Create an Examples folder
+
 - [ ] How to save output?
-- [ ] Implement different ways to initialize cell locations
-- [x] Allow cells to have different properties (used Tables.jl)
+
+- [x] Implement different ways to initialize cell locations
+  
+  - [ ] Still need image input
+
+- [x] Allow cells to have different properties (used `NamedTuple`)
 
 ## Minor Improvements
 
-- [x] Allow user defined parameters to cells (used Tables.jl)
+- [x] Allow user defined parameters to cells (used `NamedTuple`)
 - [ ] Allow cells of the same type to be different sizes (?)
 - [ ] For 3D gui, don't recreate voxels every iteration, just set color to clear
-- [ ] Could get a big speed improvement if you don't loop through all cells to update articulation points
+- [x] Could get a big speed improvement if you don't loop through all cells to update articulation points
   - Need to be clever about updating articulation points locally (is this possible?)
+  - rewrote [Tarjan's algoirthm](https://en.wikipedia.org/wiki/Biconnected_component) to find articulation points which is O(V+E)
 - [ ] Don't loop through all of the cell borders when updating the GUI.
 - [ ] Use abstract typing (e.g. `AbstractVector` vs `Vector`) without creating type instability
 - [x] Do we even need to track to total energy? (nope!)

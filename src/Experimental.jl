@@ -1,51 +1,65 @@
-####################################################
-# Determine cell subgraph
-####################################################
+#Custom sparsevector that does not allocate
 
-using Graphs
-using CellularPotts
+mutable struct SV{T<:Integer} <: AbstractVector{T}
+    n::T
+    nzind::Vector{T}
+    nzval::Vector{T}
 
-g = CellSpace(50,50)
-cellIdx = rand(1:50^2,100) |> sort
+    function SV(n::T) where {T<:Integer}
+        nzind = T[]
+        sizehint!(nzind,n)
 
-#This function attempts to find a subgraph of the a faster, however performance is about the same 😖
-function induced_subgraph_mod(g::T, vlist::AbstractVector{U}) where T <: AbstractGraph where U <: Integer
-
-    gSubRaw = view(g.fadjlist, vlist)
-    fadjlist = filter.(x -> x ∈ vlist, gSubRaw)
-    #d = Dict(vlist .=> eachindex(vlist))
-
-    for list in fadjlist
-        for (j,vertex) in enumerate(list)
-            list[j] = searchsortedfirst(vlist,vertex) #assumes vlist is sorted
-            #list[j] = d[vertex]
-        end
+        nzval = T[]
+        sizehint!(nzval,n)
+        return new{T}(n,nzind,nzval)
     end
-
-    return SimpleGraph( sum(length,fadjlist) ÷ 2, fadjlist)
 end
 
-g1 = induced_subgraph_mod(g,cellIdx)
+Base.size(S::SV) = (S.n,)
+Base.IndexStyle(::Type{<:SV}) = IndexLinear()
+
+nnz(S::SV) = length(S.nzind)
+
+function Base.getindex(S::SV, i::Int)
+    ii = searchsortedfirst(S.nzind,i)
+    
+    return (ii ≤ nnz(S) && S.nzind[ii] == i) ? S.nzval[ii] : 0
+end
+
+
+function Base.setindex!(S::SV{T}, val::T, i::T) where T <: Integer
+    checkbounds(S, i)
+
+    if iszero(val)
+        return nothing
+    end
+
+    ii = searchsortedfirst(S.nzind,i)
+
+    if ii ≤ nnz(S) && S.nzind[ii] == i
+        S.nzval[ii] = val
+    else
+        insert!(S.nzind, ii, i)
+        insert!(S.nzval, ii, val)
+    end
+end
+
+
+s = SV(10)
+
+s.nzind = [1,4]
+s.nzval = [10,20]
+
+s[3] = 100
+
+sum(s)
 
 
 
-function DFS(g::SimpleGraph)
-    src = first(vertices(g))
-    n = nv(g)
-    stack = Int[]
-    visited = falses(n)
-    depth = zeros(Int,n)
-    low = zeros(Int,n)
-
-    push!(stack, src)
-
-    while !isempty(stack)
-        currentNode = pop!(stack)
-        if !visited[currentNode]
-            visited[currentNode] = true
-            for neighbor in neighbors(g, currentNode)
-                push!(stack, neighbor)
-            end
-        end
+dict = Dict{Int, Int}()
+sizehint!(dict, 200)
+@benchmark begin
+    for i in 1:100
+        dict[i] = i^2
     end
 end
