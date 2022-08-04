@@ -1,3 +1,9 @@
+```@meta
+DocTestSetup = quote
+    using CellularPotts
+end
+```
+
 # Introduction
 
 CPMs simulate a collection of cells interacting with one another. These interactions can range anywhere from simple contact between cells to complex cytokine communication.
@@ -21,7 +27,7 @@ In this example, we'll specify a single stationary cell in the center of the gri
 
 We start by loading in the `CellularPotts.jl` package and creating a space where cells can exist.
 
-```julia
+```jldoctest simpleExample
 using CellularPotts
 
 space = CellSpace(50,50; wrapAround=true, cellNeighbors=mooreNeighbors)
@@ -31,8 +37,17 @@ Here we create a 50 by 50 square grid with periodic boundary conditions where gr
 
 Next we need to initialize a table of cell information to put into this space.
 
-```julia
-initialCellState = newCellState([:Epithelial], [500], [1]); 
+```jldoctest simpleExample; output = false
+initialCellState = newCellState([:Epithelial], [500], [1]);
+
+# output
+┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┐
+│      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │
+│     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │
+├────────────┼─────────┼─────────┼─────────┼────────────────┼────────────┼───────────────────┤
+│     Medium │       0 │       0 │       0 │              0 │          0 │                 0 │
+│ Epithelial │       1 │       1 │       0 │            500 │          0 │               264 │
+└────────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴───────────────────┘
 ```
 
 The `newCellState()` function populates a table detailing the current cell state. The 3 required inputs are:
