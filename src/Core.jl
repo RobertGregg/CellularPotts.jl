@@ -333,38 +333,38 @@ countcelltypes(cpm::CellPotts) = countcelltypes(cpm.currentState)
 ####################################################
 
 function show(io::IO, cpm::CellPotts) 
-    println("Cell Potts Model:")
+    println(io,"Cell Potts Model:")
     #Grid
     dim = length(cpm.space.gridSize)
     if dim == 2
-        println("Grid: $(cpm.space.gridSize[1])×$(cpm.space.gridSize[2])")
+        println(io,"Grid: $(cpm.space.gridSize[1])×$(cpm.space.gridSize[2])")
     else
-        println("Grid: $(cpm.space.gridSize[1])×$(cpm.space.gridSize[2])×$(cpm.space.gridSize[3])")
+        println(io,"Grid: $(cpm.space.gridSize[1])×$(cpm.space.gridSize[2])×$(cpm.space.gridSize[3])")
     end
 
     #Cells and types
     cellCounts = countmap(cpm.currentState.names)
-    print("Cell Counts:")
+    print(io,"Cell Counts:")
     for (key, value) in cellCounts #remove medium
         if key ≠ :Medium
-            print(" [$(key) → $(value)]")
+            print(io," [$(key) → $(value)]")
         end
     end
 
     if length(cellCounts) > 1
-        println(" [Total → $(length(cpm.currentState.names)-1)]")
+        println(io," [Total → $(length(cpm.currentState.names)-1)]")
     else
-        print("\n")
+        print(io,"\n")
     end
 
-    print("Model Penalties:")
+    print(io,"Model Penalties:")
     for p in Base.uniontypes(eltype(cpm.penalties))
         p = Symbol(p)
-        print(" $(replace(String(p),"Penalty"=>""))")
+        print(io," $(replace(String(p),"Penalty"=>""))")
     end
-    print("\n")
-    println("Temperature: ", cpm.temperature)
-    print("Steps: ", cpm.step.stepCounter)
+    print(io,"\n")
+    println(io,"Temperature: ", cpm.temperature)
+    print(io,"Steps: ", cpm.step.stepCounter)
 end
 
 function show(io::IO, intState::CellTable) 
@@ -374,7 +374,7 @@ function show(io::IO, intState::CellTable)
     hl = Highlighter(f = (data, i, j) -> i == 1,
                          crayon = Crayon(background = :dark_gray))
 
-    pretty_table(
+    pretty_table(io,
         data,
         header_crayon = crayon"yellow bold",
         highlighters = hl,

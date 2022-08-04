@@ -14,8 +14,6 @@ using Graphs
 end
 
 
-@testset "MyPackage" begin
-    ... # other tests & testsets
-    doctest(MyPackage)
-    ... # other tests & testsets
+@testset "Docs Testing" begin
+    doctest(CellularPotts)
 end

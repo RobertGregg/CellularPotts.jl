@@ -27,18 +27,21 @@ In this example, we'll specify a single stationary cell in the center of the gri
 
 We start by loading in the `CellularPotts.jl` package and creating a space where cells can exist.
 
-```jldoctest simpleExample
+```jldoctest simpleExample; output = false
 using CellularPotts
 
 space = CellSpace(50,50; wrapAround=true, cellNeighbors=mooreNeighbors)
+
+# output
+{2500, 10000} undirected simple Int64 graph
 ```
 
 Here we create a 50 by 50 square grid with periodic boundary conditions where grid locations are connected to their 8 closest neighbors (4-cell neighborhoods are also available using the `vonNeumannNeighbors` function). By default, `wrapAround` is set to true and `cellNeighbors` uses the 8 closest neighbors. 
 
 Next we need to initialize a table of cell information to put into this space.
 
-```jldoctest simpleExample; output = false
-initialCellState = newCellState([:Epithelial], [500], [1]);
+```jldoctest simpleExample
+initialCellState = newCellState([:Epithelial], [500], [1])
 
 # output
 ┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┐
@@ -62,30 +65,15 @@ The inputs are simple in this case. We want one cell type called "Epithelial" wi
 
 The table `newCellState()` generates has each row representing a cell and each column listing a property given to that cell. Other information, like the column's type, is also provided.
 
-```
-initialCellState
-┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┐
-│      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │
-│     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │
-├────────────┼─────────┼─────────┼─────────┼────────────────┼────────────┼───────────────────┤
-│     Medium │       0 │       0 │       0 │              0 │          0 │                 0 │
-│ Epithelial │       1 │       1 │       0 │            500 │          0 │               264 │
-└────────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴───────────────────┘
-```
-
 The first row will always show properties for "Medium", the name given to grid locations without a cell type. Most values related to Medium are either default or missing altogether. Here we see our one epithelial cell has a desired volume of 500 and perimeter of 264 which is the minimal perimeter penalty calculated from the desired volume. 
 
 Additional properties can be added to our cells. In this model we can provide a property called positions with a single default value
 
-```julia
+```jldoctest simpleExample
 positions = [(25,25)]
 initialCellState = addCellProperty(initialCellState, :positions, positions)
-```
 
-Looking at our updated table, we can see the newly added property.
-
-```
-initialCellState
+# output
 ┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┬─────────────────────┐
 │      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │           positions │
 │     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │ Tuple{Int64, Int64} │
@@ -95,23 +83,29 @@ initialCellState
 └────────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴───────────────────┴─────────────────────┘
 ```
 
+Looking at our updated table, we can see the newly added property.
+
 Now that we have a space and a cell to fill it with, we need to provide a list of model penalties. A number of default penalties exist and you can even create your own custom penalties. Here we only include an `AdhesionPenalty` which encourages grid locations with the same cell type to stick together and a `VolumePenalty` which penalizes cells that deviate from their desired volume.
 
-```julia
+```jldoctest simpleExample
 penalties = [
     AdhesionPenalty([ 0  20;
                      20  0]),
     VolumePenalty([5])
     ]
+
+# output
+2-element Vector{Penalty}:
+ AdhesionPenalty([0 20; 20 0])
+ VolumePenalty([0, 5])
 ```
 
 `AdhesionPenalty` requires a symmetric matrix `J` where `J[n,m]` gives the adhesion penalty for cells with types n and m. In this model we penalize Epithelial cell locations adjacent to Medium. The `VolumePenalty` needs a vector of scaling factors (one for each cell type) that either increase or decrease the volume penalty contribution to the overall penalty. 
 
 Now we can take these three objects and create a Cellular Potts Model object.
 
-```
-cpm = CellPotts(space, initialCellState, penalties)
-
+```jldoctest simpleExample
+julia> cpm = CellPotts(space, initialCellState, penalties)
 Cell Potts Model:
 Grid: 50×50
 Cell Counts: [Epithelial → 1] [Total → 1]
