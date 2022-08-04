@@ -27,12 +27,10 @@ In this example, we'll specify a single stationary cell in the center of the gri
 
 We start by loading in the `CellularPotts.jl` package and creating a space where cells can exist.
 
-```jldoctest simpleExample; output = false
-using CellularPotts
+```jldoctest simpleExample
+julia> using CellularPotts
 
-space = CellSpace(50,50; wrapAround=true, cellNeighbors=mooreNeighbors)
-
-# output
+julia> space = CellSpace(50,50; wrapAround=true, cellNeighbors=mooreNeighbors)
 {2500, 10000} undirected simple Int64 graph
 ```
 
@@ -41,9 +39,7 @@ Here we create a 50 by 50 square grid with periodic boundary conditions where gr
 Next we need to initialize a table of cell information to put into this space.
 
 ```jldoctest simpleExample
-initialCellState = newCellState([:Epithelial], [500], [1])
-
-# output
+julia> initialCellState = newCellState([:Epithelial], [500], [1])
 ┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┐
 │      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │
 │     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │
@@ -70,10 +66,9 @@ The first row will always show properties for "Medium", the name given to grid l
 Additional properties can be added to our cells. In this model we can provide a property called positions with a single default value
 
 ```jldoctest simpleExample
-positions = [(25,25)]
-initialCellState = addCellProperty(initialCellState, :positions, positions)
+julia> positions = [(25,25)];
 
-# output
+julia> initialCellState = addCellProperty(initialCellState, :positions, positions)
 ┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┬─────────────────────┐
 │      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │           positions │
 │     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │ Tuple{Int64, Int64} │
@@ -88,13 +83,11 @@ Looking at our updated table, we can see the newly added property.
 Now that we have a space and a cell to fill it with, we need to provide a list of model penalties. A number of default penalties exist and you can even create your own custom penalties. Here we only include an `AdhesionPenalty` which encourages grid locations with the same cell type to stick together and a `VolumePenalty` which penalizes cells that deviate from their desired volume.
 
 ```jldoctest simpleExample
-penalties = [
-    AdhesionPenalty([ 0  20;
-                     20  0]),
-    VolumePenalty([5])
-    ]
-
-# output
+julia> penalties = [
+           AdhesionPenalty([0 20;
+                           20 0]),
+           VolumePenalty([5])
+           ]
 2-element Vector{Penalty}:
  AdhesionPenalty([0 20; 20 0])
  VolumePenalty([0, 5])
@@ -118,12 +111,12 @@ Calling this object gives a quick summary of the model's current state. Note tha
 
 Our cell still needs to be placed into the space. This can be done using the `positionCellsRandom!()` function or because we have a "positions" property, we can use the `positionCells!()` function.
 
-```julia
+```@repl
 positionCells!(cpm)
 ```
 
 Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`
 
-```julia
+```@repl
 recordCPM("HelloWorld.gif", cpm)
 ```
