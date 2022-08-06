@@ -68,7 +68,7 @@ function plotCells(cpm::CellPotts)
     #distintCellTypes = countcelltypes(cpm) + 1
 
     heatmap!(axSim,
-                cpm.visual,
+                cpm.space.nodeIDs,
                 show_axis = false,
                 colormap = :Greys_3) #cgrad(cmap, distintCellTypes, categorical=true, rev=true)
         tightlimits!.(axSim)
@@ -84,7 +84,7 @@ function plotCells(cpm::CellPotts)
     points = vcat(horizontal[:],vertical[:])
 
     #Determine the transparency of the linesegments
-    gridflip = rotl90(cpm.visual) #https://github.com/JuliaPlots/Makie.jl/issues/205
+    gridflip = rotl90(cpm.space.nodeIDs) #https://github.com/JuliaPlots/Makie.jl/issues/205
 
     #Cell borders are outlined in black
     black = RGBA{Float64}(0.0,0.0,0.0,1.0);

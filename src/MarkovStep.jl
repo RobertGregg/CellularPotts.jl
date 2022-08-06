@@ -65,18 +65,13 @@ function MHStep!(cpm::CellPotts)
 
         #Cell IDs
         cpm.space.nodeIDs[cpm.step.targetNode] = cpm.step.sourceCellID
-        cpm.space.nodeTypes[cpm.step.targetNode] = cpm.currentState.names[cpm.step.sourceCellID]
+        cpm.space.nodeTypes[cpm.step.targetNode] = cpm.currentState.typeIDs[cpm.step.sourceCellID]
 
         #---Cell properties---
         for i in eachindex(cpm.penalties)
             updateMHStep!(cpm, cpm.penalties[i])
         end
         
-        #TODO Add articulation point updater 
-        
-        #---Overall properties---
-        #Update visual
-        cpm.visual[cpm.step.targetNode] = cpm.currentState.typeIDs[cpm.step.sourceCellID]
     end
 
     return nothing
@@ -130,8 +125,10 @@ end
 
 function updateMHStep!(cpm::CellPotts, MP::MigrationPenalty)
 
-    #Medium should have no MigrationPenalty
-    if cpm.step.sourceCellID == 0
+    τ = cpm.currentState.typeIDs[cpm.step.targetCellID]
+    
+    #Do not update cells with λ==0
+    if iszero(MP.λ[τ])
         MP.nodeMemory[cpm.step.targetNode] = 0
     else
         MP.nodeMemory[cpm.step.targetNode] = MP.maxAct

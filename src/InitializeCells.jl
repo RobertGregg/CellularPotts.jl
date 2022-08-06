@@ -18,7 +18,7 @@ function updateCellMembership!(cpm, cellMembership)
     for (i, cellID) in enumerate(cellMembership)
         if cellID ≠ 0
             cpm.space.nodeIDs[i] = cellID
-            cpm.space.nodeTypes[i] = cpm.currentState.names[cellID]
+            cpm.space.nodeTypes[i] = cpm.currentState.typeIDs[cellID]
 
             #Update the cell summary volumes
             cpm.currentState.volumes[cellID] += 1
@@ -36,11 +36,6 @@ function updateCellMembership!(cpm, cellMembership)
             end
         end
     end
-
-    #Fill the the array for the visual
-    #cpm.space.nodeTypes are symbols so cpm.visual ≠ cpm.space.nodeTypes
-    #cpm.visual = [cpm.currentState.typeIDs[i] for i in cellMembership]
-    cpm.visual = cellMembership
 end
 
 

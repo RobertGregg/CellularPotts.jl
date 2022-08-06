@@ -7,9 +7,9 @@ mutable struct CellSpace{N, T<:Integer} <: AbstractSimpleGraph{T}
     ne::T                         #Number of edges
     fadjlist::Vector{Vector{T}}   #Sorted adjacency list [src]: (dst, dst, dst)
     gridSize::NTuple{N, T}        #Size of grid (x,y,z...)
-    wrapAround::Bool              #Does the grid wrap around
-    nodeIDs::Vector{T}            #Cell's ID for each node
-    nodeTypes::Vector{Symbol}     #Cell's type for each node
+    wrapAround::Bool              #Does the grid wrap around?
+    nodeIDs::Matrix{T}            #Cell's ID for each node
+    nodeTypes::Matrix{T}          #Cell's type for each node
 end
 
 #CellSpaces are not directed
@@ -152,8 +152,8 @@ function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=mooreN
         fadjlist,
         gridSize,
         wrapAround,
-        zeros(T,nodes),
-        fill(:Medium,nodes))
+        zeros(T,gridSize),
+        zeros(T,gridSize))
 end
 
 
@@ -161,7 +161,7 @@ end
 CellSpace(gridSize::T...; wrapAround=true, cellNeighbors=mooreNeighbors) where T<:Integer = CellSpace(gridSize; wrapAround, cellNeighbors)
 
 #Needed for induced_subgraph (why?)
-function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
-    fadjlist = [Vector{T}() for _ in one(T):n]
-    return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(Int,n), fill(:Medium,n))
-end
+# function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
+#     fadjlist = [Vector{T}() for _ in one(T):n]
+#     return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(T,n,n),zeros(T,n,n))
+# end

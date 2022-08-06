@@ -37,7 +37,7 @@ function CellGUI(cpm::CellPotts{2})
     heatmap_node = @lift begin
         currentTime = $timestep
         MHStep!(cpm)
-        cpm.visual
+        cpm.space.nodeIDs
     end
     
     #Create the heatmap

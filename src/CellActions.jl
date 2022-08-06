@@ -28,10 +28,6 @@ function CellDivision!(cpm::CellPotts, σ::Int)
     #Update graph attributes
         cpm.space.nodeIDs[newCellNodeIDs] .= cpm.currentState.cellIDs[end]
 
-    #Global CellPotts attributes
-    #visual
-        cpm.visual[newCellNodeIDs] .= cpm.currentState.typeIDs[end]
-
     return nothing
 end
 

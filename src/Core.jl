@@ -18,7 +18,6 @@ offset(x) = OffsetArray(x, Origin(0))
 ####################################################
 
 #Could use something like TypedDelegation.jl to pass functions to data
-#TODO use Tables.jl
 """
     CellTable
 An concrete type that stores a table where each row is a cell and each column is a cell property.
@@ -47,6 +46,7 @@ keys(df::CellTable) = keys(parent(df))
 values(df::CellTable) = values(parent(df))
 pairs(df::CellTable) = pairs(parent(df))
 
+#TODO use Tables.jl
 iterate(df::CellTable, iter=1) = iter ≥ countcells(df) ? nothing : ((;((k,v[iter]) for (k,v) in pairs(df))...), iter + 1)
 getindex(df::CellTable, i::Int) = (;((k,[v[i]]) for (k,v) in pairs(df))...)
 
@@ -227,6 +227,7 @@ mutable struct PerimeterPenalty <: Penalty
     end
 end
 
+#TODO Cells get stuck in other cell's nodeMemory
 """
     MigrationPenalty(maxAct, λ, gridSize)
 An concrete type that encourages cells to protude and drag themselves forward.
@@ -288,7 +289,6 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     currentState::CellTable{V}
     penalties::Vector{U}
     step::MHStepInfo{T}
-    visual::Array{Int,N}
     getArticulation::ArticulationUtility
     temperature::Float64
 
@@ -302,7 +302,6 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
             initialCellState,
             U[p for p in penalties],
             MHStepInfo(),
-            zeros(T,space.gridSize),
             ArticulationUtility(nv(space)),
             20.0)
     end

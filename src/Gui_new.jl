@@ -10,18 +10,20 @@ function CellGUI(cpm::CellPotts)
     heatmap_node = @lift begin
         currentTime = $timestep
         ModelStep!(cpm)
-        cpm.visual
+        cpm.space.nodeIDs
     end
 
-    # cmap = ColorSchemes.nipy_spectral
-    # cmap = ColorSchemes.linear_bgyw_20_98_c66_n256
+    #cmap = ColorSchemes.nipy_spectral
+    #cmap = ColorSchemes.linear_bgyw_20_98_c66_n256
     cmap = ColorSchemes.tol_muted
     distintCellTypes = countcelltypes(cpm) + 1
 
     heatmap!(axSim,
              heatmap_node,
              show_axis = false,
-             colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true)) #:Greys_3
+             colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true))
+             #colormap = cgrad(cmap,rev=true))
+             #:Greys_3
         tightlimits!.(axSim)
         hidedecorations!.(axSim) #removes axis numbers
 
@@ -35,7 +37,7 @@ function CellGUI(cpm::CellPotts)
     points = vcat(horizontal[:],vertical[:])
 
     #Determine the transparency of the linesegments
-    gridflip = rotl90(cpm.visual) #https://github.com/JuliaPlots/Makie.jl/issues/205
+    gridflip = rotl90(cpm.space.nodeIDs) #https://github.com/JuliaPlots/Makie.jl/issues/205
 
     #Cell borders are outlined in black
     black = RGBA{Float64}(0.0,0.0,0.0,1.0);
@@ -48,7 +50,7 @@ function CellGUI(cpm::CellPotts)
     lineColors_node = @lift begin
         currentTime = $timestep
         
-        gridflip = rotl90(cpm.visual)
+        gridflip = rotl90(cpm.space.nodeIDs)
 
         for (i,edges) in enumerate(edgeConnectors)
             currentEdgeColors[i] = gridflip[edges[1]]==gridflip[edges[2]] ? clear : black

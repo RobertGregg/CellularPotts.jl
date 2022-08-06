@@ -70,7 +70,7 @@ end
 #Check if node i is a root node
 isroot(A::ArticulationUtility, i::Int) = iszero(A.parent[i])
 
-#Add node i to the list of articulation ArtPoints
+#Add node i to the list of articulation points
 function pushCell!(A::ArticulationUtility, i::Int)
     if i ∉ A.articulationPoints
         push!(A.articulationPoints, i)
@@ -91,6 +91,7 @@ function (A::ArticulationUtility)(g::CellSpace, cellID::Int)
 
     A.cellID = cellID
 
+    #Loop through all nodes with current cellID
     @inbounds for i in Iterators.filter(x->g.nodeIDs[x] == cellID, vertices(g))
         push!(A.nodeIDs, i)
         if !A.visited[i]
