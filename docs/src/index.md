@@ -19,7 +19,7 @@ Pkg.add("CellularPotts")
 
 ```@raw html
 <p style="text-align:center;">
-    <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true" alt="" width="445">
+    <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/src/Gallery/HelloWorld/HelloWorld.gif?raw=true" alt="Image of a light blue cell with fluctuating boundaries" width="445">
 </p>
 ```
 
@@ -111,12 +111,12 @@ Calling this object gives a quick summary of the model's current state. Note tha
 
 Our cell still needs to be placed into the space. This can be done using the `positionCellsRandom!()` function or because we have a "positions" property, we can use the `positionCells!()` function.
 
-```@repl
+```@repl simpleExample
 positionCells!(cpm)
 ```
 
 Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`
 
-```@repl
+```@repl simpleExample
 recordCPM("HelloWorld.gif", cpm)
 ```
