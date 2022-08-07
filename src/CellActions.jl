@@ -1,14 +1,13 @@
-#TODO either add removeCell() or condition for division to not select dead cells
-
 ####################################################
 # Cell Division
 ####################################################
 
-#This is so easy with a graph 
+#TODO Syntax now doesn't match b/s we're using Tables
+#TODO User needs to specify what happens to custom properties
 function CellDivision!(cpm::CellPotts, σ::Int)
 
     #Find all the nodes with the same ID (σ) as input
-    cellNodeIDs = findall(isequal(σ), cpm.space.nodeIDs)
+    cellNodeIDs = findall(isequal(σ), cpm.space.nodeIDs[:])
 
     #Use Metis to evenly partition the cell into two subcells
     nodePartition = Metis.partition(cpm.space[cellNodeIDs], 2) #Vector of ones and twos
@@ -20,8 +19,8 @@ function CellDivision!(cpm::CellPotts, σ::Int)
         cpm.currentState.volumes[σ] = count(isequal(1), nodePartition)
     #Add new cell
         cell = cpm.currentState[σ]
-        cell.cellIDs[1] = maximum(cpm.currentState.cellIDs) + 1 #now have n+1 cells
-        cell.volumes[1] = count(isequal(2), nodePartition)
+        cell.cellIDs = maximum(cpm.currentState.cellIDs) + 1 #now have n+1 cells
+        cell.volumes = count(isequal(2), nodePartition)
         addNewCell(cpm.currentState, cell)
 
 

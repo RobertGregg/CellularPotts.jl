@@ -9,15 +9,15 @@ initialCellState = newCellState(
     [500],
     [1]);
 
-positions = [(100,100)]
+#positions = [(100,100)]
 
-initialCellState = addcellproperty(initialCellState, :positions, positions)
+#initialCellState = addcellproperty(initialCellState, :positions, positions)
 
 penalties = [
     AdhesionPenalty([0 30;
-                    30 100]),
-    VolumePenalty([8]),
-    PerimeterPenalty([8]),
+                    30 30]),
+    VolumePenalty([10]),
+    PerimeterPenalty([10]),
     MigrationPenalty(50, [100], space.gridSize)
     ]
 
@@ -26,7 +26,7 @@ cpm = CellPotts(space, initialCellState, penalties);
 
 cpm.temperature = 10.0
 
-positionCells!(cpm)
+positionCellsRandom!(cpm)
 
 CellGUI(cpm)
 recordCPM("LetsGetMoving1.gif", cpm)

@@ -159,13 +159,13 @@ function addPenalty!(cpm::CellPotts, MP::MigrationPenalty, node::T, σ::T) where
     nodeCount = 1
 
     for neighbor in neighbors(cpm.space,node)
-        nodeMemory = MP.nodeMemory[neighbor]
+        neighborMemory = MP.nodeMemory[neighbor]
 
         if σ == cpm.space.nodeIDs[neighbor]
-            if nodeMemory == 0
+            if iszero(neighborMemory)
                 return 0
             end
-            average += nodeMemory
+            average += neighborMemory
             nodeCount += 1
         end
     end

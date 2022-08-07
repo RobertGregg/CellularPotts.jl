@@ -4,7 +4,7 @@ function CellGUI(cpm::CellPotts)
     fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf(0.98, 0.98, 0.98))
     axSim = fig[1, 1] = Axis(fig, title = "Simulation")
 
-    timestep = Node(1) #will increase by one every step
+    timestep = Observable(1) #will increase by one every step
 
     # heatmap_node is an array that updates when timestep updates
     heatmap_node = @lift begin
@@ -20,7 +20,6 @@ function CellGUI(cpm::CellPotts)
 
     heatmap!(axSim,
              heatmap_node,
-             show_axis = false,
              colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true))
         tightlimits!.(axSim)
         hidedecorations!.(axSim) #removes axis numbers
@@ -30,8 +29,8 @@ function CellGUI(cpm::CellPotts)
     (m,n) = cpm.space.gridSize
 
     #Generate all of the edge Connections by putting a point on each cell corner
-    horizontal = [Point2f0(x, y) => Point2f0(x+1, y) for x in 0.5:m-0.5, y in 0.5:m+0.5]
-    vertical = [Point2f0(x, y) => Point2f0(x, y+1) for y in 0.5:n-0.5, x in 0.5:n+0.5]
+    horizontal = [Point2f(x, y) => Point2f(x+1, y) for x in 0.5:m-0.5, y in 0.5:m+0.5]
+    vertical = [Point2f(x, y) => Point2f(x, y+1) for y in 0.5:n-0.5, x in 0.5:n+0.5]
     points = vcat(horizontal[:],vertical[:])
 
     #Determine the transparency of the linesegments
@@ -79,7 +78,6 @@ function CellGUI(cpm::CellPotts)
 
         heatmap!(axSim,
                 heatmap_Gm,
-                show_axis = false,
                 colormap = colmap)
     end
 
@@ -133,7 +131,7 @@ function CellGUI(cpm::CellPotts)
         #Has the stop button been pushed?
         if  stop.clicks[] == 1
             runsim = false
-            GLMakie.destroy!(GLMakie.global_gl_screen()) #close the window
+            #GLMakie.destroy!(GLMakie.global_gl_screen()) #close the window?
         end
 
         

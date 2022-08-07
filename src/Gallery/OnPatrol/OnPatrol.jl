@@ -2,21 +2,21 @@ using Revise
 using CellularPotts
 
 
-space = CellSpace(100,100)
+space = CellSpace(200,200)
 
 initialCellState = newCellState(
     [:Epithelial, :TCell],
-    [130, 100],
-    [60, 10])
+    [500, 400],
+    [75, 1])
 
 
 penalties = [
-    AdhesionPenalty([0 50 50;
-                    50 30 50;
-                    50 50 30]),
-    VolumePenalty([5,5]),
-    PerimeterPenalty([5,5]),
-    MigrationPenalty(50, [0,100], space.gridSize)
+    AdhesionPenalty([0 20 20;
+                    20 20 100;
+                    20 100 200]),
+    VolumePenalty([30,30]),
+    PerimeterPenalty([0,2]),
+    MigrationPenalty(500, [0,60], space.gridSize)
     ]
 
 

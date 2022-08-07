@@ -85,17 +85,17 @@ merge(df::CellTable, newColumn) = CellTable( merge(parent(df), newColumn) )
 
 #TODO rename as "createNewTable"
 """
-    newCellState(names, volumes, counts)
+    newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
 Create a new `cellTable` where each row corresponds to a cell.
 
 By default, this function generates a table with the following columns:
- - names`::Vector{Symbol}`: List of names given to cells (e.g. `:TCell`)
- - cellIDs`::Vector{<:Integer}`: A unqiue number given to a cell
- - typeIDs`::Vector{<:Integer}`: A number corresponding to the cell's name
- - volumes`::Vector{<:Integer}`: Number of grid squares occupied 
- - desiredVolumes`::Vector{<:Integer}`: Desired number of grid square
- - perimeters`::Vector{<:Integer}`: Cell border penality
- - desiredPerimeters`::Vector{<:Integer}`: Desired cell border penality
+ - names`::Vector{Symbol}` -- List of names given to cells (e.g. `:TCell`)
+ - cellIDs`::Vector{<:Integer}` -- A unqiue number given to a cell
+ - typeIDs`::Vector{<:Integer}` -- A number corresponding to the cell's name
+ - volumes`::Vector{<:Integer}` -- Number of grid squares occupied 
+ - desiredVolumes`::Vector{<:Integer}`-- Desired number of grid square
+ - perimeters`::Vector{<:Integer}`-- Cell border penality
+ - desiredPerimeters`::Vector{<:Integer}`-- Desired cell border penality
 
 The first row in the table is reserved for `:Medium` which is the name given to grid locations not belonging to any cell and is given an index of 0 (The first cell is given an index of 1).
     
@@ -132,20 +132,21 @@ end
 """
     addcellproperty(df::CellTable, propertyName, propertyValue)
     addcellproperty(df::CellTable, propertyName, propertyValue, validCells)
-    addcellproperty(df::CellTable, propertyName, cellPropertyPairs::Vector{Pair{Symbol, T}})
+    addcellproperty(df::CellTable, propertyName, cellPropertyPairs::Dict{Symbol, T})
 
 Given a `CellTable`, add a new column called `propertyName` with values from `propertyValue`.
 
 There are several ways to add a new property to a `CellTable`, with the simplest method requiring only a `propertyName` and a single `propertyValue`. A vector of `propertyValue`s can also be provided if a unique value for each cell is desired.
 
-Sometimes a property may only apply to certain cell types. A single cell type or vector of cell types can be passed to `validCells`. All non-valid cell will be given a `missing` value for that property.
+Sometimes a property may only apply to certain cell types. A single cell type or vector of cell types can be passed to `validCells`. All non-valid cells will be given a `missing` value for that property.
 
-Finally, a vector of `pairs` can be passed if multiple cells should have different property values. If all the cells are not provided, property values will be set to missing.
+Finally, a dictionary of cell=>value pairs can be passed for a given property. Cells not in this dictionary will be given a property value of `missing`.
 """
 function addcellproperty(df::CellTable, propertyName::Symbol, propertyValue::Vector{T}) where T
     
+    #Check if :Medium is accounted for
     if length(propertyValue) ≠ length(df)
-        pushfirst!(propertyValue, first(propertyValue)) # note sure what to do about medium...
+        pushfirst!(propertyValue, first(propertyValue))
     end
     propertyValue = offset(propertyValue)
 
@@ -162,7 +163,6 @@ function addcellproperty(df::CellTable, propertyName::Symbol, cellPropertyDict::
     newColumn = U[]
 
     for cellName in df.names
-
         if !haskey(cellPropertyDict, cellName)
             push!(newColumn, missing)
         else

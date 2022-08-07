@@ -63,6 +63,8 @@ Below is simply tracking the progress of the package and any notes to myself.
 
 - [x] Allow cells to have different properties (used `NamedTuple`)
 
+- [ ] Use automatic differentiation to calculate [cellular forces](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007459) from the Hamiltonian
+
 ## Minor Improvements
 
 - [x] Allow user defined parameters to cells (used `NamedTuple`)

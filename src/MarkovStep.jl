@@ -43,6 +43,7 @@ function MHStep!(cpm::CellPotts)
         return nothing
     end
 
+    #TODO Add an option to toggle this check
     #Test if the target cell is an articulation point
     if cpm.step.targetNode ∈ cpm.getArticulation(cpm.space, cpm.step.targetCellID)
         return nothing
@@ -125,7 +126,7 @@ end
 
 function updateMHStep!(cpm::CellPotts, MP::MigrationPenalty)
 
-    τ = cpm.currentState.typeIDs[cpm.step.targetCellID]
+    τ = cpm.currentState.typeIDs[cpm.step.sourceCellID]
     
     #Do not update cells with λ==0
     if iszero(MP.λ[τ])
