@@ -1,7 +1,7 @@
 
 function CellGUI(cpm::CellPotts)
 
-    fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf0(0.98, 0.98, 0.98))
+    fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf(0.98, 0.98, 0.98))
     axSim = fig[1, 1] = Axis(fig, title = "Simulation")
 
     timestep = Node(1) #will increase by one every step
@@ -10,7 +10,7 @@ function CellGUI(cpm::CellPotts)
     heatmap_node = @lift begin
         currentTime = $timestep
         ModelStep!(cpm)
-        cpm.space.nodeIDs
+        cpm.space.nodeTypes
     end
 
     #cmap = ColorSchemes.nipy_spectral
@@ -22,8 +22,6 @@ function CellGUI(cpm::CellPotts)
              heatmap_node,
              show_axis = false,
              colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true))
-             #colormap = cgrad(cmap,rev=true))
-             #:Greys_3
         tightlimits!.(axSim)
         hidedecorations!.(axSim) #removes axis numbers
 
@@ -67,7 +65,8 @@ function CellGUI(cpm::CellPotts)
         )
 
     #Active cell movement
-    migrationIndex = findfirst(x->typeof(x)==MigrationPenalty, cpm.penalties)
+    #TODO use spy()?
+    migrationIndex = findfirst(x-> x isa MigrationPenalty, cpm.penalties)
     if !isnothing(migrationIndex)
 
         heatmap_Gm = @lift begin

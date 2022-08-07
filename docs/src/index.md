@@ -68,7 +68,7 @@ Additional properties can be added to our cells. In this model we can provide a 
 ```jldoctest simpleExample
 julia> positions = [(25,25)];
 
-julia> initialCellState = addCellProperty(initialCellState, :positions, positions)
+julia> initialCellState = addcellproperty(initialCellState, :positions, positions)
 ┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┬─────────────────────┐
 │      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │           positions │
 │     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │ Tuple{Int64, Int64} │

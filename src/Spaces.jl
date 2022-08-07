@@ -123,16 +123,15 @@ end
 # Space constructor
 ####################################################
 
-
-#Given n nodes, create an empty graph
 function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=mooreNeighbors) where {N, T<:Integer}
     
     nodes = prod(gridSize)
     grid = reshape(1:nodes, gridSize...)
 
-    neighborIndices = vec([cellNeighbors(n) for n in CartesianIndices(grid)])
+    neighborIndices = [cellNeighbors(n) for n in CartesianIndices(grid)]
     fadjlist = [zeros(T, 3^N - 1) for _ in 1:nodes] #assumes worse case senario (i.e. mooreNeighbors)
 
+    #Loop through all neighbor sets and connect the edges
     for (i,n) in enumerate(neighborIndices)
         if wrapAround
             fadjlist[i] = grid[mod1.(n, gridSize...)]
@@ -161,7 +160,7 @@ end
 CellSpace(gridSize::T...; wrapAround=true, cellNeighbors=mooreNeighbors) where T<:Integer = CellSpace(gridSize; wrapAround, cellNeighbors)
 
 #Needed for induced_subgraph (why?)
-# function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
-#     fadjlist = [Vector{T}() for _ in one(T):n]
-#     return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(T,n,n),zeros(T,n,n))
-# end
+function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
+    fadjlist = [Vector{T}() for _ in one(T):n]
+    return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(T,n,n),zeros(T,n,n))
+end

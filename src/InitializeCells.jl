@@ -86,15 +86,16 @@ function positionCells!(cpm::CellPotts{N,T,V}) where {N,T,V}
     #initialize matrix of cell IDs (σ)
     cellMembership = zeros(T, space.gridSize)
 
-    for (id, vol, pos) in zip(currState.cellIDs, currState.desiredVolumes, currState.positions)
+    for cell in currState
 
-        if id == 0
+        if iszero(cell.cellIDs)
             continue
         end
+
         #Determine how far nodes are from the position
-        node = LinearIndices(space.gridSize)[pos...]
+        node = LinearIndices(space.gridSize)[cell.positions...]
         
-        politeBFS(cellMembership, space, id, vol, node)
+        politeBFS(cellMembership, space, cell.cellIDs, cell.desiredVolumes, node)
     end
 
 

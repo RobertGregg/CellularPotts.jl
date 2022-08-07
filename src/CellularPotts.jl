@@ -1,7 +1,9 @@
 module CellularPotts
 
 using OffsetArrays, #Allow some arrays to be zero indexed to include medium
-      GLMakie, #For plotting and making the GUI (also exports AbstractPlotting)
+      Makie, #For plotting and making the GUI
+      GLMakie, #Need both?
+      Tables, #Structure for holding cells and their properties
       Colors, #More color options for the cells (e.g. :Purples)
       ColorSchemes, #For custom cell colors
       StatsBase, Random, #Currently just used for countmap, inverse_rle; shuffle
@@ -33,12 +35,41 @@ import Base: eltype,
              show,
              iterate,
              getindex,
-             keys,
-             values,
-             pairs
+             length
+
+import Tables:
+             istable,
+             schema,
+             Schema,
+             columnaccess,
+             columns,
+             getcolumn,
+             columnnames,
+             rowaccess,
+             rows,
+             AbstractColumns,
+             AbstractRow
+
+
+####################################################
+# Global Helper Functions
+####################################################
+#Kronecker delta function
+δ(x, y) = isequal(x,y) ? 1 : 0
+
+#Given a desired cell volume, calculate minimum perimeter on a square lattice
+#There are 3 pages of notes behind this equation
+#It's related to the minimum perimeter for a polyomino which is 2ceil(2√V)
+#TODO Honestly why isn't perimeter the literal perimeter?
+estPerimeter(V::Int) = iszero(V) ? 0 : 4ceil(Int,2sqrt(V)-3) + 2ceil(Int,2sqrt(V+1)-4) + 14
+
+#Returns a zero indexed array
+offset(x) = OffsetArray(x, Origin(0))
+
 
 include("Spaces.jl")
 include("ArticulationPoints.jl")
+include("CellTableStructure.jl")
 include("Core.jl")
 include("Penalties.jl")
 include("InitializeCells.jl")
@@ -55,12 +86,13 @@ export
       CellSpace,
 #ArticulationPoints.jl
       ArticulationUtility,
-#Core.jl
+#CellTableStructure.jl
       CellTable,
+      addcellproperty,
+#Core.jl
       countcells,
       countcelltypes,
       newCellState,
-      addCellProperty,
       addNewCell,
       removeCell,
       Penalty,

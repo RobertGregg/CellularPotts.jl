@@ -11,7 +11,7 @@ initialCellState = newCellState(
 
 positions = [(100,100)]
 
-initialCellState = addCellProperty(initialCellState, :positions, positions)
+initialCellState = addcellproperty(initialCellState, :positions, positions)
 
 penalties = [
     AdhesionPenalty([0 30;
