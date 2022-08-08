@@ -1,4 +1,3 @@
-
 ####################################################
 # Space Structure
 ####################################################
@@ -164,3 +163,23 @@ function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
     fadjlist = [Vector{T}() for _ in one(T):n]
     return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(T,n,n),zeros(T,n,n))
 end
+
+####################################################
+# Show method
+####################################################
+function show(io::IO, space::CellSpace{N,T}) where {N,T} 
+    
+    wrapType = space.wrapAround ? "Periodic" : "nonPeriodic"
+    numNeigbors = maximum(length, space.fadjlist)
+
+    for n = 1:length(space.gridSize)-1
+        print(io, "$(space.gridSize[n])×")
+    end
+
+    if length(space.gridSize) > 1
+        print(io, "$(last(space.gridSize)) $(wrapType) $(numNeigbors)-Neighbor CellSpace{$(N),$(T)}")
+    else
+        print(io, " $(wrapType) $(numNeigbors)-Neighbor CellSpace{$(N),$(T)}")
+    end
+end
+

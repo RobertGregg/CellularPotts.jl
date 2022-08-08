@@ -15,7 +15,7 @@ space = CellSpace(50,50; wrapAround=true, cellNeighbors=mooreNeighbors)
 ````
 
 ````
-{2500, 10000} undirected simple Int64 graph
+50×50 Periodic 8-Neighbor CellSpace{2,Int64}
 ````
 
 Here we create a 50 by 50 square grid with periodic boundary conditions where grid locations are connected to their 8 closest neighbors (4-cell neighborhoods are also available using the `vonNeumannNeighbors` function). By default, `wrapAround` is set to true and `cellNeighbors` uses the 8 closest neighbors.
