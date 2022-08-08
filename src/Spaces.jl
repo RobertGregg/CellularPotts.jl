@@ -7,8 +7,8 @@ mutable struct CellSpace{N, T<:Integer} <: AbstractSimpleGraph{T}
     fadjlist::Vector{Vector{T}}   #Sorted adjacency list [src]: (dst, dst, dst)
     gridSize::NTuple{N, T}        #Size of grid (x,y,z...)
     wrapAround::Bool              #Does the grid wrap around?
-    nodeIDs::Matrix{T}            #Cell's ID for each node
-    nodeTypes::Matrix{T}          #Cell's type for each node
+    nodeIDs::Array{T,N}           #Cell's ID for each node
+    nodeTypes::Array{T,N}         #Cell's type for each node
 end
 
 #CellSpaces are not directed
@@ -169,17 +169,18 @@ end
 ####################################################
 function show(io::IO, space::CellSpace{N,T}) where {N,T} 
     
+    
+    for (i,dim) in enumerate(space.gridSize)
+        if i < length(space.gridSize)
+            print(io, "$(dim)×")
+        else
+            print(io, "$(dim)")
+        end
+    end
+    
     wrapType = space.wrapAround ? "Periodic" : "nonPeriodic"
     numNeigbors = maximum(length, space.fadjlist)
 
-    for n = 1:length(space.gridSize)-1
-        print(io, "$(space.gridSize[n])×")
-    end
-
-    if length(space.gridSize) > 1
-        print(io, "$(last(space.gridSize)) $(wrapType) $(numNeigbors)-Neighbor CellSpace{$(N),$(T)}")
-    else
-        print(io, " $(wrapType) $(numNeigbors)-Neighbor CellSpace{$(N),$(T)}")
-    end
+    print(io, " $(wrapType) $(numNeigbors)-Neighbor CellSpace{$(N),$(T)}")
 end
 

@@ -1,5 +1,8 @@
 {
     "cSpell.words": [
         "indicies"
+    ],
+    "cSpell.enableFiletypes": [
+        "julia"
     ]
 }

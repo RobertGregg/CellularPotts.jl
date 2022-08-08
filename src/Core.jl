@@ -172,12 +172,15 @@ countcelltypes(cpm::CellPotts) = countcelltypes(cpm.currentState)
 
 function show(io::IO, cpm::CellPotts) 
     println(io,"Cell Potts Model:")
+
     #Grid
-    dim = length(cpm.space.gridSize)
-    if dim == 2
-        println(io,"Grid: $(cpm.space.gridSize[1])×$(cpm.space.gridSize[2])")
-    else
-        println(io,"Grid: $(cpm.space.gridSize[1])×$(cpm.space.gridSize[2])×$(cpm.space.gridSize[3])")
+    print(io, "Grid: ")
+    for (i,dim) in enumerate(cpm.space.gridSize)
+        if i < length(cpm.space.gridSize)
+            print(io, "$(dim)×")
+        else
+            println(io, "$(dim)")
+        end
     end
 
     #Cells and types
