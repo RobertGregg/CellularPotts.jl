@@ -22,13 +22,29 @@ Pkg.add("CellularPotts")
     .row {
         display: flex;
         flex-wrap: wrap;
-        padding: 0 4px;
     }   
 
     .column {
         flex: 25%;
         max-width: 25%;
-        padding: 0 4px;
+    }
+
+    /* Responsive layout - makes a two column-layout instead of four columns */
+    @media screen and (max-width: 800px) {
+    .column {
+        -ms-flex: 50%;
+        flex: 50%;
+        max-width: 50%;
+    }
+    }
+
+    /* Responsive layout - makes the two columns stack on top of each other instead of next to each other */
+    @media screen and (max-width: 600px) {
+    .column {
+        -ms-flex: 100%;
+        flex: 100%;
+        max-width: 100%;
+    }
     }
 </style>
 
@@ -63,7 +79,7 @@ Pkg.add("CellularPotts")
             <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/HelloWorld/HelloWorld.gif?raw=true">
         </a>
     </div>
-    
+
 </div>
 ```
 
