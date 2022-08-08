@@ -18,11 +18,22 @@ Pkg.add("CellularPotts")
 # Simple example
 
 ```@raw html
-<p style="text-align:center;">
+<style>
+    .myDiv {
+      border: 5px outset red;
+      background-color: lightblue;
+      text-align: center;
+    }
+</style>
+
+<div class="myDiv">
     <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/">
         <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/HelloWorld/HelloWorld.gif?raw=true" width="445">
     </a>
-</p>
+    <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/">
+        <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/HelloWorld/HelloWorld.gif?raw=true" width="445">
+    </a>
+</div>
 ```
 
 In this example, we'll specify a single stationary cell in the center of the grid. 
