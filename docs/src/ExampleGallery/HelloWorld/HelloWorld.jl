@@ -6,7 +6,7 @@
 
 using CellularPotts
 
-space = CellSpace(50,50)
+space = CellSpace(50,50; wrapAround=true, cellNeighbors=mooreNeighbors)
 
 # Here we create a 50 by 50 square grid with periodic boundary conditions where grid locations are connected to their 8 closest neighbors (4-cell neighborhoods are also available using the `vonNeumannNeighbors` function). By default, `wrapAround` is set to true and `cellNeighbors` uses the 8 closest neighbors.
 
@@ -31,7 +31,7 @@ initialCellState = newCellState(
 #    
 # The first row will always show properties for "Medium", the name given to grid locations without a cell type. Most values related to Medium are either default or missing altogether. Here we see our one epithelial cell has a desired volume of 500 and perimeter of 264 which is the minimal perimeter penalty calculated from the desired volume. 
 #    
-# Additional properties can be added to our cells. In this model we can provide a property called positions with a single default value
+# Additional properties can be added to our cells using the `addcellproperty` function. In this model we can provide a special property called positions with a single default value
 
 positions = [(25,25)]
 
@@ -47,7 +47,7 @@ penalties = [
     VolumePenalty([5])
     ]
 
-# `AdhesionPenalty` requires a symmetric matrix `J` where `J[n,m]` gives the adhesion penalty for cells with types n and m. In this model we penalize Epithelial cell locations adjacent to Medium. The `VolumePenalty` needs a vector of scaling factors (one for each cell type) that either increase or decrease the volume penalty contribution to the overall penalty. 
+# `AdhesionPenalty` requires a symmetric matrix `J` where `J[n,m]` gives the adhesion penalty for cells with types n and m. In this model we penalize Epithelial cell locations adjacent to Medium. The `VolumePenalty` needs a vector of scaling factors (one for each cell type) that either increase or decrease the volume penalty contribution to the overall penalty. The scaling factor for `:Medium` is automatically set to zero.
 
 # Now we can take these three objects and create a Cellular Potts Model object.
 

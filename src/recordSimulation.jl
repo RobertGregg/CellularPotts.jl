@@ -1,8 +1,25 @@
-function recordCPM(file::String, cpm::CellPotts)
-    fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf0(0.98, 0.98, 0.98))
+"""
+    recordCPM(
+        file::String,
+        cpm::CellPotts,
+        timestamps = 0:300,
+        cmap = ColorSchemes.tol_muted;
+        framerate=60,
+        kwargs...)
+Generates an animation of the CPM model.
+"""
+function recordCPM(
+    file::String,
+    cpm::CellPotts,
+    timestamps = 0:300,
+    cmap = ColorSchemes.tol_muted;
+    framerate=60,
+    kwargs...)
+
+    fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf(0.98, 0.98, 0.98))
     axSim = fig[1, 1] = Axis(fig)
 
-    timestep = Node(0) #will increase by one every step
+    timestep = Observable(0) #will increase by one every step
 
     # heatmap_node is an array that updates when timestep updates
     heatmap_node = @lift begin
@@ -11,12 +28,11 @@ function recordCPM(file::String, cpm::CellPotts)
         cpm.space.nodeIDs
     end
 
-    cmap = ColorSchemes.tol_muted
+
     distintCellTypes = countcelltypes(cpm) + 1
 
     heatmap!(axSim,
              heatmap_node,
-             show_axis = false,
              colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true)) #:Greys_3
         tightlimits!.(axSim)
         hidedecorations!.(axSim) #removes axis numbers
@@ -26,8 +42,8 @@ function recordCPM(file::String, cpm::CellPotts)
     (m,n) = cpm.space.gridSize
 
     #Generate all of the edge Connections by putting a point on each cell corner
-    horizontal = [Point2f0(x, y) => Point2f0(x+1, y) for x in 0.5:m-0.5, y in 0.5:m+0.5]
-    vertical = [Point2f0(x, y) => Point2f0(x, y+1) for y in 0.5:n-0.5, x in 0.5:n+0.5]
+    horizontal = [Point2f(x, y) => Point2f(x+1, y) for x in 0.5:m-0.5, y in 0.5:m+0.5]
+    vertical = [Point2f(x, y) => Point2f(x, y+1) for y in 0.5:n-0.5, x in 0.5:n+0.5]
     points = vcat(horizontal[:],vertical[:])
 
     #Determine the transparency of the linesegments
@@ -75,14 +91,11 @@ function recordCPM(file::String, cpm::CellPotts)
 
         heatmap!(axSim,
                 heatmap_Gm,
-                show_axis = false,
                 colormap = colmap)
     end
     
-    framerate = 60
-    timestamps = 0:300
     
-    record(fig, file, timestamps; framerate = framerate, compression = 1) do t
+    record(fig, file, timestamps; framerate, kwargs...) do t
         timestep[] += 1
     end
 

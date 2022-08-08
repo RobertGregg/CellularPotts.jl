@@ -43,6 +43,6 @@ end
 end
 
 
-@testset "Docs Testing" begin
-    doctest(CellularPotts)
-end
+# @testset "Docs Testing" begin
+#     doctest(CellularPotts)
+# end
