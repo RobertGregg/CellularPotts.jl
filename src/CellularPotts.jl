@@ -11,7 +11,8 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       LinearAlgebra, #Additional functionality for arrays
       SparseArrays, #Improve speed for some large arrays
       Graphs, #Needed for creating graphs that look like graphDimension
-      Metis #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
+      Metis, #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
+      Literate #Auto genereate markdown files from julia scripts
 
 import OffsetArrays: Origin
 
@@ -35,7 +36,8 @@ import Base: eltype,
              show,
              iterate,
              getindex,
-             length
+             length,
+             size
 
 import Tables:
              istable,

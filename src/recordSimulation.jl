@@ -25,7 +25,7 @@ function recordCPM(
     heatmap_node = @lift begin
         currentTime = $timestep
         ModelStep!(cpm)
-        cpm.space.nodeIDs
+        cpm.space.nodeTypes
     end
 
 

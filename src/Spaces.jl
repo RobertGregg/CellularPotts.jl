@@ -11,6 +11,9 @@ mutable struct CellSpace{N, T<:Integer} <: AbstractSimpleGraph{T}
     nodeTypes::Array{T,N}         #Cell's type for each node
 end
 
+#This might break things in Graphs.jl, let's see
+size(g::CellSpace) = g.gridSize
+
 #CellSpaces are not directed
 is_directed(::Type{<:CellSpace}) = false
 is_directed(g::CellSpace) = false

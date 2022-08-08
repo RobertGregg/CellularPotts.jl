@@ -1,5 +1,7 @@
-using CellularPotts, Literate
+using CellularPotts, Literate, Random
 
+
+Random.seed!(314159)
 
 #Function to replace name of gif with actual gif
 function gifReplace(content, root, fileName)

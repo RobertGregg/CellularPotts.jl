@@ -43,9 +43,7 @@ initialCellState = newCellState(
 The `newCellState()` function populates a table detailing the current cell state. The 3 required inputs are:
 
 1. A list of cell types
-
 2. A list of desired cell sizes (volumes)
-
 3. A list of cell counts for each cell type
 
 The inputs are simple in this case. We want one cell type called "Epithelial" with a size of 500 pixels and we want only one of them.
