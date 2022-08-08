@@ -7,6 +7,7 @@ makedocs(
     modules = [CellularPotts],
     pages = [
         "Introduction" => "index.md",
+        "Examples" => ["./GeneratedGallery/HelloWorld.md"],
         "API.md"]
 )
 
