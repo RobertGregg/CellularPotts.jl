@@ -21,7 +21,8 @@ Pkg.add("CellularPotts")
 <style>
     .Gallery {
         display: grid;
-        grid-template-columns: auto auto auto auto;
+        grid-template-columns: repeat(4,auto);
+        grid-gap: 1%;
     }  
 </style>
 
@@ -58,6 +59,7 @@ Pkg.add("CellularPotts")
     </div>
 
 </div>
+
 ```
 
 In this example, we'll specify a single stationary cell in the center of the grid. 
