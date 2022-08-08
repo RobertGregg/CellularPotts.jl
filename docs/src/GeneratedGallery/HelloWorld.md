@@ -8,7 +8,7 @@ In this example, we'll specify a single stationary cell in the center of the gri
 
 We start by loading in the `CellularPotts.jl` package and creating a space where cells can exist.
 
-````jldoctest HelloWorld
+````@example HelloWorld
 using CellularPotts
 
 space = CellSpace(50,50)
@@ -18,7 +18,7 @@ Here we create a 50 by 50 square grid with periodic boundary conditions where gr
 
 Next we need to initialize a table of cell information to put into this space.
 
-````jldoctest HelloWorld
+````@example HelloWorld
 initialCellState = newCellState(
     [:Epithelial],
     [500],
@@ -41,7 +41,7 @@ The first row will always show properties for "Medium", the name given to grid l
 
 Additional properties can be added to our cells. In this model we can provide a property called positions with a single default value
 
-````jldoctest HelloWorld
+````@example HelloWorld
 positions = [(25,25)]
 
 initialCellState = addcellproperty(initialCellState, :positions, positions)
@@ -51,7 +51,7 @@ Looking at our updated table, we can see the newly added property.
 
 Now that we have a space and a cell to fill it with, we need to provide a list of model penalties. A number of default penalties exist and you can even create your own custom penalties. Here we only include an `AdhesionPenalty` which encourages grid locations with the same cell type to stick together and a `VolumePenalty` which penalizes cells that deviate from their desired volume.
 
-````jldoctest HelloWorld
+````@example HelloWorld
 penalties = [
     AdhesionPenalty([0 20;
                      20 0]),
@@ -63,7 +63,7 @@ penalties = [
 
 Now we can take these three objects and create a Cellular Potts Model object.
 
-````jldoctest HelloWorld
+````@example HelloWorld
 cpm = CellPotts(space, initialCellState, penalties)
 ````
 
@@ -71,13 +71,13 @@ Calling this object gives a quick summary of the model's current state. Note tha
 
 Our cell still needs to be placed into the space. This can be done using the `positionCellsRandom!()` function or because we have a "positions" property, we can use the `positionCells!()` function.
 
-````jldoctest HelloWorld
+````@example HelloWorld
 positionCells!(cpm)
 ````
 
 Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`
 
-````jldoctest HelloWorld
+````@example HelloWorld
 recordCPM("HelloWorld.gif", cpm)
 ````
 
