@@ -1,7 +1,7 @@
 # # Hello World
-#
+
 # In this example, we'll specify a single stationary cell in the center of the grid. 
-#
+
 # We start by loading in the `CellularPotts.jl` package and creating a space where cells can exist.
 
 using CellularPotts
@@ -18,19 +18,19 @@ initialCellState = newCellState(
     [1])
 
 # The `newCellState()` function populates a table detailing the current cell state. The 3 required inputs are:
-#
+
 # 1. A list of cell types
-#        
+        
 # 2. A list of desired cell sizes (volumes)
-#    
+    
 # 3. A list of cell counts for each cell type
-#    
+    
 # The inputs are simple in this case. We want one cell type called "Epithelial" with a size of 500 pixels and we want only one of them.
-#    
+    
 # The table `newCellState()` generates has each row representing a cell and each column listing a property given to that cell. Other information, like the column's type, is also provided.
-#    
+    
 # The first row will always show properties for "Medium", the name given to grid locations without a cell type. Most values related to Medium are either default or missing altogether. Here we see our one epithelial cell has a desired volume of 500 and perimeter of 264 which is the minimal perimeter penalty calculated from the desired volume. 
-#    
+    
 # Additional properties can be added to our cells using the `addcellproperty` function. In this model we can provide a special property called positions with a single default value
 
 positions = [(25,25)]
