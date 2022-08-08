@@ -4,13 +4,29 @@ Pkg.add(&quot;CellularPotts&quot;)</code></pre><h1 id="Simple-example"><a class=
     .row {
         display: flex;
         flex-wrap: wrap;
-        padding: 0 4px;
     }   
 
     .column {
         flex: 25%;
         max-width: 25%;
-        padding: 0 4px;
+    }
+
+    /* Responsive layout - makes a two column-layout instead of four columns */
+    @media screen and (max-width: 800px) {
+    .column {
+        -ms-flex: 50%;
+        flex: 50%;
+        max-width: 50%;
+    }
+    }
+
+    /* Responsive layout - makes the two columns stack on top of each other instead of next to each other */
+    @media screen and (max-width: 600px) {
+    .column {
+        -ms-flex: 100%;
+        flex: 100%;
+        max-width: 100%;
+    }
     }
 </style>
 
@@ -45,7 +61,7 @@ Pkg.add(&quot;CellularPotts&quot;)</code></pre><h1 id="Simple-example"><a class=
             <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/HelloWorld/HelloWorld.gif?raw=true">
         </a>
     </div>
-    
+
 </div><p>In this example, we&#39;ll specify a single stationary cell in the center of the grid. </p><p>We start by loading in the <code>CellularPotts.jl</code> package and creating a space where cells can exist.</p><pre><code class="language-julia-repl hljs">julia&gt; using CellularPotts
 
 julia&gt; space = CellSpace(50,50; wrapAround=true, cellNeighbors=mooreNeighbors)
@@ -78,4 +94,4 @@ Grid: 50×50
 Cell Counts: [Epithelial → 1] [Total → 1]
 Model Penalties: Adhesion Volume
 Temperature: 20.0
-Steps: 0 </code></pre><p>Calling this object gives a quick summary of the model&#39;s current state. Note that a &quot;temperature&quot; of 20 is given to the model by default. Higher temperatures allow the model to more likely accept changes that increase the overall penalty (e.g. cells could deviate further from their desired volume). The model object also tracks how many time steps have been performed. </p><p>Our cell still needs to be placed into the space. This can be done using the <code>positionCellsRandom!()</code> function or because we have a &quot;positions&quot; property, we can use the <code>positionCells!()</code> function.</p><pre><code class="language-julia hljs">positionCells!(cpm)</code></pre><p>Our model is more ready for simulation! This can be done using the using the <code>ModelStep!</code> function, interactively through the <code>CellGUI</code> function, or recorded as a gif using <code>recordCPM</code></p><pre><code class="language-julia hljs">recordCPM(&quot;HelloWorld.gif&quot;, cpm)</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="ExampleGallery/HelloWorld/HelloWorld/">Hello World »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Monday 8 August 2022 19:23">Monday 8 August 2022</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Steps: 0 </code></pre><p>Calling this object gives a quick summary of the model&#39;s current state. Note that a &quot;temperature&quot; of 20 is given to the model by default. Higher temperatures allow the model to more likely accept changes that increase the overall penalty (e.g. cells could deviate further from their desired volume). The model object also tracks how many time steps have been performed. </p><p>Our cell still needs to be placed into the space. This can be done using the <code>positionCellsRandom!()</code> function or because we have a &quot;positions&quot; property, we can use the <code>positionCells!()</code> function.</p><pre><code class="language-julia hljs">positionCells!(cpm)</code></pre><p>Our model is more ready for simulation! This can be done using the using the <code>ModelStep!</code> function, interactively through the <code>CellGUI</code> function, or recorded as a gif using <code>recordCPM</code></p><pre><code class="language-julia hljs">recordCPM(&quot;HelloWorld.gif&quot;, cpm)</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="ExampleGallery/HelloWorld/HelloWorld/">Hello World »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Monday 8 August 2022 19:42">Monday 8 August 2022</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
