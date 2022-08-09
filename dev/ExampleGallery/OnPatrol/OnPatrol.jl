@@ -8,7 +8,7 @@ space = CellSpace(200,200)
 
 # Initialize a new `CellTable` with 75 epithelial cells and 5 T-Cells
 
-initialCellState = newCellState(
+initialCellState = CellTable(
     [:Epithelial, :TCell],
     [500, 400],
     [75, 5])
