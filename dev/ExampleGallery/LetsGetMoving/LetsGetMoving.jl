@@ -1,4 +1,4 @@
-# #Let's Get Moving
+# # Let's Get Moving
 
 # Many cells have the ability to move within their environment through the contraction of actin filaments. This mechanism leads to cells performing an **"intermittent random walk"** which is characterized by periods of persistent movement, followed by periods of being stationary. 
 
