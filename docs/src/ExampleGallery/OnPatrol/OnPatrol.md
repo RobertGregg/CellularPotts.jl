@@ -2,7 +2,7 @@
 EditURL = "<unknown>/docs/src/ExampleGallery/OnPatrol/OnPatrol.jl"
 ```
 
-#On Patrol
+# On Patrol
 
 Here we combine ideas from the [HelloWorld.jl](https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/) and [LetsGetMoving.jl](https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/LetsGetMoving/LetsGetMoving/) examples to simulate T-Cells patrolling through a dense layer of epithelial cells.
 

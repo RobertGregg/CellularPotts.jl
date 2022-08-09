@@ -71,6 +71,9 @@ function positionCellsRandom!(cpm::CellPotts{N,T,V}) where {N,T,V}
         cellMembership[networkIdx] = Metis.partition(cpm.space[networkIdx], countcells(cpm))
     end
 
+    #Shuffle around the cells IDs so similar cells types are not clumped together
+    replace!(cellMembership, (1:countcells(cpm) .=> shuffle(1:countcells(cpm)))...)
+
     updateCellMembership!(cpm, cellMembership)
     
     return nothing
