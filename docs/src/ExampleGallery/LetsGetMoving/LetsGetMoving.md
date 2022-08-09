@@ -22,7 +22,7 @@ space = CellSpace(200,200)
 Much like in the [HelloWorld.jl](https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/) example, we create a single cell that averages 500 pixels in size.
 
 ````julia
-initialCellState = newCellState(
+initialCellState = CellTable(
     [:Epithelial],
     [500],
     [1]);

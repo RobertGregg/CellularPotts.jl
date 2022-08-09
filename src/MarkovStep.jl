@@ -61,8 +61,7 @@ function MHStep!(cpm::CellPotts)
 
 
     if rand() < acceptRatio #If the acceptance ratio is large enough
-        #Need to update all cell and graph properties
-        #---Graph properties---
+        #Need to update properties
 
         #Cell IDs
         cpm.space.nodeIDs[cpm.step.targetNode] = cpm.step.sourceCellID
@@ -86,7 +85,7 @@ end
 function ModelStep!(cpm::CellPotts)
 
     #Repeat MHStep! for each pixel in the model
-    for _ in 1:prod(cpm.space.gridSize)
+    for _ in 1:prod(size(cpm.space))
         MHStep!(cpm)
     end
 
@@ -147,10 +146,10 @@ updateModelStep!(cpm::CellPotts, penalty::Penalty) = nothing
 
 function updateModelStep!(cpm::CellPotts, MP::MigrationPenalty)
     
-    #Remove zeros from Medium copying into cells
+    #Remove zeros from λ==0 cells copying into other cells
     dropzeros!(MP.nodeMemory)
 
-    #Reduce the node Memory by 1 and remove zeros
+    #Reduce the node memory by 1 and remove explicit zeros
     MP.nodeMemory.nzval .-= 1
     dropzeros!(MP.nodeMemory)
     

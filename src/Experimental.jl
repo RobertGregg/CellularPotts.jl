@@ -63,3 +63,68 @@ sizehint!(dict, 200)
         dict[i] = i^2
     end
 end
+
+#############################################
+
+using OrdinaryDiffEq
+
+function fish_stock!(ds, s, p, t)
+    max_population, h = p
+    ds[1] = s[1] * (1 - (s[1] / max_population)) - h
+end
+
+stock = 400.0
+max_population = 500.0
+min_threshold = 60.0
+
+
+prob = ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
+integrator = init(prob, Tsit5(); advance_to_tstop = true)
+
+
+
+# We step 364 days with this call.
+step!(integrator, 30.0, true)
+
+
+# Only allow fishing if stocks are high enough
+integrator.p[2] = integrator.u[1] > min_threshold ? rand(300:500) : 0.0
+# Notify the integrator that conditions may be altered
+u_modified!(integrator, true)
+# Then apply our catch modifier
+step!(integrator, 1.0, true)
+# Store yearly stock in the model for plotting
+stockHistory = integrator.u[1]
+# And reset for the next year
+integrator.p[2] = 0.0
+u_modified!(integrator, true)
+
+#############################################
+
+using OrdinaryDiffEq
+
+
+
+function cellCycle!(du, u, p, t)
+    α₁, α₂, α₃, β₁, β₂, β₃, K₁, K₂, K₃, n₁, n₂, n₃ = p
+
+    CDK1, PIK1, APC = u
+
+    du[1] = dCDK1 = α₁ - β₁ * CDK1 * APC^n₁ / (K₁^n₁ + APC^n₁)
+    du[2] = dPIK1 = α₂*(1-PIK1) * CDK1^n₂ / (K₂^n₂ + CDK1^n₂) - β₂ * PIK1
+    du[3] = dAPC = α₃*(1-APC) * PIK1^n₃ / (K₃^n₃ + PIK1^n₃) - β₃ * APC
+
+    return nothing
+end
+
+u0 = zeros(3)
+p = [0.1, 3.0, 3.0,
+     3.0, 1.0, 1.0,
+     0.5, 0.5, 0.5,
+     8.0, 8.0, 8.0]
+t0 = (0.0, 25.0)
+
+
+prob = ODEProblem(cellCycle!, u0, t0, p)
+
+sol = solve(prob, Tsit5())

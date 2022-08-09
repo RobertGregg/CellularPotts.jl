@@ -12,8 +12,6 @@
 """
     CellTable
 An concrete type that stores a table where each row is a cell and each column is a cell property.
-
-This table can be genereated using the `newCellState()` function.
 """
 mutable struct CellTable{T<:NamedTuple} <: Tables.AbstractColumns
     data::T
@@ -83,9 +81,8 @@ merge(df::CellTable, newColumn) = CellTable( merge(parent(df), newColumn) )
 # Function to create a new cell state
 ####################################################
 
-#TODO rename as "createNewTable"
 """
-    newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
+    CellTable(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
 Create a new `cellTable` where each row corresponds to a cell.
 
 By default, this function generates a table with the following columns:
@@ -101,7 +98,7 @@ The first row in the table is reserved for `:Medium` which is the name given to 
     
 Of note, `desiredPerimeters` are calculated as the minimal perimeter given the cell's volume. 
 """
-function newCellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
+function CellTable(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
 
     #Does not include Medium
     totalCells = sum(counts)
@@ -128,6 +125,8 @@ end
 ####################################################
 # Add/remove cells and properties
 ####################################################
+
+#TODO addcellproperty → addcellproperty! by updating CellTable.data
 
 """
     addcellproperty(df::CellTable, propertyName, propertyValue)

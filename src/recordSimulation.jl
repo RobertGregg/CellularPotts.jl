@@ -13,11 +13,12 @@ function recordCPM(
     cpm::CellPotts,
     timestamps = 0:300,
     cmap = ColorSchemes.tol_muted;
+    addlegend=false,
     framerate=60,
     kwargs...)
 
     fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf(0.98, 0.98, 0.98))
-    axSim = fig[1, 1] = Axis(fig)
+    axSim = fig[1, 1] = Axis(fig, aspect=1)
 
     timestep = Observable(0) #will increase by one every step
 
@@ -30,15 +31,21 @@ function recordCPM(
 
 
     distintCellTypes = countcelltypes(cpm) + 1
+    cellColors = cgrad(cmap, distintCellTypes, categorical=true, rev=true)
 
     heatmap!(axSim,
              heatmap_node,
-             colormap = cgrad(cmap, distintCellTypes, categorical=true, rev=true)) #:Greys_3
+             colormap = cellColors)
         tightlimits!.(axSim)
         hidedecorations!.(axSim) #removes axis numbers
 
+    if addlegend
+        labels = String.(unique(cpm.currentState.names))
+        elements = [PolyElement(polycolor = cellColors[i]) for i in 1:length(labels)]
+        Legend(fig[1,2], elements, labels, labelsize  = 30)
+    end
 
-        edgeConnectors = Edge2Grid(cpm.space.gridSize)
+    edgeConnectors = Edge2Grid(cpm.space.gridSize)
     (m,n) = cpm.space.gridSize
 
     #Generate all of the edge Connections by putting a point on each cell corner
@@ -101,3 +108,22 @@ function recordCPM(
 
 
 end
+
+fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf(0.98, 0.98, 0.98))
+axSim = fig[1, 1] = Axis(fig, aspect = 1)
+
+cmap = ColorSchemes.tol_muted
+cmap = cgrad(cmap, 5, categorical=true, rev=true)
+
+hm = heatmap!(
+    axSim,
+    rand(1:5,20,20),
+    colormap = cmap
+)
+tightlimits!.(axSim)
+hidedecorations!.(axSim)
+
+labels = ["Cell 1","Cell 2","Cell 3","Cell 4","Cell 5"]
+elements = [PolyElement(polycolor = cmap[i]) for i in 1:length(labels)]
+
+Legend(fig[1,2], elements, labels,labelsize  = 30)

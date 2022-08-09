@@ -14,6 +14,7 @@
 
 #Once the cells are positioned, update the model
 function updateCellMembership!(cpm, cellMembership)
+    
     #Update the network with the new cell locations
     for (i, cellID) in enumerate(cellMembership)
         if cellID ≠ 0
@@ -41,25 +42,25 @@ end
 
 function positionCellsRandom!(cpm::CellPotts{N,T,V}) where {N,T,V}
 
-    #Unpack the initial state and parameters
+    #Unpack the cell space
     space = cpm.space
 
     #initialize matrix of cell IDs (σ)
     cellMembership = zeros(T, space.gridSize)
     
     #Find the center node of the entire graph
-    centerIdx = CartesianIndex(space.gridSize.÷2)
-    nodeIdx = LinearIndices(space.gridSize)
+    centerIdx = CartesianIndex(size(space).÷2)
+    nodeIdx = LinearIndices(size(space))
     centerNode = nodeIdx[centerIdx]
 
     #Determine how far nodes are from the center
     nodeDis = gdistances(space, centerNode)
 
+    #Get a sorted permutation of the node distances
+    sortedDis = sortperm(nodeDis)
+
     #How many nodes need to be initialized?
     totalNodes = sum(cpm.currentState.desiredVolumes)
-
-    #Get a sorted permutation of the distance
-    sortedDis = sortperm(nodeDis)
 
     #Assign 1:totalNodes to be filled with cells and the rest medium
     networkIdx = sortedDis[1:totalNodes] 
@@ -96,7 +97,7 @@ function positionCells!(cpm::CellPotts{N,T,V}) where {N,T,V}
         end
 
         #Determine how far nodes are from the position
-        node = LinearIndices(space.gridSize)[cell.positions...]
+        node = LinearIndices(size(space))[cell.positions...]
         
         politeBFS(cellMembership, space, cell.cellIDs, cell.desiredVolumes, node)
     end

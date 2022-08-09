@@ -28,6 +28,10 @@ Pkg.add("CellularPotts")
         grid-template-columns: repeat(3,auto);
         grid-gap: 1%;
     }  
+
+    h3 {
+        text-align: center;
+    }
 </style>
 
 <div class="Gallery">

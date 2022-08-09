@@ -19,13 +19,13 @@ Here we create a 50 by 50 square grid with periodic boundary conditions where gr
 Next we need to initialize a table of cell information to put into this space.
 
 ````jldoctest HelloWorld
-initialCellState = newCellState(
+initialCellState = CellTable(
     [:Epithelial],
     [500],
     [1])
 ````
 
-The `newCellState()` function populates a table detailing the current cell state. The 3 required inputs are:
+The `CellTable()` function populates a table detailing the current cell state. The 3 required inputs are:
 
 1. A list of cell types
 
@@ -35,7 +35,7 @@ The `newCellState()` function populates a table detailing the current cell state
 
 The inputs are simple in this case. We want one cell type called "Epithelial" with a size of 500 pixels and we want only one of them.
 
-The table `newCellState()` generates has each row representing a cell and each column listing a property given to that cell. Other information, like the column's type, is also provided.
+The table `CellTable()` generates has each row representing a cell and each column listing a property given to that cell. Other information, like the column's type, is also provided.
 
 The first row will always show properties for "Medium", the name given to grid locations without a cell type. Most values related to Medium are either default or missing altogether. Here we see our one epithelial cell has a desired volume of 500 and perimeter of 264 which is the minimal perimeter penalty calculated from the desired volume.
 

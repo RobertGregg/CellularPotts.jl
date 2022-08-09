@@ -17,7 +17,7 @@ end
 
 @testset "Adding Properties" begin
 
-    df = newCellState(
+    df = CellTable(
     [:Epithelial, :TCell, :BCell],
     [500, 100, 100],
     [1, 1, 1])

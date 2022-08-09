@@ -94,7 +94,6 @@ export
 #Core.jl
       countcells,
       countcelltypes,
-      newCellState,
       addNewCell,
       removeCell,
       Penalty,

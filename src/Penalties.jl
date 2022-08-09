@@ -1,4 +1,4 @@
-#Note, the Types definitions are in Core.jl (e.g. struct AdhesionPenalty ... end)
+#Note, the Type definitions are in Core.jl (e.g. struct AdhesionPenalty ... end)
 
 ####################################################
 # Adhesion 
@@ -91,6 +91,7 @@ function addPenalty!(cpm::CellPotts, PP::PerimeterPenalty)
     cpm.currentState.perimeters[σᵢ] -= PP.Δpᵢ
     cpm.currentState.perimeters[σⱼ] += PP.Δpⱼ
 
+    #Change the target node back into the target node
     cpm.space.nodeIDs[node] = σⱼ
 
     return targetPerimeter - sourcePerimeter
@@ -143,7 +144,7 @@ end
 #=
 The orginal method to calculate migration penality uses geometric mean. This is problematic because it introduces floating point calculations. Here we instead calculate an integer rounded arithmetic mean and map any neighorbood containing zeros to zero. This mimics the desired behavior of the geometric mean where neighborhoods “with holes” (i.e., lattice sites with activity value zero) are ignored.
 
-This change might become moot when chemotaxis is introduced. Gradient fields with unavoidably introduce floating point calculations.
+This change might become moot when chemotaxis is introduced. Gradient fields will unavoidably introduce floating point calculations.
 =#
 
 function addPenalty!(cpm::CellPotts, MP::MigrationPenalty)

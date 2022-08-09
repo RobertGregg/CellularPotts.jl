@@ -66,7 +66,6 @@ mutable struct PerimeterPenalty <: Penalty
     end
 end
 
-#TODO Cells get stuck in other cell's nodeMemory
 """
     MigrationPenalty(maxAct, λ, gridSize)
 An concrete type that encourages cells to protude and drag themselves forward.
@@ -90,6 +89,9 @@ mutable struct MigrationPenalty <: Penalty
     end
 end
 
+"""
+    
+"""
 
 
 ####################################################
@@ -119,7 +121,7 @@ A data container that holds information to run the cellular potts simulation.
 
 Requires three inputs:
  - `space`: a region where cells can exist, generated using `CellSpace()`.
- - `initialCellState`: a table where rows are cells and columns are cell properties, generated using `newCellState()`.
+ - `initialCellState`: a table where rows are cells and columns are cell properties, generated using `CellTable()`.
  - `penalties`: a vector of penalties to append to the model.
 """
 mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
