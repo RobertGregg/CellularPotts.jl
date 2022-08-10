@@ -12,11 +12,11 @@ Start by loading in the `CellularPotts.jl` package and creating a space where ce
 
 ````julia
 using CellularPotts
-space = CellSpace(200,200)
+space = CellSpace(100,100)
 ````
 
 ````
-200×200 Periodic 8-Neighbor CellSpace{2,Int64}
+100×100 Periodic 8-Neighbor CellSpace{2,Int64}
 ````
 
 Much like in the [HelloWorld.jl](https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/) example, we create a single cell that averages 500 pixels in size.
@@ -36,7 +36,7 @@ positions = [size(space) .÷ 2]
 
 ````
 1-element Vector{Tuple{Int64, Int64}}:
- (100, 100)
+ (50, 50)
 ````
 
 And that property is added to the CellTable
@@ -50,8 +50,8 @@ initialCellState = addcellproperty(initialCellState, :positions, positions)
 │      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │           positions │
 │     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │ Tuple{Int64, Int64} │
 ├────────────┼─────────┼─────────┼─────────┼────────────────┼────────────┼───────────────────┼─────────────────────┤
-│     Medium │       0 │       0 │       0 │              0 │          0 │                 0 │          (100, 100) │
-│ Epithelial │       1 │       1 │       0 │            500 │          0 │               264 │          (100, 100) │
+│     Medium │       0 │       0 │       0 │              0 │          0 │                 0 │            (50, 50) │
+│ Epithelial │       1 │       1 │       0 │            500 │          0 │               264 │            (50, 50) │
 └────────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴───────────────────┴─────────────────────┘
 
 ````
@@ -77,7 +77,7 @@ penalties = [
  AdhesionPenalty([0 30; 30 30])
  VolumePenalty([0, 5])
  PerimeterPenalty([0, 0, 10], 0, 0)
- MigrationPenalty(50, [0, 50], sparse(Int64[], Int64[], Int64[], 200, 200))
+ MigrationPenalty(50, [0, 50], sparse(Int64[], Int64[], Int64[], 100, 100))
 ````
 
 Create a Cellular Potts Model object

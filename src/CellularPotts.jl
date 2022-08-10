@@ -37,7 +37,8 @@ import Base: eltype,
              iterate,
              getindex,
              length,
-             size
+             size,
+             deleteat!
 
 import Tables:
              istable,
@@ -67,6 +68,10 @@ estPerimeter(V::Int) = iszero(V) ? 0 : 4ceil(Int,2sqrt(V)-3) + 2ceil(Int,2sqrt(V
 
 #Returns a zero indexed array
 offset(x) = OffsetArray(x, Origin(0))
+
+#see https://github.com/JuliaArrays/OffsetArrays.jl/pull/137
+#This is enough for this package (b/c we only use 0-indexed vectors)
+deleteat!(v::OffsetVector{T, Vector{T}}, i::T) where T<:Integer = deleteat!(parent(v),i-first(v.offsets))
 
 
 include("Spaces.jl")
