@@ -19,9 +19,10 @@ function CellDivision!(cpm::CellPotts, σ::Int)
         cpm.currentState.volumes[σ] = count(isequal(1), nodePartition)
     #Add new cell
         cell = cpm.currentState[σ]
-        cell.cellIDs = maximum(cpm.currentState.cellIDs) + 1 #now have n+1 cells
-        cell.volumes = count(isequal(2), nodePartition)
         addNewCell(cpm.currentState, cell)
+
+        cpm.currentState.cellIDs[end] = maximum(cpm.currentState.cellIDs) + 1
+        cpm.currentState.volumes[end] = count(isequal(2), nodePartition)
 
 
     #Update graph attributes

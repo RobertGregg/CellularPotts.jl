@@ -194,10 +194,10 @@ end
 
 Given a `cellTable`, add a new row corresponding to a new cell in the mode. Property names in the for the cell need to match column names in the cellTable
 """
-function addNewCell(df::CellTable, cell::T) where T<:NamedTuple
+function addNewCell(df::CellTable, cell::CellRow)
     #TODO Need some checks (e.g. all cells have unique ids, all the keys match)
     for property in keys(df)
-        append!(parent(df)[property], cell[property])
+        push!(df[property], cell[property])
     end
 end
 
@@ -208,7 +208,7 @@ Given a `cellTable`, remove the cell with provided `cellID`.
 """
 function removeCell(df::CellTable, cellID::T) where T<:Integer
     for property in keys(df)
-        deleteat!(parent(df)[property], cellID)
+        deleteat!(df[property], cellID)
     end
 end
 

@@ -6,7 +6,7 @@
 
 # Start by loading in the `CellularPotts.jl` package and creating a space where cells can exist.
 using CellularPotts
-space = CellSpace(200,200)
+space = CellSpace(100,100)
 
 # Much like in the [HelloWorld.jl](https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/) example, we create a single cell that averages 500 pixels in size.
 
