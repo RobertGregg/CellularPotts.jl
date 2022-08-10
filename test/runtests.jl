@@ -7,7 +7,7 @@ using Graphs
 
 
 @testset "Spaces or graphs, who's to say?" begin
-    g = CellSpace(3,3;wrapAround=false,cellNeighbors=vonNeumannNeighbors)
+    g = CellSpace(3,3;wrapAround=false,cellNeighbors=:vonNeumann)
 
     @test nv(g) == 9
     @test ne(g) == 12
@@ -43,6 +43,3 @@ end
 end
 
 
-# @testset "Docs Testing" begin
-#     doctest(CellularPotts)
-# end

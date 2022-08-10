@@ -69,102 +69,45 @@ function add_edge!(g::CellSpace{N,T}, e::SimpleEdge{T}) where {N,T}
 end
 
 ####################################################
-# Get node neighbors
+# Generate graphs using graph products
 ####################################################
 
-#The mod1 function always returns a number between 1 and n
-#0 gets mapped to n
-#n+1 gets mapped to 1
-#This is exactly what is needed for periodic boundaries
-#Make mod1 work for CartesianIndex (I is the tuple of indices)
-Base.mod1(x::CartesianIndex{N}, i::Int...) where N = CartesianIndex(mod1.(x.I,i))
 
-#Get the 4 neighboring nodes around current position
-function vonNeumannNeighbors(J::CartesianIndex{2})
-    Δx = CartesianIndex(1,0)
-    Δy = CartesianIndex(0,1)
+#https://en.wikipedia.org/wiki/Strong_product_of_graphs
+#Note: It looks like Graphs.jl will eventually add this function
+strong_product(g::G, h::G) where G <: AbstractSimpleGraph = union(cartesian_product(g,h),tensor_product(g,h))
 
-    return [     J-Δy,
-            J-Δx,     J+Δx,
-                 J+Δy]
-end
+#https://en.wikipedia.org/wiki/King%27s_graph
+kingsGrid(dims; periodic=true) = mapfoldl(periodic ? cycle_graph : path_graph, strong_product, reverse(dims))
 
-#3D Version
-function vonNeumannNeighbors(J::CartesianIndex{3})
-    Δx = CartesianIndex(1,0,0)
-    Δy = CartesianIndex(0,1,0)
-    Δz = CartesianIndex(0,0,1)
+function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=:moore) where {N, T<:Integer}
 
-    return [             J-Δy,               
-            J-Δz,   J-Δx,     J+Δx,   J+Δz,
-                         J+Δy,             ]
-end
-
-#Get the 8 neighboring nodes around current position
-function mooreNeighbors(J::CartesianIndex{2})
-    Δx = CartesianIndex(1,0)
-    Δy = CartesianIndex(0,1)
-
-    return [J-Δx-Δy,J-Δy,J+Δx-Δy,
-            J-Δx,        J+Δx,
-            J-Δx+Δy,J+Δy,J+Δx+Δy]
-end
-
-#3D Version
-function mooreNeighbors(J::CartesianIndex{3})
-    Δx = CartesianIndex(1,0,0)
-    Δy = CartesianIndex(0,1,0)
-    Δz = CartesianIndex(0,0,1)
-
-    return [J-Δx-Δy-Δz,J-Δy-Δz,J+Δx-Δy-Δz,  J-Δx-Δy,J-Δy,J+Δx-Δy,  J-Δx-Δy+Δz,J-Δy+Δz,J+Δx-Δy+Δz,
-            J-Δx-Δz,   J-Δz,      J+Δx-Δz,  J-Δx,           J+Δx,  J-Δx+Δz,   J+Δz,      J+Δx+Δz,
-            J-Δx+Δy-Δz,J+Δy-Δz,J+Δx+Δy-Δz,  J-Δx+Δy,J+Δy,J+Δx+Δy,  J-Δx+Δy+Δz,J+Δy+Δz,J+Δx+Δy+Δz]
-end
-
-####################################################
-# Space constructor
-####################################################
-
-function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=mooreNeighbors) where {N, T<:Integer}
-    
-    nodes = prod(gridSize)
-    grid = reshape(1:nodes, gridSize...)
-
-    neighborIndices = [cellNeighbors(n) for n in CartesianIndices(grid)]
-    fadjlist = [zeros(T, 3^N - 1) for _ in 1:nodes] #assumes worse case senario (i.e. mooreNeighbors)
-
-    #Loop through all neighbor sets and connect the edges
-    for (i,n) in enumerate(neighborIndices)
-        if wrapAround
-            fadjlist[i] = grid[mod1.(n, gridSize...)]
-        else
-            for j in eachindex(gridSize)
-                filter!(x-> 0 < x.I[j] ≤ gridSize[j], n)
-            end
-            fadjlist[i] = grid[n]
-        end
+    if cellNeighbors == :vonNeumann
+        g = Graphs.grid(gridSize; periodic=wrapAround)
+    elseif cellNeighbors == :moore
+        g = kingsGrid(gridSize; periodic=wrapAround)
+    else
+        error("Unknown cell neighbor option, current options are :moore and :vonNeumann")
     end
 
-    #Because of mod1, list might not be sorted
-    sort!.(fadjlist)
-    
     return CellSpace{N,T}(
-        sum(length,fadjlist) ÷ 2, #edges are listed twice (e.g. 1=>2 and 2=>1)
-        fadjlist,
+        ne(g), #edges are listed twice (e.g. 1=>2 and 2=>1)
+        g.fadjlist,
         gridSize,
         wrapAround,
         zeros(T,gridSize),
-        zeros(T,gridSize))
+        zeros(T,gridSize)
+        )
 end
 
 
 #Allow CellSpace(n,n) in addition to CellSpace((n,n))
-CellSpace(gridSize::T...; wrapAround=true, cellNeighbors=mooreNeighbors) where T<:Integer = CellSpace(gridSize; wrapAround, cellNeighbors)
+CellSpace(gridSize::T...; wrapAround=true, cellNeighbors=:moore) where T<:Integer = CellSpace(gridSize; wrapAround, cellNeighbors)
 
 #Needed for induced_subgraph (why?)
 function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
     fadjlist = [Vector{T}() for _ in one(T):n]
-    return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(T,n,n),zeros(T,n,n))
+    return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(T,n,n), zeros(T,n,n))
 end
 
 ####################################################

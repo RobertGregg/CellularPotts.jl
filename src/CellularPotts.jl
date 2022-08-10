@@ -88,8 +88,6 @@ include("recordSimulation.jl")
 export 
 
 #Spaces.jl
-      vonNeumannNeighbors,
-      mooreNeighbors,
       CellSpace,
 #ArticulationPoints.jl
       ArticulationUtility,

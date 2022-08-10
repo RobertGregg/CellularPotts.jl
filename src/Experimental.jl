@@ -130,19 +130,3 @@ prob = ODEProblem(cellCycle!, u0, t0, p)
 sol = solve(prob, Tsit5())
 
 #############################################
-using Graphs
-
-function CellSpace_experimental(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=mooreNeighbors) where {N, T<:Integer}
-
-
-    if cellNeighbors == vonNeumannNeighbors
-        g = grid(gridSize, periodic=wrapAround)
-    else
-        #https://en.wikipedia.org/wiki/Strong_product_of_graphs
-        gs = map(wrapAround ? cycle_graph : path_graph, gridSize)
-        #g = union(cartesian_product(gs...), tensor_product(gs...))
-        g = union(foldl(cartesian_product,gs), foldl(tensor_product,gs)) #not working for 3D
-    end
-
-    return g
-end
