@@ -130,3 +130,29 @@ prob = ODEProblem(cellCycle!, u0, t0, p)
 sol = solve(prob, Tsit5())
 
 #############################################
+using DiffEqJump, Graphs
+dims = (5,5)
+num_nodes = prod(dims) # number of sites
+grid = Graphs.grid(dims) # or use LightGraphs.grid(dims)
+
+num_species = 3
+starting_state = zeros(Int, num_species, num_nodes)
+starting_state[1,1] = 25
+starting_state[2,end] = 25
+
+tspan = (0.0, 3.0)
+rates = [6.0, 0.05] # k_1 = rates[1], k_2 = rates[2]
+
+prob = DiscreteProblem(starting_state, tspan, rates)
+
+netstoch = [[1 => -1, 2 => -1, 3 => 1],[1 => 1, 2 => 1, 3 => -1]]
+reactstoch = [[1 => 1, 2 => 1],[3 => 1]]
+majumps = MassActionJump(rates, reactstoch, netstoch)
+
+hopping_constants = ones(num_species, num_nodes)
+hopping_constants[3, :] .= 0.0
+
+alg = NSM()
+jump_prob = JumpProblem(prob, alg, majumps, hopping_constants=hopping_constants, spatial_system = grid, save_positions=(true, false))
+
+solution = solve(jump_prob, SSAStepper())

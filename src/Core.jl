@@ -14,7 +14,7 @@ abstract type Penalty end
 
 """
     AdhesionPenalty(J::Matrix{Int})
-An concrete type that penalizes neighboring grid locations from different cells.
+A concrete type that penalizes neighboring grid locations from different cells.
 
 Requires a symmetric matrix `J` where `J[n,m]` gives the adhesion penality for cells with types n and m. `J` is zero-indexed meaning `J[0,1]` and `J[1,0]` corresponds to the `:Medium` ↔ `:Cell1` adhesion penalty.
 
@@ -32,7 +32,7 @@ end
 
 """
     VolumePenalty(λᵥ::Vector{Int})
-An concrete type that penalizes cells that deviate from their desired volume.
+A concrete type that penalizes cells that deviate from their desired volume.
 
 Requires a vector `λᵥ` with n penalties where n is the number of cell types. `λᵥ` is zero-indexed meaning `λᵥ[0]` corresponds to the `:Medium` volume penalty (which is set to zero).
 
@@ -49,7 +49,7 @@ end
 
 """
     PerimeterPenalty(λᵥ::Vector{Int})
-An concrete type that penalizes cells that deviate from their desired perimeter.
+A concrete type that penalizes cells that deviate from their desired perimeter.
 
 Requires a vector `λₚ` with n penalties where n is the number of cell types. `λₚ` is zero-indexed meaning `λₚ[0]` corresponds to the `:Medium` perimeter penalty (which is set to zero).
 
@@ -68,7 +68,7 @@ end
 
 """
     MigrationPenalty(maxAct, λ, gridSize)
-An concrete type that encourages cells to protude and drag themselves forward.
+A concrete type that encourages cells to protude and drag themselves forward.
 
 Two integer parameters control how cells protude:
  - `maxAct`: A maximum activity a grid location can have
@@ -120,9 +120,9 @@ MHStepInfo() = MHStepInfo(0,0,[0],[0],0,0,0)
 A data container that holds information to run the cellular potts simulation.
 
 Requires three inputs:
- - `space`: a region where cells can exist, generated using `CellSpace()`.
- - `initialCellState`: a table where rows are cells and columns are cell properties, generated using `CellTable()`.
- - `penalties`: a vector of penalties to append to the model.
+ - `space` -- a region where cells can exist, generated using `CellSpace()`.
+ - `initialCellState` -- a table where rows are cells and columns are cell properties, generated using `CellTable()`.
+ - `penalties` -- a vector of penalties to append to the model.
 """
 mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     space::CellSpace{N,T}

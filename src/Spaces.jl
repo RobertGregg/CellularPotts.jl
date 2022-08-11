@@ -2,6 +2,10 @@
 # Space Structure
 ####################################################
 
+"""
+    CellSpace{N, T<:Integer} <: Graphs.AbstractSimpleGraph{T}
+A concrete type that stores the underlying space cells will occupy.
+"""
 mutable struct CellSpace{N, T<:Integer} <: AbstractSimpleGraph{T}
     ne::T                         #Number of edges
     fadjlist::Vector{Vector{T}}   #Sorted adjacency list [src]: (dst, dst, dst)
@@ -91,7 +95,7 @@ function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=:moore
     end
 
     return CellSpace{N,T}(
-        ne(g), #edges are listed twice (e.g. 1=>2 and 2=>1)
+        ne(g),
         g.fadjlist,
         gridSize,
         wrapAround,
