@@ -44,9 +44,9 @@ Pkg.add("CellularPotts")
     </div>
 
     <div>
-        <h4>moving</h4>
+        <h4>Let's get moving</h4>
         <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/LetsGetMoving/LetsGetMoving/">
-            <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/LetsGetMoving/LetsGetMoving.gif?raw=true">
+            <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/HelloWorld/HelloWorld.gif?raw=true">
         </a>
     </div>
 
