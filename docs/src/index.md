@@ -57,6 +57,13 @@ Pkg.add("CellularPotts")
         </a>
     </div>
 
+    <div>
+        <h3>Life and death</h3>
+        <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/LifeAndDeath/LifeAndDeath/">
+            <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/LifeAndDeath/LifeAndDeath.gif?raw=true">
+        </a>
+    </div>
+
 </div>
 
 ```

@@ -105,25 +105,4 @@ function recordCPM(
     record(fig, file, timestamps; framerate, kwargs...) do t
         timestep[] += 1
     end
-
-
 end
-
-fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf(0.98, 0.98, 0.98))
-axSim = fig[1, 1] = Axis(fig, aspect = 1)
-
-cmap = ColorSchemes.tol_muted
-cmap = cgrad(cmap, 5, categorical=true, rev=true)
-
-hm = heatmap!(
-    axSim,
-    rand(1:5,20,20),
-    colormap = cmap
-)
-tightlimits!.(axSim)
-hidedecorations!.(axSim)
-
-labels = ["Cell 1","Cell 2","Cell 3","Cell 4","Cell 5"]
-elements = [PolyElement(polycolor = cmap[i]) for i in 1:length(labels)]
-
-Legend(fig[1,2], elements, labels,labelsize  = 30)

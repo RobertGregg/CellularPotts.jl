@@ -10,7 +10,8 @@ makedocs(
         "Examples" => [
             "./ExampleGallery/HelloWorld/HelloWorld.md",
             "./ExampleGallery/LetsGetMoving/LetsGetMoving.md",
-            "./ExampleGallery/OnPatrol/OnPatrol.md"],
+            "./ExampleGallery/OnPatrol/OnPatrol.md",
+            "./ExampleGallery/LifeAndDeath/LifeAndDeath.md"],
         "API.md"]
 )
 

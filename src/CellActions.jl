@@ -2,7 +2,6 @@
 # Cell Division
 ####################################################
 
-#TODO Syntax now doesn't match b/s we're using Tables
 #TODO User needs to specify what happens to custom properties
 function CellDivision!(cpm::CellPotts, σ::Int)
 
@@ -16,13 +15,15 @@ function CellDivision!(cpm::CellPotts, σ::Int)
     #Now we just need to update the model to account for the new cell
 
     #Update old cell
-        cpm.currentState.volumes[σ] = count(isequal(1), nodePartition)
-    #Add new cell
-        cell = cpm.currentState[σ]
-        addNewCell(cpm.currentState, cell)
+    cpm.currentState.volumes[σ] = count(isequal(1), nodePartition)
 
-        cpm.currentState.cellIDs[end] = maximum(cpm.currentState.cellIDs) + 1
-        cpm.currentState.volumes[end] = count(isequal(2), nodePartition)
+    #Add new cell
+    cellcopy = cpm.currentState[σ]
+    addNewCell(cpm.currentState, cellcopy)
+
+    #Update new cell attributes
+    cpm.currentState.cellIDs[end] = maximum(cpm.currentState.cellIDs) + 1
+    cpm.currentState.volumes[end] = count(isequal(2), nodePartition)
 
 
     #Update graph attributes
