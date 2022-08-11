@@ -47,11 +47,13 @@ Below is simply tracking the progress of the package and any notes to myself.
 
 - [ ] Integrate hybrid modeling schemes
   
-  - [ ] ODE Modeling (intracellular)
+  - [x] ODE Modeling (intracellular)
   
   - [ ] PDE Modeling (extracellular)
   
   - Maybe use [Neural networks](https://github.com/SciML/NeuralPDE.jl) to speed up the PDE computation?
+  
+  - Stochastic jumps?
 
 - [x] Create an Examples folder
 
@@ -68,7 +70,8 @@ Below is simply tracking the progress of the package and any notes to myself.
 ## Minor Improvements
 
 - [x] Allow user defined parameters to cells (used `NamedTuple`)
-- [ ] Allow cells of the same type to be different sizes (?)
+- [x] Allow cells of the same type to be different sizes (?)
+  - Just specify different desired volumes
 - [ ] For 3D gui, don't recreate voxels every iteration, just set color to clear
 - [x] Could get a big speed improvement if you don't loop through all cells to update articulation points
   - Need to be clever about updating articulation points locally (is this possible?)

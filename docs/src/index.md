@@ -29,7 +29,7 @@ Pkg.add("CellularPotts")
         grid-gap: 1%;
     }  
 
-    h3 {
+    h4 {
         text-align: center;
     }
 </style>
@@ -37,28 +37,28 @@ Pkg.add("CellularPotts")
 <div class="Gallery">
 
     <div>
-        <h3>Hello world</h3>
+        <h4>Hello world</h4>
         <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/">
             <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/HelloWorld/HelloWorld.gif?raw=true">
         </a>
     </div>
 
     <div>
-        <h3>Let's get moving</h3>
+        <h4>moving</h4>
         <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/LetsGetMoving/LetsGetMoving/">
             <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/LetsGetMoving/LetsGetMoving.gif?raw=true">
         </a>
     </div>
 
     <div>
-        <h3>On patrol</h3>
+        <h4>On patrol</h4>
         <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/OnPatrol/OnPatrol/">
             <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/OnPatrol/OnPatrol.gif?raw=true">
         </a>
     </div>
 
     <div>
-        <h3>Life and death</h3>
+        <h4>Life and death</h4>
         <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/LifeAndDeath/LifeAndDeath/">
             <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/LifeAndDeath/LifeAndDeath.gif?raw=true">
         </a>
