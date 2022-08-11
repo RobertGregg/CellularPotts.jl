@@ -25,8 +25,9 @@ Pkg.add("CellularPotts")
 <style>
     .Gallery {
         display: grid;
-        grid-template-columns: repeat(3,auto);
+        grid-template-columns: repeat(3,1fr);
         grid-gap: 1%;
+        min-width: 0px;
     }  
 
     h3 {
