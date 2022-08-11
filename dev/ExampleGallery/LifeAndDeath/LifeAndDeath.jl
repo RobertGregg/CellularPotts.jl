@@ -93,10 +93,10 @@ callbacks = CallbackSet(pcb, ccb);
 # Define the ODE model and solve
 tspan = (0.0,20.0)
 prob = ODEProblem(f,u0,tspan)
-sol = solve(prob, Tsit5(),callback=callbacks);
+sol = solve(prob, Tsit5(), callback=callbacks);
 
-# We can replicate the plots from the original example
-using Plots, Printf
+# We can replicate the plots from the original example   
+using Plots, Printf, ColorSchemes
 
 # Plot the total cell count over time
 plot(sol.t,map((x)->length(x),sol[:]),lw=3,
@@ -109,7 +109,15 @@ plot(ts,map((x)->x[2],sol.(ts)),lw=3, ylabel="Amount of X in Cell 1",xlabel="Tim
 # Finally, we can create an animation of the CPM to see the cells dividing. I've dropped the first few frames because the first cell takes a while to divide.
 anim = @animate for t in Iterators.drop(eachindex(spaceLog),5*timeScale)
     currTime = @sprintf "Time: %.2f" t/timeScale
-    heatmap(spaceLog[t], axis=nothing,legend = :none, size=(500,500),title=currTime)
+    heatmap(
+        spaceLog[t],
+        axis=nothing,
+        legend = :none,
+        framestyle = :box,
+        size=(1200,1200),
+        c = cgrad(:tol_muted, rev=true),
+        title=currTime,
+        titlefontsize = 48)
 end
 
 gif(anim, "LifeAndDeath.gif", fps = 30)
