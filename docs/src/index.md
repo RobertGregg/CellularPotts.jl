@@ -18,7 +18,7 @@ Pkg.add("CellularPotts")
 # Example Gallery
 
 !!! tip
-    Click on an example to go to example page
+    Click on an image to go to example page
 
 ```@raw html
 
