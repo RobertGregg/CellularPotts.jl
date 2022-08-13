@@ -56,7 +56,7 @@ end
 
 # This timeScale variable controls how often the callback is triggered. Larger timescales correspond to faster cell movement.
 timeScale = 100
-pcb = PeriodicCallback(integrator -> cpmUpdate!(integrator, cpm, spaceLog), 1/timeScale)
+pcb = PeriodicCallback(integrator -> cpmUpdate!(integrator, cpm, spaceLog), 1/timeScale);
 
 # The ODE functions are taken directly from the DifferentialEquations example. Each cell is given the following differential equation
 # ```math

@@ -1,6 +1,7 @@
 using Documenter
 using CellularPotts
 
+
 makedocs(
     sitename = "CellularPotts.jl",
     format = Documenter.HTML(),
@@ -8,10 +9,10 @@ makedocs(
     pages = [
         "Introduction" => "index.md",
         "Examples" => [
-            "ExampleGallery/HelloWorld/HelloWorld.md",
-            "ExampleGallery/LetsGetMoving/LetsGetMoving.md",
-            "ExampleGallery/OnPatrol/OnPatrol.md",
-            "ExampleGallery/BringingODEsToLife/BringingODEsToLife.md"],
+            "Hello World" => "ExampleGallery/HelloWorld/HelloWorld.md",
+            "Let's Get Moving" => "ExampleGallery/LetsGetMoving/LetsGetMoving.md",
+            "On Patrol" => "ExampleGallery/OnPatrol/OnPatrol.md",
+            "Bringing ODEs To Life" => "ExampleGallery/BringingODEsToLife/BringingODEsToLife.md"],
         "API.md"]
 )
 
