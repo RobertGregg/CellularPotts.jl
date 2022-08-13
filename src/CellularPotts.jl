@@ -111,6 +111,7 @@ export
 #InitializeCells.jl
       positionCellsRandom!,
       positionCells!,
+      growcells,
 #MarkovStep.jl
       MHStep!,
       calculateΔH,
