@@ -8,10 +8,10 @@ makedocs(
     pages = [
         "Introduction" => "index.md",
         "Examples" => [
-            "./ExampleGallery/HelloWorld/HelloWorld.md",
-            "./ExampleGallery/LetsGetMoving/LetsGetMoving.md",
-            "./ExampleGallery/OnPatrol/OnPatrol.md",
-            "./ExampleGallery/LifeAndDeath/LifeAndDeath.md"],
+            "ExampleGallery/HelloWorld/HelloWorld.md",
+            "ExampleGallery/LetsGetMoving/LetsGetMoving.md",
+            "ExampleGallery/OnPatrol/OnPatrol.md",
+            "ExampleGallery/BringingODEsToLife/BringingODEsToLife.md"],
         "API.md"]
 )
 

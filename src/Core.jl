@@ -89,10 +89,17 @@ mutable struct MigrationPenalty <: Penalty
     end
 end
 
-"""
-    
-"""
 
+#Boundary conditions?
+mutable struct ChemoTaxisPenalty{N,T} <: Penalty where {N,T}
+    λ::OffsetVector{Int,Vector{Int}}
+    Species::Array{N,T}
+
+    function MigrationPenalty(λ::Vector{T₁}, Species::Array{N,T₂}) where {T₁<:Integer,N,T₂}
+        λOff = offset([0; λ])
+        return new{N,T}(λOff, Species)
+    end
+end
 
 ####################################################
 # Variables for Markov Step 

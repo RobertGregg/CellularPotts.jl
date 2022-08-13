@@ -59,9 +59,9 @@ Pkg.add("CellularPotts")
     </div>
 
     <div>
-        <h3>Life and death</h3>
-        <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/LifeAndDeath/LifeAndDeath/">
-            <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/LifeAndDeath/LifeAndDeath.gif?raw=true">
+        <h3>Bringing ODEs to life</h3>
+        <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/BringingODEsToLife/BringingODEsToLife/">
+            <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/BringingODEsToLife/BringingODEsToLife.gif?raw=true">
         </a>
     </div>
 
