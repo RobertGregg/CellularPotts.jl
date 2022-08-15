@@ -11,14 +11,14 @@ space = CellSpace(200,200)
 initialCellState = CellTable(
     [:Epithelial, :TCell],
     [500, 400],
-    [75, 5])
+    [76, 5])
 
 # Note that for the `MigrationPenalty` we set the epithelial cell's scaling factor to zero. This effectively removes this penalty from the cell type.
 
 penalties = [
-    AdhesionPenalty([0 20 20;
-                    20 20 20;
-                    20 20 100]),
+    AdhesionPenalty([0 20 50;
+                    20 20 75
+                    50 75 100]),
     VolumePenalty([10,10]),
     PerimeterPenalty([0,10]),
     MigrationPenalty(50, [0,100], size(space))

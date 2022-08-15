@@ -1,4 +1,4 @@
-# Cellular Potts Modeling
+# <img title="CellularPotts.jl" src="docs/src/assets/logo.svg" alt="" width="50"> CellularPotts.jl
 
 The goal of this package is to develop a cellular, agent-based modeling approach in Julia using a network-based Potts modeling framework. Currently, other software exists to simulate these types of models, but they have a number of limitations:
 
