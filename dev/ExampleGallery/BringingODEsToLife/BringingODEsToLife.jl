@@ -5,12 +5,12 @@
 # We begin by loading in both CellularPotts and DifferentialEquations
 using CellularPotts, DifferentialEquations
 
-# On the CellularPotts side, we need to create a new CellPotts model which requires a CellSpace, a cellTable, and a list of penalties
+# On the CellularPotts side, we need to create a new CellPotts model which requires a CellSpace, a CellTable, and a list of penalties
 
 # The space will use is a 200×200 grid that defaults to periodic boundary conditions
 space = CellSpace(200,200)
 
-# In the cellTable we specify one epithelial cell with a volume of 200 pixels
+# In the CellTable we specify one epithelial cell with a volume of 200 pixels
 initialCellState = CellTable(
     [:Epithelial],
     [200],
@@ -21,7 +21,7 @@ positions = [size(space) .÷ 2]
 initialCellState = addcellproperty(initialCellState, :positions, positions)
 
 
-#From the DifferentialEquations example, a theoretical protein X was created for each cell that increases linearly in time with rate parameter α
+# From the DifferentialEquations example, a theoretical protein X was created for each cell that increases linearly in time with rate parameter α
 const α = 0.3;
 
 # ProteinX needs an initial condition which we set to 0.2. Note that for :Medium (grid locations without a cell) we give a concentration of zero. 
@@ -38,7 +38,7 @@ penalties = [
 # Now that we have all the pieces, we can generate a new CPM model.
 cpm = CellPotts(space, initialCellState, penalties);
 
-# An position the cell according to the the :postions property
+# And position the cell according to the the :postions property
 positionCells!(cpm)
 
 # ## DifferentialEquations.jl setup
@@ -46,7 +46,7 @@ positionCells!(cpm)
 # Currently there isn't a simple method to log states in CellPotts models (work in progress! 🙂). For now, we need to create an extrernal variable to log how the nodeIDs change over time.
 spaceLog = [cpm.space.nodeIDs];
 
-# As ProteinX evolves over time for each cell, the CPM model also needs to step forward in time to try annd minimize its energy. To facilitate this, we can use a the callback feature from DifferentialEquations.jl. Here specifically we use the `PeriodicCallback` function which will stop the ODE solve at regular time intervals and run some other function for us (Here it will be the `ModelStep!` function). 
+# As ProteinX evolves over time for each cell, the CPM model also needs to step forward in time to try and minimize its energy. To facilitate this, we can use the callback feature from DifferentialEquations.jl. Here specifically we use the `PeriodicCallback` function which will stop the ODE solve at regular time intervals and run some other function for us (Here it will be the `ModelStep!` function). 
 
 function cpmUpdate!(integrator, cpm, spaceLog)
     ModelStep!(cpm)
