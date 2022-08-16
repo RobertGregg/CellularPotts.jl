@@ -126,8 +126,6 @@ end
 # Add/remove cells and properties
 ####################################################
 
-#TODO addcellproperty → addcellproperty! by updating CellTable.data
-
 """
     addcellproperty(df::CellTable, propertyName, propertyValue)
     addcellproperty(df::CellTable, propertyName, propertyValue, validCells)
