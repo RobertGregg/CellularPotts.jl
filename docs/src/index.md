@@ -65,6 +65,13 @@ Pkg.add("CellularPotts")
         </a>
     </div>
 
+    <div>
+        <h3>Going 3D</h3>
+        <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/Going3D/Going3D/">
+            <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/Going3D/Going3D.gif?raw=true">
+        </a>
+    </div>
+
 </div>
 
 ```

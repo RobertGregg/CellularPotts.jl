@@ -10,12 +10,12 @@ Generates an animation of the CPM model.
 """
 function recordCPM(
     file::String,
-    cpm::CellPotts,
+    cpm::CellPotts{2, T, V, U},
     timestamps = 0:300,
     cmap = ColorSchemes.tol_muted;
     addlegend=false,
     framerate=60,
-    kwargs...)
+    kwargs...) where {T,V,U}
 
     fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf(0.98, 0.98, 0.98))
     axSim = fig[1, 1] = Axis(fig, aspect=1)
@@ -103,6 +103,63 @@ function recordCPM(
     
     
     record(fig, file, timestamps; framerate, kwargs...) do t
+        timestep[] += 1
+    end
+end
+
+
+
+function recordCPM(
+    file::String,
+    cpm::CellPotts{3, T, V, U},
+    timestamps = 0:300,
+    cmap = ColorSchemes.tol_muted;
+    addlegend=false,
+    framerate=60,
+    kwargs...) where {T,V,U}
+
+    timestep = Node(1)
+    
+    # SSAO attributes are per scene (will need to play with these), too slow for animation?
+    scene = Scene(resolution = (1200, 1200))
+
+    GLMakie.enable_SSAO[] = true
+    scene[:SSAO][:radius][] = 5.0
+    scene[:SSAO][:blur][] = 3
+    scene[:SSAO][:bias][] = 0.025
+
+    #General voxel
+    voxel = Rect3D(Point3f0(-0.5), Vec3f0(1))
+   
+    
+
+    lim = FRect3D((0,0,0), size(cpm.space))
+
+    mesh_node = @lift begin
+        currentTime = $timestep
+        ModelStep!(cpm)
+         #Positions for the voxels
+         #use the cell indices to color the cell (could also use cell type)
+        [Point3f0(idx.I...) for idx in CartesianIndices(cpm.space.nodeTypes) if cpm.space.nodeTypes[idx] ≠ 0]
+    end
+
+    color_node = @lift begin
+        currentTime = $timestep
+        colors = filter(!isequal(0), cpm.space.nodeTypes)
+    end
+    
+
+    meshscatter!(scene,
+        mesh_node,
+        marker=voxel,
+        markersize=1,
+        color=color_node,
+        colormap=:RdYlBu_11, #see https://juliagraphics.github.io/ColorSchemes.jl/stable/basics/
+        limits = lim,
+        ssao=true)
+
+
+    record(scene, file, timestamps; framerate, kwargs...) do t
         timestep[] += 1
     end
 end
