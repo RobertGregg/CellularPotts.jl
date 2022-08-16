@@ -12,7 +12,8 @@ makedocs(
             "Hello World" => "ExampleGallery/HelloWorld/HelloWorld.md",
             "Let's Get Moving" => "ExampleGallery/LetsGetMoving/LetsGetMoving.md",
             "On Patrol" => "ExampleGallery/OnPatrol/OnPatrol.md",
-            "Bringing ODEs To Life" => "ExampleGallery/BringingODEsToLife/BringingODEsToLife.md"],
+            "Bringing ODEs To Life" => "ExampleGallery/BringingODEsToLife/BringingODEsToLife.md",
+            "Going 3D" => "ExampleGallery/Going3D/Going3D.md"],
         "API.md"]
 )
 
