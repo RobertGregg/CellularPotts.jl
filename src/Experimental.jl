@@ -130,29 +130,62 @@ prob = ODEProblem(cellCycle!, u0, t0, p)
 sol = solve(prob, Tsit5())
 
 #############################################
-using DiffEqJump, Graphs
-dims = (5,5)
-num_nodes = prod(dims) # number of sites
-grid = Graphs.grid(dims) # or use LightGraphs.grid(dims)
 
-num_species = 3
-starting_state = zeros(Int, num_species, num_nodes)
-starting_state[1,1] = 25
-starting_state[2,end] = 25
+#= 
+Some chemical will reside in a somewhat circular boundary.
+Diffusion in and out of the boundary is slow compared to free diffusion
+Two reactions for this chemical:
+    x --> 2x
+    x --> ∅ 
+=#
+using DifferentialEquations, Graphs, Plots, Printf
 
-tspan = (0.0, 3.0)
-rates = [6.0, 0.05] # k_1 = rates[1], k_2 = rates[2]
+
+dims = (30,30)
+numberOfSpecies = 1
+numberOfNodes = prod(dims) # number of sites
+grid = Graphs.grid(dims)
+
+center = LinearIndices(dims)[dims .÷2...]
+starting_state = zeros(Int,numberOfSpecies, numberOfNodes)
+starting_state[center] = 25
+
+tspan = (0.0, 10.0)
+rates = [2.0, 1.0] # x generation is slower so everthing will be removed eventually
 
 prob = DiscreteProblem(starting_state, tspan, rates)
 
-netstoch = [[1 => -1, 2 => -1, 3 => 1],[1 => 1, 2 => 1, 3 => -1]]
-reactstoch = [[1 => 1, 2 => 1],[3 => 1]]
+reactstoch = [[1 => 1],[1 => 1]]
+netstoch = [[1 => 1],[1 => -1]]
 majumps = MassActionJump(rates, reactstoch, netstoch)
 
-hopping_constants = ones(num_species, num_nodes)
-hopping_constants[3, :] .= 0.0
+hopConstants = ones(numberOfSpecies, numberOfNodes)
+#boundary is harder to hop over
+hopConstants[gdistances(grid, center) .== 6] .= -1.0
 
-alg = NSM()
-jump_prob = JumpProblem(prob, alg, majumps, hopping_constants=hopping_constants, spatial_system = grid, save_positions=(true, false))
 
-solution = solve(jump_prob, SSAStepper())
+alg = DirectCRDirect()
+jump_prob = JumpProblem(prob,
+                        alg,
+                        majumps;
+                        hopping_constants=hopConstants,
+                        spatial_system = grid,
+                        save_positions=(true, false))
+
+sol = solve(jump_prob, SSAStepper())
+
+
+#maxium value obtained
+maxu = vcat(sol.u...) |> maximum
+
+anim = @animate for t in range(tspan..., 300)
+    currTime = @sprintf "Time: %.2f" t
+    heatmap(
+        reshape(sol(t), dims),
+        axis=nothing,
+       clims = (0,maxu),
+        framestyle = :box,
+        title=currTime)
+end
+
+gif(anim, "test.gif", fps = 60)
