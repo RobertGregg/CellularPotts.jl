@@ -71,7 +71,7 @@ end
 isroot(A::ArticulationUtility, i::Int) = iszero(A.parent[i])
 
 #Add node i to the list of articulation points
-function pushCell!(A::ArticulationUtility, i::Int)
+function pushcell!(A::ArticulationUtility, i::Int)
     if i ∉ A.articulationPoints
         push!(A.articulationPoints, i)
     end
@@ -99,7 +99,7 @@ function (A::ArticulationUtility)(g::CellSpace, cellID::Int)
         end
     end
 
-    return sort!(A.articulationPoints)
+    return sort!(A.articulationPoints) #maybe use some kind of sorted set data structure?
 end
 
 
@@ -136,12 +136,12 @@ function cellDFS!(A::ArticulationUtility, g::CellSpace, i::Int)
             # i is an articulation point in following cases:
             # (1) i is root of DFS tree and has two or more children.
             if isroot(A,i) && children > 1
-                pushCell!(A,i)
+                pushcell!(A,i)
             end
 
             #(2) If i is not root and low value of one of its child is more than discovery value of i.
             if !isroot(A,i) && A.low[v] ≥ A.discoveryTime[i]
-                pushCell!(A,i)
+                pushcell!(A,i)
             end
         
         #Update low value of i for parent function calls

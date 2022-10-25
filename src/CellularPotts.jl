@@ -94,6 +94,8 @@ export
 #CellTableStructure.jl
       CellTable,
       addcellproperty,
+      addNewCell,
+      removecell,
 #Core.jl
       countcells,
       countcelltypes,
