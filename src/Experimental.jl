@@ -1,68 +1,87 @@
-#Custom sparsevector that does not allocate
+# Logging/Saving simulations results
+#This "works" but is very messy
 
-mutable struct SV{T<:Integer} <: AbstractVector{T}
-    n::T
-    nzind::Vector{T}
-    nzval::Vector{T}
+using DataFrames, StatsBase, Tables
+using CellularPotts
 
-    function SV(n::T) where {T<:Integer}
-        nzind = T[]
-        sizehint!(nzind,n)
+#Create a CellTable
+initialCellState = CellTable(
+    [:Epithelial, :TCell],
+    [500, 400],
+    [7, 5])
 
-        nzval = T[]
-        sizehint!(nzval,n)
-        return new{T}(n,nzind,nzval)
-    end
-end
-
-Base.size(S::SV) = (S.n,)
-Base.IndexStyle(::Type{<:SV}) = IndexLinear()
-
-nnz(S::SV) = length(S.nzind)
-
-function Base.getindex(S::SV, i::Int)
-    ii = searchsortedfirst(S.nzind,i)
+#Create a function that generates a dictionary for each column of the CellTable.
+# Each column gets a dataframe that logs changes that occur for that column
+function makeHistory(initialCellState)
     
-    return (ii ≤ nnz(S) && S.nzind[ii] == i) ? S.nzval[ii] : 0
+    columnDict = Dict{Symbol, DataFrame}()
+
+    for (property, val) in pairs(parent(initialCellState))
+        columnDict[property] = DataFrame(time=Int64[], position=Int64[], value=eltype(val)[])
+    end
+
+    return columnDict
 end
 
 
-function Base.setindex!(S::SV{T}, val::T, i::T) where T <: Integer
-    checkbounds(S, i)
+columnDict = makeHistory(initialCellState)
 
-    if iszero(val)
-        return nothing
+
+#Randomnly update the CellTable and log the changes
+
+function randUpdate(initialCellState, columnDict)
+    
+
+    numRows, numCols = size(initialCellState)
+
+    colNames = Tables.columnnames(initialCellState)
+
+    for i =1:100
+
+        #Get a random column
+        randCol = rand(1:numCols-1)
+        randRow = rand(1:numRows-1)
+        #Get old value
+        oldValue = initialCellState[randRow][randCol]
+
+        #Sample that column
+        newValue = rand(initialCellState[colNames[randCol]])
+
+        if oldValue ≠ newValue
+            #Update the log
+            push!(columnDict[colNames[randCol]], [i,randRow,newValue])
+        end
+
     end
+end
 
-    ii = searchsortedfirst(S.nzind,i)
+randUpdate(initialCellState, columnDict)
 
-    if ii ≤ nnz(S) && S.nzind[ii] == i
-        S.nzval[ii] = val
-    else
-        insert!(S.nzind, ii, i)
-        insert!(S.nzval, ii, val)
-    end
+for (k,v) in pairs(columnDict)
+    @show (k,v)
 end
 
 
-s = SV(10)
-
-s.nzind = [1,4]
-s.nzval = [10,20]
-
-s[3] = 100
-
-sum(s)
-
-
-
-dict = Dict{Int, Int}()
-sizehint!(dict, 200)
-@benchmark begin
-    for i in 1:100
-        dict[i] = i^2
+function getState(n, columnDict, initialCellState)
+    
+    out = deepcopy(initialCellState)
+    
+    #loop through columns in initialCellState
+    for (property, df) in pairs(columnDict)
+        for row in eachrow(df)
+            if row.time > n
+                break
+            end
+            out[property][row.position] = row.value
+        end
     end
+
+    return out
 end
+
+
+getState(20, columnDict, initialCellState)
+
 
 #############################################
 
