@@ -62,14 +62,14 @@ for (k,v) in pairs(columnDict)
 end
 
 
-function getState(n, columnDict, initialCellState)
+function getState(t, columnDict, initialCellState)
     
     out = deepcopy(initialCellState)
     
     #loop through columns in initialCellState
     for (property, df) in pairs(columnDict)
         for row in eachrow(df)
-            if row.time > n
+            if row.time > t
                 break
             end
             out[property][row.position] = row.value
@@ -195,14 +195,14 @@ sol = solve(jump_prob, SSAStepper())
 
 
 #maxium value obtained
-maxu = vcat(sol.u...) |> maximum
+maxu = maximum(maximum.(sol.u))
 
 anim = @animate for t in range(tspan..., 300)
     currTime = @sprintf "Time: %.2f" t
     heatmap(
         reshape(sol(t), dims),
         axis=nothing,
-       clims = (0,maxu),
+       #clims = (0,maxu),
         framestyle = :box,
         title=currTime)
 end

@@ -11,14 +11,14 @@ We start by loading in the `CellularPotts.jl` package and creating a space where
 ````julia
 using CellularPotts
 
-space = CellSpace(50,50; wrapAround=true, cellNeighbors=:moore)
+space = CellSpace(50,50; isPeriodic=true, neighborhood=:moore)
 ````
 
 ````
 50×50 Periodic 8-Neighbor CellSpace{2,Int64}
 ````
 
-Here we create a 50 by 50 square grid with periodic boundary conditions where grid locations are connected to their 8 closest neighbors (4-cell neighborhoods are also available using the `:vonNeumann` option). By default, `wrapAround` is set to true and `cellNeighbors` uses the 8 closest neighbors.
+Here we create a 50 by 50 square grid with periodic boundary conditions where grid locations are connected to their 8 closest neighbors (4-cell neighborhoods are also available using the `:vonNeumann` option). By default, `isPeriodic` is set to true and `neighborhood` uses the 8 closest neighbors.
 
 Next we need to initialize a table of cell information to put into this space.
 
@@ -108,11 +108,7 @@ Steps: 0
 
 Calling this object gives a quick summary of the model's current state. Note that a "temperature" of 20 is given to the model by default. Higher temperatures allow the model to more likely accept changes that increase the overall penalty (e.g. cells could deviate further from their desired volume). The model object also tracks how many time steps have been performed.
 
-Our cell still needs to be placed into the space. This can be done using the `positionCellsRandom!()` function or because we have a "positions" property, we can use the `positionCells!()` function.
-
-````julia
-positionCells!(cpm)
-````
+Note that because we added the `:positions` property to our CellTable, the CellPotts initializer placed the cells in the grid centered at those positions. If we did not specify a :positions property, cells would be randomly placed in the space.
 
 Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`
 

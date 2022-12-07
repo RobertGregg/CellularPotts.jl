@@ -8,7 +8,7 @@
 
 Space:
   dimensions: [100, 100]
-  wrapAround: true
+  isPeriodic: true
   neighborhood: Moore
 
 

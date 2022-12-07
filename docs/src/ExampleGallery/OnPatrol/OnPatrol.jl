@@ -28,10 +28,6 @@ penalties = [
 
 cpm = CellPotts(space, initialCellState, penalties)
 
-# Here we did not specify the positions of the cells, so they be randomly added to the space. 
-
-positionCellsRandom!(cpm)
 
 # Record the simulation
-
 recordCPM("OnPatrol.gif", cpm)

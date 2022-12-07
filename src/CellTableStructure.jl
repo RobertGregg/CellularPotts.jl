@@ -222,6 +222,8 @@ countcelltypes(df::CellTable) = length(unique(df.typeIDs)) - 1
 # Override Base.show
 ####################################################
 
+#TODO: Add a compact mode
+
 function show(io::IO, intState::CellTable) 
 
     data = map(OffsetArrays.no_offset_view, parent(intState))

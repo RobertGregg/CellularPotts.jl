@@ -8,7 +8,7 @@ NOTE: Graphs.jl has an articulation() function which is very good. I went throug
 
 """
     ArticulationUtility(n::Int)
-Create a new `ArticulationUtility` to hold variables used in articulation point calculation.
+Create a new `ArticulationUtility` to hold variables used in the articulation point calculation.
 
 This data structure contains the following fields:
  - discoveryTime`::Vector{Int}`: The time step where the node was discovered

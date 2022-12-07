@@ -7,7 +7,7 @@ using Graphs
 
 
 @testset "Spaces or graphs, who's to say?" begin
-    g = CellSpace(3,3;wrapAround=false,cellNeighbors=:vonNeumann)
+    g = CellSpace(3,3;isPeriodic=false,neighborhood=:vonNeumann)
 
     @test nv(g) == 9
     @test ne(g) == 12

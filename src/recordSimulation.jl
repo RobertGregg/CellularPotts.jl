@@ -108,58 +108,54 @@ function recordCPM(
 end
 
 
-
 function recordCPM(
     file::String,
     cpm::CellPotts{3, T, V, U},
     timestamps = 0:300,
-    cmap = ColorSchemes.tol_muted;
+    cmap = ColorSchemes.inferno;
     addlegend=false,
     framerate=60,
     kwargs...) where {T,V,U}
 
-    timestep = Node(1)
+    timestep = Observable(0)
+
+    GLMakie.activate!(ssao=true)
+    GLMakie.closeall() # close any open screen
     
-    # SSAO attributes are per scene (will need to play with these), too slow for animation?
-    scene = Scene(resolution = (1200, 1200))
+    #Axis limits
+    lim = ntuple(i -> iseven(i) ? size(cpm.space)[i÷2] : 0, 6)
 
-    GLMakie.enable_SSAO[] = true
-    scene[:SSAO][:radius][] = 5.0
-    scene[:SSAO][:blur][] = 3
-    scene[:SSAO][:bias][] = 0.025
-
-    #General voxel
-    voxel = Rect3D(Point3f0(-0.5), Vec3f0(1))
-   
+    fig = Figure(resolution = (1200, 1200), backgroundcolor = RGBf(0.98, 0.98, 0.98))
+    ax = Axis3(fig[1, 1], limits = lim)
     
-
-    lim = FRect3D((0,0,0), size(cpm.space))
-
+    voxel = Rect3(Point3f(-0.5), Vec3f(1))
+    
     mesh_node = @lift begin
         currentTime = $timestep
         ModelStep!(cpm)
          #Positions for the voxels
          #use the cell indices to color the cell (could also use cell type)
-        [Point3f0(idx.I...) for idx in CartesianIndices(cpm.space.nodeTypes) if cpm.space.nodeTypes[idx] ≠ 0]
+        [Point3f(idx.I...) for idx in CartesianIndices(cpm.space.nodeTypes) if cpm.space.nodeTypes[idx] ≠ 0]
     end
 
     color_node = @lift begin
         currentTime = $timestep
-        colors = filter(!isequal(0), cpm.space.nodeTypes)
+        filter(!isequal(0), cpm.space.nodeTypes)
     end
-    
 
-    meshscatter!(scene,
+    meshscatter!(ax,
         mesh_node,
         marker=voxel,
         markersize=1,
         color=color_node,
-        colormap=:RdYlBu_11, #see https://juliagraphics.github.io/ColorSchemes.jl/stable/basics/
-        limits = lim,
+        colormap=cmap, #see https://juliagraphics.github.io/ColorSchemes.jl/stable/basics/
         ssao=true)
 
-
-    record(scene, file, timestamps; framerate, kwargs...) do t
+    record(fig, file, timestamps; framerate, kwargs...) do t
+        ax.azimuth[] = 1.7pi + 0.3 * sin(2pi * t / 120)
         timestep[] += 1
     end
 end
+
+
+

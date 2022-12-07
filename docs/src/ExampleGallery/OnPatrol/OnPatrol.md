@@ -153,12 +153,6 @@ Temperature: 20.0
 Steps: 0
 ````
 
-Here we did not specify the positions of the cells, so they be randomly added to the space.
-
-````julia
-positionCellsRandom!(cpm)
-````
-
 Record the simulation
 
 ````julia

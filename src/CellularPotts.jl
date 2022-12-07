@@ -1,8 +1,7 @@
 module CellularPotts
 
 using OffsetArrays, #Allow some arrays to be zero indexed to include medium
-      Makie, #For plotting and making the GUI
-      GLMakie, #Need both?
+      GLMakie, #Need Makie as well?
       Tables, #Structure for holding cells and their properties
       Colors, #More color options for the cells (e.g. :Purples)
       ColorSchemes, #For custom cell colors
@@ -94,13 +93,11 @@ export
 #CellTableStructure.jl
       CellTable,
       addcellproperty,
-      addNewCell,
+      addnewcell,
       removecell,
 #Core.jl
       countcells,
       countcelltypes,
-      addNewCell,
-      removeCell,
       Penalty,
       AdhesionPenalty,
       VolumePenalty,

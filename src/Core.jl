@@ -140,11 +140,12 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     getArticulation::ArticulationUtility
     temperature::Float64
 
-    function CellPotts(space::CellSpace{N,T}, initialCellState::CellTable{V}, penalties::Vector{P}) where {N,T,V,P}
+    function CellPotts(space::CellSpace{N,T}, initialCellState::CellTable{V}, penalties::Vector{P}; ) where {N,T,V,P}
 
         #See https://github.com/JuliaLang/julia/pull/44131 for why Unions are used
         U = Union{typeof.(penalties)...}
-        return new{N,T,V,U}(
+
+        cpm =  new{N,T,V,U}(
             space,
             initialCellState,
             initialCellState,
@@ -152,6 +153,15 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
             MHStepInfo(),
             ArticulationUtility(nv(space)),
             20.0)
+
+        #Position the cells in the model
+        if :positions ∈ keys(initialCellState)
+            positionCells!(cpm)
+        else
+            positionCellsRandom!(cpm)
+        end
+
+        return cpm
     end
 end
 
@@ -174,6 +184,9 @@ countcells(cpm::CellPotts) = countcells(cpm.currentState)
 Count the number of cell types in the model 
 """
 countcelltypes(cpm::CellPotts) = countcelltypes(cpm.currentState)
+
+arrayids(cpm::CellPotts) where {N,T} = arrayids(cpm.space)
+arraytypes(cpm::CellPotts) where {N,T} = arraytypes(cpm.space)
 
 ####################################################
 # Override Base.show

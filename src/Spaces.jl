@@ -3,14 +3,19 @@
 ####################################################
 
 """
-    CellSpace{N, T<:Integer} <: Graphs.AbstractSimpleGraph{T}
+    CellSpace(gridSize::NTuple{N, T}; isPeriodic=true, neighborhood=:moore)
+    CellSpace(gridSize::T...; isPeriodic=true, neighborhood=:moore) where T<:Integer
 A concrete type that stores the underlying space cells will occupy.
+
+A `CellSpace()` can be created by supplying a tuple of dimensions or multiple arguments for each dimension, e.g. `CellSpace((3,3,4))` or `CellSpace(3,3,4)`. There are two optional keyword arguements:
+ - isPeriodic`::Bool`: Determines if the grid has periodic boundaries
+ - neighborhood`::Symbol`: Adjacent cells are either a `:moore` or a `:vonNeumann` neighborhood. Moore neighborhoods include adjacent diagonal positions.
 """
 mutable struct CellSpace{N, T<:Integer} <: AbstractSimpleGraph{T}
     ne::T                         #Number of edges
     fadjlist::Vector{Vector{T}}   #Sorted adjacency list [src]: (dst, dst, dst)
     gridSize::NTuple{N, T}        #Size of grid (x,y,z...)
-    wrapAround::Bool              #Does the grid wrap around?
+    isPeriodic::Bool              #Does the grid wrap around?
     nodeIDs::Array{T,N}           #Cell's ID for each node
     nodeTypes::Array{T,N}         #Cell's type for each node
 end
@@ -84,12 +89,12 @@ strong_product(g::G, h::G) where G <: AbstractSimpleGraph = union(cartesian_prod
 #https://en.wikipedia.org/wiki/King%27s_graph
 kingsGrid(dims; periodic=true) = mapfoldl(periodic ? cycle_graph : path_graph, strong_product, reverse(dims))
 
-function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=:moore) where {N, T<:Integer}
+function CellSpace(gridSize::NTuple{N, T}; isPeriodic=true, neighborhood=:moore) where {N, T<:Integer}
 
-    if cellNeighbors == :vonNeumann
-        g = Graphs.grid(gridSize; periodic=wrapAround)
-    elseif cellNeighbors == :moore
-        g = kingsGrid(gridSize; periodic=wrapAround)
+    if neighborhood == :vonNeumann
+        g = Graphs.grid(gridSize; periodic=isPeriodic)
+    elseif neighborhood == :moore
+        g = kingsGrid(gridSize; periodic=isPeriodic)
     else
         error("Unknown cell neighbor option, current options are :moore and :vonNeumann")
     end
@@ -98,21 +103,32 @@ function CellSpace(gridSize::NTuple{N, T}; wrapAround=true, cellNeighbors=:moore
         ne(g),
         g.fadjlist,
         gridSize,
-        wrapAround,
+        isPeriodic,
         zeros(T,gridSize),
         zeros(T,gridSize)
         )
 end
 
 
+####################################################
+# Constructors
+####################################################
+
 #Allow CellSpace(n,n) in addition to CellSpace((n,n))
-CellSpace(gridSize::T...; wrapAround=true, cellNeighbors=:moore) where T<:Integer = CellSpace(gridSize; wrapAround, cellNeighbors)
+CellSpace(gridSize::T...; isPeriodic=true, neighborhood=:moore) where T<:Integer = CellSpace(gridSize; isPeriodic, neighborhood)
 
 #Needed for induced_subgraph (why?)
 function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
     fadjlist = [Vector{T}() for _ in one(T):n]
     return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(T,n,n), zeros(T,n,n))
 end
+
+####################################################
+# Misc functions
+####################################################
+
+arrayids(space::CellSpace{N,T}) where {N,T} = space.nodeIDs
+arraytypes(space::CellSpace{N,T}) where {N,T} = space.nodeIDs
 
 ####################################################
 # Show method
@@ -128,9 +144,11 @@ function show(io::IO, space::CellSpace{N,T}) where {N,T}
         end
     end
     
-    wrapType = space.wrapAround ? "Periodic" : "nonPeriodic"
+    wrapType = space.isPeriodic ? "Periodic" : "nonPeriodic"
     numNeigbors = maximum(length, space.fadjlist)
 
     print(io, " $(wrapType) $(numNeigbors)-Neighbor CellSpace{$(N),$(T)}")
 end
 
+#https://discourse.julialang.org/t/weird-base-show-behavior-with-custom-struct/91321
+show(io::IO, ::MIME"text/plain", space::CellSpace{N,T}) where {N,T}  = show(io, space)

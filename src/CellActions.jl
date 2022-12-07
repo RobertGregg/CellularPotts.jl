@@ -19,7 +19,7 @@ function CellDivision!(cpm::CellPotts, σ::Int)
 
     #Add new cell
     cellcopy = cpm.currentState[σ]
-    addNewCell(cpm.currentState, cellcopy)
+    addnewcell(cpm.currentState, cellcopy)
 
     #Update new cell attributes
     cpm.currentState.cellIDs[end] = maximum(cpm.currentState.cellIDs) + 1
