@@ -11,14 +11,14 @@ jobs:
   build:
     permissions:
       contents: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Install binary dependencies
-        run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev && export LD_PRELOAD=/usr/lib64/libstdc++.so.6
+        run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
         with:
-          version: '1.6'
+          version: '1'
       - name: Install dependencies
         run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: Build and deploy
