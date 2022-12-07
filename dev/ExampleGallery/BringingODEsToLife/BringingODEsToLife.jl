@@ -38,9 +38,6 @@ penalties = [
 # Now that we have all the pieces, we can generate a new CPM model.
 cpm = CellPotts(space, initialCellState, penalties);
 
-# And position the cell according to the the :postions property
-positionCells!(cpm)
-
 # ## DifferentialEquations.jl setup
 
 # Currently there isn't a simple method to log states in CellPotts models (work in progress! 🙂). For now, we need to create an extrernal variable to log how the nodeIDs change over time.

@@ -2,7 +2,7 @@
 using CellularPotts
 
 
-space = CellSpace(30,30,30; wrapAround=false)
+space = CellSpace(30,30,30; isPeriodic=false)
 
 
 initialCellState = CellTable(
@@ -23,7 +23,5 @@ penalties = [
 
 
 cpm = CellPotts(space, initialCellState, penalties)
-
-positionCells!(cpm)
 
 recordCPM("Going3D.gif", cpm)
