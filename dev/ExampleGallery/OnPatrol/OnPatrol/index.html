@@ -3,7 +3,7 @@
 space = CellSpace(200,200)</code></pre><pre><code class="nohighlight hljs">200×200 Periodic 8-Neighbor CellSpace{2,Int64}</code></pre><p>Initialize a new <code>CellTable</code> with 75 epithelial cells and 5 T-Cells</p><pre><code class="language-julia hljs">initialCellState = CellTable(
     [:Epithelial, :TCell],
     [500, 400],
-    [76, 5])</code></pre><pre><code class="nohighlight hljs">┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┐
+    [75, 5])</code></pre><pre><code class="nohighlight hljs">┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┐
 │      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │
 │     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │
 ├────────────┼─────────┼─────────┼─────────┼────────────────┼────────────┼───────────────────┤
@@ -83,29 +83,26 @@ space = CellSpace(200,200)</code></pre><pre><code class="nohighlight hljs">200×
 │ Epithelial │      73 │       1 │       0 │            500 │          0 │               264 │
 │ Epithelial │      74 │       1 │       0 │            500 │          0 │               264 │
 │ Epithelial │      75 │       1 │       0 │            500 │          0 │               264 │
-│ Epithelial │      76 │       1 │       0 │            500 │          0 │               264 │
+│      TCell │      76 │       2 │       0 │            400 │          0 │               236 │
 │      TCell │      77 │       2 │       0 │            400 │          0 │               236 │
 │      TCell │      78 │       2 │       0 │            400 │          0 │               236 │
 │      TCell │      79 │       2 │       0 │            400 │          0 │               236 │
 │      TCell │      80 │       2 │       0 │            400 │          0 │               236 │
-│      TCell │      81 │       2 │       0 │            400 │          0 │               236 │
 └────────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴───────────────────┘
 </code></pre><p>Note that for the <code>MigrationPenalty</code> we set the epithelial cell&#39;s scaling factor to zero. This effectively removes this penalty from the cell type.</p><pre><code class="language-julia hljs">penalties = [
-    AdhesionPenalty([0 20 50;
-                    20 20 75
-                    50 75 100]),
+    AdhesionPenalty([0 30 30;
+                    30 30 30
+                    30 30 30]),
     VolumePenalty([10,10]),
-    PerimeterPenalty([0,10]),
-    MigrationPenalty(50, [0,100], size(space))
-    ]</code></pre><pre><code class="nohighlight hljs">4-element Vector{Penalty}:
- AdhesionPenalty([0 20 50; 20 20 75; 50 75 100])
+    MigrationPenalty(50, [0,50], size(space))
+    ]</code></pre><pre><code class="nohighlight hljs">3-element Vector{Penalty}:
+ AdhesionPenalty([0 30 30; 30 30 30; 30 30 30])
  VolumePenalty([0, 10, 10])
- PerimeterPenalty([0, 0, 10], 0, 0)
- MigrationPenalty(50, [0, 0, 100], sparse(Int64[], Int64[], Int64[], 200, 200))</code></pre><p>Create a new <code>CellPotts</code> model.</p><pre><code class="language-julia hljs">cpm = CellPotts(space, initialCellState, penalties)</code></pre><pre><code class="nohighlight hljs">Cell Potts Model:
+ MigrationPenalty(50, [0, 0, 50], sparse(Int64[], Int64[], Int64[], 200, 200))</code></pre><p>Create a new <code>CellPotts</code> model.</p><pre><code class="language-julia hljs">cpm = CellPotts(space, initialCellState, penalties)</code></pre><pre><code class="nohighlight hljs">Cell Potts Model:
 Grid: 200×200
-Cell Counts: [Epithelial → 76] [TCell → 5] [Total → 81]
-Model Penalties: Adhesion Migration Perimeter Volume
+Cell Counts: [Epithelial → 75] [TCell → 5] [Total → 80]
+Model Penalties: Adhesion Migration Volume
 Temperature: 20.0
 Steps: 0</code></pre><p>Record the simulation</p><pre><code class="language-julia hljs">recordCPM(&quot;OnPatrol.gif&quot;, cpm)</code></pre><p style="text-align:center;">
     <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/OnPatrol/OnPatrol.gif?raw=true" width="445">
-</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../LetsGetMoving/LetsGetMoving/">« Let&#39;s Get Moving</a><a class="docs-footer-nextpage" href="../../BringingODEsToLife/BringingODEsToLife/">Bringing ODEs To Life »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Wednesday 7 December 2022 18:08">Wednesday 7 December 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../LetsGetMoving/LetsGetMoving/">« Let&#39;s Get Moving</a><a class="docs-footer-nextpage" href="../../BringingODEsToLife/BringingODEsToLife/">Bringing ODEs To Life »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Thursday 8 December 2022 23:14">Thursday 8 December 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -40,20 +40,19 @@ cpm = CellPotts(space, initialCellState, penalties);
 
 # ## DifferentialEquations.jl setup
 
-# Currently there isn't a simple method to log states in CellPotts models (work in progress! 🙂). For now, we need to create an extrernal variable to log how the nodeIDs change over time.
-spaceLog = [cpm.space.nodeIDs];
+# Currently by default CellularPotts models to not record states as they change overtime to increase computional speed. To have the model record past states we can toggle the appropriate keyword.
+cpm.record = true;
 
 # As ProteinX evolves over time for each cell, the CPM model also needs to step forward in time to try and minimize its energy. To facilitate this, we can use the callback feature from DifferentialEquations.jl. Here specifically we use the `PeriodicCallback` function which will stop the ODE solve at regular time intervals and run some other function for us (Here it will be the `ModelStep!` function). 
 
-function cpmUpdate!(integrator, cpm, spaceLog)
+function cpmUpdate!(integrator, cpm)
     ModelStep!(cpm)
-    push!(spaceLog, copy(cpm.space.nodeIDs))
 end
 
 
 # This timeScale variable controls how often the callback is triggered. Larger timescales correspond to faster cell movement.
 timeScale = 100
-pcb = PeriodicCallback(integrator -> cpmUpdate!(integrator, cpm, spaceLog), 1/timeScale);
+pcb = PeriodicCallback(integrator -> cpmUpdate!(integrator, cpm), 1/timeScale);
 
 # The ODE functions are taken directly from the DifferentialEquations example. Each cell is given the following differential equation
 # ```math
@@ -107,15 +106,15 @@ ts = range(0, stop=20, length=100)
 plot(ts,map((x)->x[2],sol.(ts)),lw=3, ylabel="Amount of X in Cell 1",xlabel="Time",legend=nothing)
 
 # Finally, we can create an animation of the CPM to see the cells dividing. I've dropped the first few frames because the first cell takes a while to divide.
-anim = @animate for t in Iterators.drop(eachindex(spaceLog),5*timeScale)
+anim = @animate for t in Iterators.drop(1:cpm.step.stepCounter,5*timeScale)
     currTime = @sprintf "Time: %.2f" t/timeScale
     heatmap(
-        spaceLog[t],
+        cpm(t).space.nodeIDs,
         axis=nothing,
         legend = :none,
         framestyle = :box,
         size=(1200,1200),
-        c = cgrad(:tol_muted, rev=true),
+        c = cgrad(:tol_light, rev=true),
         title=currTime,
         titlefontsize = 48)
 end
