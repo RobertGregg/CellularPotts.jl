@@ -1,3 +1,126 @@
+
+#############################################
+
+#what about cpm.steps?
+
+#= In order to record a simulation and save all changes we need to keep track of 3 fields in a CellPotts model:
+    - CellTable
+        - all rows and columns
+    - penalities
+        -just MP?
+    - space
+        - nodeIDs
+        - nodeTypes
+=#
+
+using Revise
+using DataFrames, StatsBase, Tables
+using CellularPotts
+
+#Simple cpm to test with
+cpm = CellPotts(
+    CellSpace(50,50),
+    CellTable([:Epithelial], [500],[1]),
+    [AdhesionPenalty([0 20;20 0]), VolumePenalty([5])]
+)
+
+#Lets create a structure to hold those three objects and the initial problem setup
+mutable struct Recorder
+    cpm::CellPotts
+    history::Dict{Symbol,Dict{Symbol, DataFrame}}
+
+    function Recorder(cpm::CellPotts)
+        
+        history = Dict(:state => Dict{Symbol, DataFrame}(), :space => Dict{Symbol, DataFrame}())
+
+        for (property, val) in pairs(parent(cpm.initialState))
+            history[:state][property] = DataFrame(time=Int64[], position=Int64[], value=eltype(val)[])
+        end
+
+        history[:space][:nodeIDs] = DataFrame(time=Int64[], position=Int64[], value = Int64[])
+        history[:space][:nodeTypes] = DataFrame(time=Int64[], position=Int64[], value = Int64[])
+
+
+        return new(cpm,history)
+    end
+end
+
+r = Recorder(cpm)
+
+
+
+#Lets randomly update the Recorder
+function randUpdate(r::Recorder)
+
+
+    numRows, numCols = size(r.cpm.initialState)
+
+    spaceNodes = prod(size(r.cpm.space))
+
+    colNames = Tables.columnnames(r.cpm.initialState)
+
+    for i =1:100
+        #Updating the table
+
+        #Get a random column
+        randCol = rand(1:numCols-1)
+        randRow = rand(1:numRows-1)
+        #Get old value
+        oldValue = r.cpm.state[randRow][randCol]
+
+        #Sample that column
+        newValue = rand(r.cpm.state[colNames[randCol]])
+
+        if oldValue ≠ newValue
+            #Update the log
+            push!(r.history[:state][colNames[randCol]], [i,randRow,newValue])
+        end
+
+        #Updating the space
+        randpos = rand(1:spaceNodes)
+        oldSpaceID = r.cpm.space.nodeIDs[randpos]
+        oldSpaceType = r.cpm.space.nodeTypes[randpos]
+
+        newSpaceID = rand(unique(r.cpm.space.nodeIDs))
+        newSpaceType = rand(unique(r.cpm.space.nodeTypes))
+
+        if oldSpaceID ≠ newSpaceID
+            #Update the log
+            push!(r.history[:space][:nodeIDs], [i,randpos,newSpaceID])
+        end
+
+        if oldSpaceType ≠ newSpaceType
+            #Update the log
+            push!(r.history[:space][:nodeTypes], [i,randpos,newSpaceType])
+        end
+    end
+end
+
+
+
+function (r::Recorder)(t)
+
+    cpm = deepcopy(r.cpm)
+    
+    #loop the record history
+    for (cpmProperty, record) in pairs(r.history)
+        for (property, df) in pairs(record)
+            for row in eachrow(df)
+                if row.time > t
+                    break
+                end
+                getproperty(getproperty(cpm,cpmProperty),property)[row.position] = row.value
+            end
+        end
+    end
+
+    return cpm
+end
+
+randUpdate(r)
+
+r(10)
+
 # Logging/Saving simulations results
 #This "works" but is very messy
 

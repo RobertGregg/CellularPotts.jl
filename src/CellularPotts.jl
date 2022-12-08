@@ -11,7 +11,8 @@ using OffsetArrays, #Allow some arrays to be zero indexed to include medium
       SparseArrays, #Improve speed for some large arrays
       Graphs, #Needed for creating graphs that look like graphDimension
       Metis, #lightning fast method for partitioning graphs (only thing in this package that is not Julia)
-      Literate #Auto genereate markdown files from julia scripts
+      Literate, #Auto genereate markdown files from julia scripts
+      DataFrames #Log how the model changes over time
 
 import OffsetArrays: Origin
 

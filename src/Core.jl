@@ -119,6 +119,25 @@ MHStepInfo() = MHStepInfo(0,0,[0],[0],0,0,0)
 
 
 ####################################################
+# Logging Function
+####################################################
+
+#This function creates a dictionary that logs changes in the model's state and space
+function initializeHistory(state)
+    
+    history = Dict(:state => Dict{Symbol, DataFrame}(), :space => Dict{Symbol, DataFrame}())
+
+    for (property, val) in pairs(parent(state))
+        history[:state][property] = DataFrame(time=Int64[], position=Int64[], value=eltype(val)[])
+    end
+
+    history[:space][:nodeIDs] = DataFrame(time=Int64[], position=Int64[], value = Int64[])
+    history[:space][:nodeTypes] = DataFrame(time=Int64[], position=Int64[], value = Int64[])
+
+    return history
+end
+
+####################################################
 # Structure for the model
 ####################################################
 
@@ -132,13 +151,16 @@ Requires three inputs:
  - `penalties` -- a vector of penalties to append to the model.
 """
 mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
+    initialSpace::CellSpace{N,T}
     space::CellSpace{N,T}
     initialState::CellTable{V}
-    currentState::CellTable{V}
+    state::CellTable{V}
     penalties::Vector{U}
     step::MHStepInfo{T}
     getArticulation::ArticulationUtility
     temperature::Float64
+    history::Dict{Symbol,Dict{Symbol, DataFrame}}
+    record::Bool
 
     function CellPotts(space::CellSpace{N,T}, initialCellState::CellTable{V}, penalties::Vector{P}; ) where {N,T,V,P}
 
@@ -147,12 +169,15 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
 
         cpm =  new{N,T,V,U}(
             space,
+            space,
             initialCellState,
             initialCellState,
             U[p for p in penalties],
             MHStepInfo(),
             ArticulationUtility(nv(space)),
-            20.0)
+            20.0,
+            initializeHistory(initialCellState),
+            false)
 
         #Position the cells in the model
         if :positions ∈ keys(initialCellState)
@@ -161,9 +186,43 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
             positionCellsRandom!(cpm)
         end
 
+        #Now that the cells are added in, reset the initial states/Spaces
+        cpm.initialSpace = deepcopy(cpm.space)
+        cpm.initialState = deepcopy(cpm.state)
+
         return cpm
     end
 end
+
+#Given the history, retieve the cpm at a given time step
+function (cpm::CellPotts)(t)
+
+    cpmNew = deepcopy(cpm)
+    cpmNew.state = deepcopy(cpm.initialState)
+    cpmNew.space = deepcopy(cpm.initialSpace)
+    
+    #loop through state and space
+    for (cpmProperty, record) in pairs(cpm.history)
+        #loop the record history
+        for (property, df) in pairs(record)
+            for row in eachrow(df)
+                if row.time > t
+                    break
+                end
+
+                if cpmProperty == :state && countcells(cpmNew) < row.position
+                    addnewcell(cpmNew.state, cpmNew.state[1])
+                end
+
+                getproperty(getproperty(cpmNew,cpmProperty),property)[row.position] = row.value
+            end
+        end
+    end
+
+    return cpmNew
+end
+
+
 
 ####################################################
 # Helper functions for CellPotts
@@ -175,7 +234,7 @@ end
 
 Count the number of cells in the model 
 """
-countcells(cpm::CellPotts) = countcells(cpm.currentState)
+countcells(cpm::CellPotts) = countcells(cpm.state)
 
 """
     countcelltypes(cpm::CellPotts)
@@ -183,10 +242,31 @@ countcells(cpm::CellPotts) = countcells(cpm.currentState)
 
 Count the number of cell types in the model 
 """
-countcelltypes(cpm::CellPotts) = countcelltypes(cpm.currentState)
+countcelltypes(cpm::CellPotts) = countcelltypes(cpm.state)
 
-arrayids(cpm::CellPotts) where {N,T} = arrayids(cpm.space)
-arraytypes(cpm::CellPotts) where {N,T} = arraytypes(cpm.space)
+arrayids(cpm::CellPotts) = arrayids(cpm.space)
+arraytypes(cpm::CellPotts) = arraytypes(cpm.space)
+
+#Given a cellID calculate it's perimeter 
+function calcuatePerimeter(cpm::CellPotts, cellID::Int)
+
+    perimeter = 0
+
+    #Loop through all of space and count neighbors
+    for (node, id) in enumerate(cpm.space.nodeIDs)
+        if id ≠ cellID
+            continue
+        end
+
+        for neighbor in neighbors(cpm.space, node)
+            if cpm.space.nodeIDs[neighbor] ≠ cellID
+                perimeter += 1
+            end
+        end
+    end
+
+    return perimeter
+end
 
 ####################################################
 # Override Base.show
@@ -206,7 +286,7 @@ function show(io::IO, cpm::CellPotts)
     end
 
     #Cells and types
-    cellCounts = countmap(cpm.currentState.names)
+    cellCounts = countmap(cpm.state.names)
     print(io,"Cell Counts:")
     for (key, value) in cellCounts #remove medium
         if key ≠ :Medium
@@ -215,7 +295,7 @@ function show(io::IO, cpm::CellPotts)
     end
 
     if length(cellCounts) > 1
-        println(io," [Total → $(length(cpm.currentState.names)-1)]")
+        println(io," [Total → $(length(cpm.state.names)-1)]")
     else
         print(io,"\n")
     end

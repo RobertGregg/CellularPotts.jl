@@ -12,7 +12,7 @@ function recordCPM(
     file::String,
     cpm::CellPotts{2, T, V, U},
     timestamps = 0:300,
-    cmap = ColorSchemes.tol_muted;
+    cmap = ColorSchemes.tol_light;
     addlegend=false,
     framerate=60,
     kwargs...) where {T,V,U}
@@ -40,7 +40,7 @@ function recordCPM(
         hidedecorations!.(axSim) #removes axis numbers
 
     if addlegend
-        labels = String.(unique(cpm.currentState.names))
+        labels = String.(unique(cpm.state.names))
         elements = [PolyElement(polycolor = cellColors[i]) for i in 1:length(labels)]
         Legend(fig[1,2], elements, labels, labelsize  = 30)
     end

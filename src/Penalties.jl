@@ -12,14 +12,14 @@ function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty, σᵢ::T) where T<:Int
     #Initialize the penality
     adhesion = zero(T)
 
-    τᵢ = cpm.currentState.typeIDs[σᵢ]
+    τᵢ = cpm.state.typeIDs[σᵢ]
 
     for neighbor in cpm.step.targetNeighborNodes
         #Given a node index, get the cellID
         σⱼ = cpm.space.nodeIDs[neighbor]
 
         #Convert the cellID to cellType
-        τⱼ = cpm.currentState.typeIDs[σⱼ]
+        τⱼ = cpm.state.typeIDs[σⱼ]
 
         #Adhesion is increased if adjacent cells are different types
         adhesion += AP.J[τᵢ, τⱼ] * (1-δ(σᵢ, σⱼ))
@@ -38,23 +38,23 @@ function addPenalty!(cpm::CellPotts, VP::VolumePenalty)
     sourceVolume = addPenalty!(cpm, VP, σᵢ) + addPenalty!(cpm, VP, σⱼ)
    
     #Change the volumes and recalculate penalty
-    cpm.currentState.volumes[σᵢ] += 1
-    cpm.currentState.volumes[σⱼ] -= 1
+    cpm.state.volumes[σᵢ] += 1
+    cpm.state.volumes[σⱼ] -= 1
 
     targetVolume = addPenalty!(cpm, VP, σᵢ) + addPenalty!(cpm, VP, σⱼ)
 
     #Reset the volumes
-    cpm.currentState.volumes[σᵢ] -= 1
-    cpm.currentState.volumes[σⱼ] += 1
+    cpm.state.volumes[σᵢ] -= 1
+    cpm.state.volumes[σⱼ] += 1
 
     return targetVolume - sourceVolume
 end
 
 
 function addPenalty!(cpm::CellPotts, VP::VolumePenalty, σ::T) where T<:Integer
-    volume = cpm.currentState.volumes[σ]
-    desiredVolume = cpm.currentState.desiredVolumes[σ]
-    τⱼ = cpm.currentState.typeIDs[σ]
+    volume = cpm.state.volumes[σ]
+    desiredVolume = cpm.state.desiredVolumes[σ]
+    τⱼ = cpm.state.typeIDs[σ]
 
     return VP.λᵥ[τⱼ] * (volume - desiredVolume)^2
 end
@@ -82,14 +82,14 @@ function addPenalty!(cpm::CellPotts, PP::PerimeterPenalty)
 
    
     #Change the perimeters and recalculate penalty
-    cpm.currentState.perimeters[σᵢ] += PP.Δpᵢ
-    cpm.currentState.perimeters[σⱼ] -= PP.Δpⱼ
+    cpm.state.perimeters[σᵢ] += PP.Δpᵢ
+    cpm.state.perimeters[σⱼ] -= PP.Δpⱼ
 
     targetPerimeter = addPenalty!(cpm, PP, σᵢ) + addPenalty!(cpm, PP, σⱼ)
 
     #Reset the perimeters (and space)
-    cpm.currentState.perimeters[σᵢ] -= PP.Δpᵢ
-    cpm.currentState.perimeters[σⱼ] += PP.Δpⱼ
+    cpm.state.perimeters[σᵢ] -= PP.Δpᵢ
+    cpm.state.perimeters[σⱼ] += PP.Δpⱼ
 
     #Change the target node back into the target node
     cpm.space.nodeIDs[node] = σⱼ
@@ -99,9 +99,9 @@ end
 
 function addPenalty!(cpm::CellPotts, PP::PerimeterPenalty, σ::T) where T<:Integer
 
-    perimeter = cpm.currentState.perimeters[σ]
-    desiredPerimeter = cpm.currentState.desiredPerimeters[σ]
-    τⱼ = cpm.currentState.typeIDs[σ]
+    perimeter = cpm.state.perimeters[σ]
+    desiredPerimeter = cpm.state.desiredPerimeters[σ]
+    τⱼ = cpm.state.typeIDs[σ]
 
     return PP.λₚ[τⱼ] * (perimeter - desiredPerimeter)^2
 end
@@ -173,7 +173,7 @@ function addPenalty!(cpm::CellPotts, MP::MigrationPenalty, node::T, σ::T) where
 
     average = average ÷ nodeCount
     
-    τ = cpm.currentState.typeIDs[σ]
+    τ = cpm.state.typeIDs[σ]
 
     return (MP.λ[τ] ÷ MP.maxAct) * average
 end

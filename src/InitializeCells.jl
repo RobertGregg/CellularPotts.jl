@@ -29,7 +29,7 @@ end
 function positionCells!(cpm::CellPotts{N,Int,V}) where {N,Int,V}
 
     #Convert positions to linear LinearIndices
-    centers = [LinearIndices(size(cpm.space))[i...] for i in cpm.currentState.positions]
+    centers = [LinearIndices(size(cpm.space))[i...] for i in cpm.state.positions]
 
     cellMembership = growcells(cpm, centers)
 
@@ -43,8 +43,8 @@ end
 function growcells(cpm, centers)
 
     #Unpack some needed variables
-    cellIDs = cpm.currentState.cellIDs
-    volumes = cpm.currentState.desiredVolumes
+    cellIDs = cpm.state.cellIDs
+    volumes = cpm.state.desiredVolumes
     space = cpm.space
 
     numCells = countcells(cpm)
@@ -104,10 +104,10 @@ function updateCellMembership!(cpm, cellMembership)
     for (i, cellID) in enumerate(cellMembership)
         if cellID ≠ 0
             cpm.space.nodeIDs[i] = cellID
-            cpm.space.nodeTypes[i] = cpm.currentState.typeIDs[cellID]
+            cpm.space.nodeTypes[i] = cpm.state.typeIDs[cellID]
 
             #Update the cell summary volumes
-            cpm.currentState.volumes[cellID] += 1
+            cpm.state.volumes[cellID] += 1
         end
     end
     
@@ -117,7 +117,7 @@ function updateCellMembership!(cpm, cellMembership)
         if cellID ≠ 0
             for n in neighbors(cpm.space, i)
                 if cpm.space.nodeIDs[n] ≠ cellID
-                    cpm.currentState.perimeters[cellID] += 1
+                    cpm.state.perimeters[cellID] += 1
                 end
             end
         end

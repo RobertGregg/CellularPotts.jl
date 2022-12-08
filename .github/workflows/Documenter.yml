@@ -11,7 +11,7 @@ jobs:
   build:
     permissions:
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-20.04 #This had to downgraded from ubuntu-lastest because of a GLMakie issue: https://discourse.julialang.org/t/opengl-error-with-documenter-jl/84854
     steps:
       - name: Install binary dependencies
         run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev

@@ -23,7 +23,7 @@ Initialize a new `CellTable` with 75 epithelial cells and 5 T-Cells
 initialCellState = CellTable(
     [:Epithelial, :TCell],
     [500, 400],
-    [76, 5])
+    [75, 5])
 ````
 
 ````
@@ -107,12 +107,11 @@ initialCellState = CellTable(
 │ Epithelial │      73 │       1 │       0 │            500 │          0 │               264 │
 │ Epithelial │      74 │       1 │       0 │            500 │          0 │               264 │
 │ Epithelial │      75 │       1 │       0 │            500 │          0 │               264 │
-│ Epithelial │      76 │       1 │       0 │            500 │          0 │               264 │
+│      TCell │      76 │       2 │       0 │            400 │          0 │               236 │
 │      TCell │      77 │       2 │       0 │            400 │          0 │               236 │
 │      TCell │      78 │       2 │       0 │            400 │          0 │               236 │
 │      TCell │      79 │       2 │       0 │            400 │          0 │               236 │
 │      TCell │      80 │       2 │       0 │            400 │          0 │               236 │
-│      TCell │      81 │       2 │       0 │            400 │          0 │               236 │
 └────────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴───────────────────┘
 
 ````
@@ -121,21 +120,19 @@ Note that for the `MigrationPenalty` we set the epithelial cell's scaling factor
 
 ````julia
 penalties = [
-    AdhesionPenalty([0 20 50;
-                    20 20 75
-                    50 75 100]),
+    AdhesionPenalty([0 30 30;
+                    30 30 30
+                    30 30 30]),
     VolumePenalty([10,10]),
-    PerimeterPenalty([0,10]),
-    MigrationPenalty(50, [0,100], size(space))
+    MigrationPenalty(50, [0,50], size(space))
     ]
 ````
 
 ````
-4-element Vector{Penalty}:
- AdhesionPenalty([0 20 50; 20 20 75; 50 75 100])
+3-element Vector{Penalty}:
+ AdhesionPenalty([0 30 30; 30 30 30; 30 30 30])
  VolumePenalty([0, 10, 10])
- PerimeterPenalty([0, 0, 10], 0, 0)
- MigrationPenalty(50, [0, 0, 100], sparse(Int64[], Int64[], Int64[], 200, 200))
+ MigrationPenalty(50, [0, 0, 50], sparse(Int64[], Int64[], Int64[], 200, 200))
 ````
 
 Create a new `CellPotts` model.
@@ -147,8 +144,8 @@ cpm = CellPotts(space, initialCellState, penalties)
 ````
 Cell Potts Model:
 Grid: 200×200
-Cell Counts: [Epithelial → 76] [TCell → 5] [Total → 81]
-Model Penalties: Adhesion Migration Perimeter Volume
+Cell Counts: [Epithelial → 75] [TCell → 5] [Total → 80]
+Model Penalties: Adhesion Migration Volume
 Temperature: 20.0
 Steps: 0
 ````

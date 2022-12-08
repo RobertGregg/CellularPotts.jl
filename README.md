@@ -63,7 +63,9 @@ Below is simply tracking the progress of the package and any notes to myself.
 
 - [x] Create an Examples folder
 
-- [ ] How to save output?
+- [x] How to save output?
+  - Save the data into a dictionary of dataframes
+  - Needs to be made more efficient
 
 - [x] Implement different ways to initialize cell locations
   
