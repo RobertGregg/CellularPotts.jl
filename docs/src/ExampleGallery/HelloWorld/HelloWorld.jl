@@ -53,7 +53,8 @@ cpm = CellPotts(space, initialCellState, penalties)
 
 # Calling this object gives a quick summary of the model's current state. Note that a "temperature" of 20 is given to the model by default. Higher temperatures allow the model to more likely accept changes that increase the overall penalty (e.g. cells could deviate further from their desired volume). The model object also tracks how many time steps have been performed. 
 
-# Note that because we added the `:positions` property to our CellTable, the CellPotts initializer placed the cells in the grid centered at those positions. If we did not specify a :positions property, cells would be randomly placed in the space.
+# !!! note 
+# Because we added the `:positions` property to our CellTable, the CellPotts initializer placed the cells in the grid centered at those positions. If we did not specify a :positions property, cells would be randomly placed in the space.
 
 # Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`
 
