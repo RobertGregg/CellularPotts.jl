@@ -120,7 +120,7 @@ CellSpace(gridSize::T...; isPeriodic=true, neighborhood=:moore) where T<:Integer
 #Needed for induced_subgraph (why?)
 function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
     fadjlist = [Vector{T}() for _ in one(T):n]
-    return CellSpace{N,T}(0, fadjlist, (0,0), true, zeros(T,n,n), zeros(T,n,n))
+    return CellSpace{N,T}(0, fadjlist, (n,n), true, zeros(T,n,n), zeros(T,n,n))
 end
 
 ####################################################

@@ -18,6 +18,9 @@ end
 ####################################################
 
 function MHStep!(cpm::CellPotts)
+
+    #Reset the success flag
+    cpm.step.success = false
     
     #Pick a random location on the graph
     cpm.step.sourceNode = rand(1:nv(cpm.space))
@@ -81,7 +84,9 @@ function MHStep!(cpm::CellPotts)
         for i in eachindex(cpm.penalties)
             updateMHStep!(cpm, cpm.penalties[i])
         end
-        
+
+        #Finally update the success flag 
+        cpm.step.success = true
     end
 
     return nothing
@@ -95,7 +100,7 @@ end
 function ModelStep!(cpm::CellPotts)
 
     #Repeat MHStep! for each pixel in the model
-    for _ in 1:prod(size(cpm.space))
+    for _ in 1:nv(cpm.space)
         MHStep!(cpm)
     end
 

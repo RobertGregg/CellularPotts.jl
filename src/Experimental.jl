@@ -331,3 +331,94 @@ anim = @animate for t in range(tspan..., 300)
 end
 
 gif(anim, "test.gif", fps = 60)
+
+
+
+#############################################
+#Graph diffusion
+
+
+#######################
+using Graphs, LinearAlgebra, SparseArrays
+using CellularPotts
+using Plots
+
+
+const N = 200
+const ΔP = zeros(N,N)
+
+cpm = CellPotts(CellSpace(N,N), CellTable([:Epithelial],[500],[10]), [AdhesionPenalty([0 30;30 30]),VolumePenalty([5])]);
+
+#Doing this because we're not using DifferentialEquations
+P = zeros(N,N)
+for i in eachindex(cpm.space.nodeIDs)
+    if !iszero(cpm.space.nodeIDs[i])
+        P[i] = rand()
+    end
+end
+P0 = copy(P)
+
+heatmap(P0)
+
+#Updates the laplacian 
+function ∇²(Δu,u,space)
+
+    Δx² = nv(space) #Grid spacing
+    D=1.0 #Diffusion coefficient
+    h = D/Δx²
+
+    for vertex in vertices(space)
+        if iszero(space.nodeIDs[vertex])
+            continue
+        end
+
+        for neighbor in neighbors(space, vertex)
+            if space.nodeIDs[vertex] == space.nodeIDs[neighbor]
+                @inbounds Δu[vertex] += u[neighbor] - u[vertex]
+            end
+        end
+    end
+    
+
+    Δu .*= h
+
+
+    return nothing
+end
+
+for i=1:10000
+    ∇²(ΔP,P,cpm.space)
+    P .+= ΔP
+end
+
+heatmap(P)
+
+N = 10
+
+cpm = CellPotts(CellSpace(N,N), CellTable([:Epithelial],[10],[1]), [AdhesionPenalty([0 30;30 30]),VolumePenalty([5])]);
+
+P = zeros(N,N)
+nodes = findall(isequal(1), cpm.space.nodeIDs[:])
+P[nodes] = rand(length(nodes))
+
+P0 = copy(P)
+
+laplaceCell = laplacian_matrix(cpm.space[nodes], dir=:both)/N^2
+
+for i=1:10000
+    P[nodes] -= laplaceCell*P[nodes]
+end
+
+
+heatmap(P0)
+heatmap(P)
+
+
+l = laplacian_matrix(cpm.space, dir=:both)
+P[:] = l * P0[:]
+
+Δu = zeros(N,N);
+∇²(Δu,u,cpm.space)
+
+
+Pnew = P0 + Δu

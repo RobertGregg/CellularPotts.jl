@@ -112,10 +112,11 @@ mutable struct MHStepInfo{T<:Integer}
     targetNeighborNodes::Vector{T} #Indicies for the neighboring nodes
     sourceCellID::T    #ID of sourceNode
     targetCellID::T    #ID of chosen cell target
-    stepCounter::T     #Counts the number of MHSteps performed
+    stepCounter::T     #Counts the number of ModelSteps performed (1 ModelStep = nv(space) MHStep attempts)
+    success::Bool      #Tracks if the MHStep was successful
 end 
 
-MHStepInfo() = MHStepInfo(0,0,[0],[0],0,0,0)
+MHStepInfo() = MHStepInfo(0,0,[0],[0],0,0,0, false)
 
 
 ####################################################
@@ -159,7 +160,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     step::MHStepInfo{T}
     getArticulation::ArticulationUtility
     temperature::Float64
-    history::Dict{Symbol,Dict{Symbol, DataFrame}}
+    history::Dict{Symbol,Dict{Symbol, DataFrame}} #TODO needs simplification  
     record::Bool
 
     function CellPotts(space::CellSpace{N,T}, initialCellState::CellTable{V}, penalties::Vector{P}; ) where {N,T,V,P}
