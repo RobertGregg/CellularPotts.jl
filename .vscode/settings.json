@@ -1,5 +1,14 @@
 {
     "cSpell.words": [
         "indicies"
+    ],
+    "cSpell.enabled": true,
+    "spellright.language": [
+        "en"
+    ],
+    "spellright.documentTypes": [
+        "markdown",
+        "latex",
+        "plaintext"
     ]
 }
