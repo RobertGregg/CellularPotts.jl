@@ -30,7 +30,7 @@ cpm = CellPotts(
     );
 
 
-# This next function looks complicated by has a lot of repeating parts. Essentially this function is called by the ODE solver at regular time intervals to update the CPM model. The remainder of the function ensures that mass is conserved.
+# This next function looks complicated but has a lot of repeating parts. Essentially this function is called by the ODE solver at regular time intervals to update the CPM model. The remainder of the function ensures that mass is conserved.
 function cpmUpdate!(integrator, cpm)
     
     #Unlike the "BringingODEsToLife" Model, CPM steps will effect the integrator
@@ -156,7 +156,7 @@ end;
 
 # The model we're using is called the "Goodwin Model" which was introduced by B. Goodwin in 1965 [^1]. I discovered this model from a [lecture series](http://mcb111.org/w11/w11-lecture.html) by Dr. Elena Rivas when I was looking for a simple cell signaling model with interesting properties (in this case oscillations). She summarizes the model as follows:
 
-# ![](goodwin_model.png)
+# <img src="goodwin_model.png" width="445">
 
 # ```math
 # \begin{aligned}
@@ -169,7 +169,7 @@ end;
 # The model consists of three states: an RNA species (R) that produces a Protein (P) which then results in the production of an inhibitor (X). The inhibitor slow down the production of RNA creating a negative feedback loop. 
 
 # This system produces dampened oscillations at values of n<8 and periodic oscillation in species concentrations for n>8.
-# ![](goodwin_oscillations.png)
+# <img src="goodwin_oscillations.png" width="445">
 
 # Note that this model isn't very realistic because n is usually interpreted as the degree of cooperatively between the inhibitor and the promoter region (meaning more than 8 molecules would have to bind simultaneously). 
 
@@ -240,7 +240,7 @@ anim = @animate for t in range(tspan...,200)
         sol(t)[:,:,3],
         axis=nothing,
         framestyle = :box,
-        size=(600,600),
+        size=(1200,1200),
         clim = (0,5),
         title=currTime,
         titlefontsize = 40)
