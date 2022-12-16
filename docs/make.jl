@@ -13,7 +13,8 @@ makedocs(
             "Let's Get Moving" => "ExampleGallery/LetsGetMoving/LetsGetMoving.md",
             "On Patrol" => "ExampleGallery/OnPatrol/OnPatrol.md",
             "Bringing ODEs To Life" => "ExampleGallery/BringingODEsToLife/BringingODEsToLife.md",
-            "Going 3D" => "ExampleGallery/Going3D/Going3D.md"],
+            "Going 3D" => "ExampleGallery/Going3D/Going3D.md",
+            "Diffusion Inside Cells" => "ExampleGallery/DiffusionInsideCells/DiffusionInsideCells.md"],
         "API.md"]
 )
 
