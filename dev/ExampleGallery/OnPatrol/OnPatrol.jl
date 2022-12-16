@@ -11,7 +11,7 @@ space = CellSpace(200,200)
 initialCellState = CellTable(
     [:Epithelial, :TCell],
     [500, 400],
-    [75, 5])
+    [75, 5]);
 
 # Note that for the `MigrationPenalty` we set the epithelial cell's scaling factor to zero. This effectively removes this penalty from the cell type.
 
