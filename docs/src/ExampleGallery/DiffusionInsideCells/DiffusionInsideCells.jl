@@ -156,7 +156,11 @@ end;
 
 # The model we're using is called the "Goodwin Model" which was introduced by B. Goodwin in 1965 [^1]. I discovered this model from a [lecture series](http://mcb111.org/w11/w11-lecture.html) by Dr. Elena Rivas when I was looking for a simple cell signaling model with interesting properties (in this case oscillations). She summarizes the model as follows:
 
+# ```@raw html
+# <p style="text-align:center;">
 # <img src="goodwin_model.png" width="445">
+# </p>
+# ```
 
 # ```math
 # \begin{aligned}
@@ -169,7 +173,12 @@ end;
 # The model consists of three states: an RNA species (R) that produces a Protein (P) which then results in the production of an inhibitor (X). The inhibitor slow down the production of RNA creating a negative feedback loop. 
 
 # This system produces dampened oscillations at values of n<8 and periodic oscillation in species concentrations for n>8.
+
+# ```@raw html
+# <p style="text-align:center;">
 # <img src="goodwin_oscillations.png" width="445">
+# </p>
+# ```
 
 # Note that this model isn't very realistic because n is usually interpreted as the degree of cooperatively between the inhibitor and the promoter region (meaning more than 8 molecules would have to bind simultaneously). 
 
