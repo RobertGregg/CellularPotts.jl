@@ -73,6 +73,13 @@ Pkg.add("CellularPotts")
     </div>
 
     <div>
+        <h3>Diffusion Outside Cells</h3>
+        <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/DiffusionOutsideCells/DiffusionOutsideCells/">
+            <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/DiffusionOutsideCells/DiffusionOutsideCells.gif?raw=true">
+        </a>
+    </div>
+
+    <div>
         <h3>Diffusion Inside Cells</h3>
         <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/DiffusionInsideCells/DiffusionInsideCells/">
             <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/DiffusionInsideCells/DiffusionInsideCells.gif?raw=true">
