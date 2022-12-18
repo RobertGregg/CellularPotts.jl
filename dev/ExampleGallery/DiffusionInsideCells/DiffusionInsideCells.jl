@@ -1,4 +1,4 @@
-# # DiffusionInsideCells
+# # Diffusion Inside Cells
 
 # This is a more complex demonstration to showcase one way we can simulate diffusion inside a cell. There are many ways to couple Cellular Potts Models with PDEs, but here we take a simple approach similar to the "BringingODEsToLife.jl" example. The basic strategy is:
 # 1. Discretize the diffusion PDE into a system of ODEs.
