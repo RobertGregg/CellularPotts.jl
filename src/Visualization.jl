@@ -1,8 +1,8 @@
 """
-    cellborders!(plt, space::CellSpace)
+    cellborders!(plotObject, space::CellSpace)
 Add line borders to differentiate cells in a plot.
 """
-function cellborders!(plt, space::CellSpace{2, T}) where T
+function cellborders!(plotObject, space::CellSpace{2, T}) where T
 
     (row,col) = size(space)
 
@@ -33,7 +33,28 @@ function cellborders!(plt, space::CellSpace{2, T}) where T
         end
     end
 
-    plot!(plt, x[:,1:count], y[:,1:count],color=:black, lw=1)
+    plot!(plotObject, x[:,1:count], y[:,1:count],color=:black, lw=1)
+
+    return nothing
+end
+
+
+function cellMovement!(plotObject,cpm)
+
+    #Active cell movement
+    migrationIndex = findfirst(x->typeof(x)==MigrationPenalty, cpm.penalties)
+
+    if isnothing(migrationIndex)
+        return nothing
+    end
+        
+    #transparent colors
+    transparentToColor = range(colorant"rgba(255,255,255,0.0)", colorant"rgba(60,4,104,0.6)")
+
+    heatmap!(plotObject,
+            Matrix(cpm.penalties[migrationIndex].nodeMemory)',
+            c = transparentToColor,
+            colorbar_entry = false)
 
     return nothing
 end
@@ -53,6 +74,7 @@ function recordCPM(
     cpm::CellPotts{2, T, V, U},
     timestamps = 0:300,
     c = cgrad(:tol_light, rev=true);
+    property = :nodeIDs,
     legend=:none,
     framerate=30,
     kwargs...) where {T,V,U}
@@ -62,7 +84,7 @@ function recordCPM(
     anim = @animate for t in timestamps
 
         plotObject = heatmap(
-            cpm.space.nodeIDs',
+            getproperty(cpm.space,property)',
             c = c,
             grid=false,
             axis=nothing,
@@ -77,6 +99,8 @@ function recordCPM(
 
         cellborders!(plotObject, cpm.space)
 
+        cellMovement!(plotObject,cpm)
+
         ModelStep!(cpm)
 
         plotObject
@@ -89,7 +113,12 @@ end
 
 function meshscatter(space::CellSpace; legend=false)
 
-    plt = plot(lims=(0,maximum(size(space))))
+    plotObject = plot(
+        lims=(0,maximum(size(space))),
+        framestyle=:box,
+        size = (600, 600)
+    )
+
     xp = [0, 0, 0, 0, 1, 1, 1, 1] .- 0.5;
     yp = [0, 1, 0, 1, 0, 0, 1, 1] .- 0.5;
     zp = [0, 0, 1, 1, 1, 0, 0, 1] .- 0.5;
@@ -99,11 +128,11 @@ function meshscatter(space::CellSpace; legend=false)
     for I in CartesianIndices(space.nodeIDs)
         if !iszero(space.nodeIDs[I])
             (x,y,z) = Tuple(I)
-            mesh3d!(plt, xp .+ x, yp .+ y, zp .+ z; connections, proj_type = :persp, color=:dodgerblue, linecolor=:black, alpha=1.0, legend=legend)
+            mesh3d!(plotObject, xp .+ x, yp .+ y, zp .+ z; connections, proj_type = :persp, color=:dodgerblue, linecolor=:black, alpha=1.0, legend=legend)
         end
     end
 
-    return plt
+    return plotObject
 end
 
 
@@ -129,5 +158,3 @@ function recordCPM(
     return gif(anim, file, fps = framerate)
 
 end
-
-

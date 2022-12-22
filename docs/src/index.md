@@ -52,7 +52,7 @@ Pkg.add("CellularPotts")
     </div>
 
     <div>
-        <h3>On patrol</h3>
+        <h3>On Patrol</h3>
         <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/OnPatrol/OnPatrol/">
             <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/OnPatrol/OnPatrol.gif?raw=true">
         </a>
