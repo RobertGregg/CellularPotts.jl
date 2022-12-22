@@ -1,0 +1,133 @@
+"""
+    cellborders!(plt, space::CellSpace)
+Add line borders to differentiate cells in a plot.
+"""
+function cellborders!(plt, space::CellSpace{2, T}) where T
+
+    (row,col) = size(space)
+
+
+    x = zeros(2,row*col)
+    y = zeros(2,row*col)
+    
+    count = 1
+    for r in 1:row
+        for c in 1:col
+
+            #vertical
+            if space.nodeIDs[r,c] ≠ space.nodeIDs[r,mod1(c+1,col)]
+                x[1,count] = r-0.5
+                x[2,count] = r+0.5
+                y[:,count] .= c+0.5
+                count += 1
+            end
+
+            #horizontal
+            if space.nodeIDs[r,c] ≠ space.nodeIDs[mod1(r+1,row),c]
+                x[:,count] .= r+0.5
+                y[1,count] = c-0.5
+                y[2,count] = c+0.5
+                count += 1
+            end
+
+        end
+    end
+
+    plot!(plt, x[:,1:count], y[:,1:count],color=:black, lw=1)
+
+    return nothing
+end
+
+"""
+    recordCPM(
+        file::String,
+        cpm::CellPotts,
+        timestamps = 0:300,
+        cmap = ColorSchemes.tol_muted;
+        framerate=60,
+        kwargs...)
+Generates an animation of the CPM model.
+"""
+function recordCPM(
+    file::String,
+    cpm::CellPotts{2, T, V, U},
+    timestamps = 0:300,
+    c = cgrad(:tol_light, rev=true);
+    legend=:none,
+    framerate=30,
+    kwargs...) where {T,V,U}
+
+    (rows,columns) = size(cpm.space)
+
+    anim = @animate for t in timestamps
+
+        plotObject = heatmap(
+            cpm.space.nodeIDs',
+            c = c,
+            grid=false,
+            axis=nothing,
+            legend=legend,
+            framestyle=:box,
+            aspect_ratio=:equal,
+            size = (600, 600),
+            xlims=(0.5, rows+0.5),
+            ylims=(0.5, columns+0.5),
+            kwargs...
+            )
+
+        cellborders!(plotObject, cpm.space)
+
+        ModelStep!(cpm)
+
+        plotObject
+    end
+
+    return gif(anim, file, fps = framerate)
+
+end
+
+
+function meshscatter(space::CellSpace; legend=false)
+
+    plt = plot(lims=(0,maximum(size(space))))
+    xp = [0, 0, 0, 0, 1, 1, 1, 1] .- 0.5;
+    yp = [0, 1, 0, 1, 0, 0, 1, 1] .- 0.5;
+    zp = [0, 0, 1, 1, 1, 0, 0, 1] .- 0.5;
+    connections = [(1,2,4,3),(1,3,5,6),(5,6,7,8),(2,4,8,7),(1,2,7,6),(3,4,8,5)];
+
+
+    for I in CartesianIndices(space.nodeIDs)
+        if !iszero(space.nodeIDs[I])
+            (x,y,z) = Tuple(I)
+            mesh3d!(plt, xp .+ x, yp .+ y, zp .+ z; connections, proj_type = :persp, color=:dodgerblue, linecolor=:black, alpha=1.0, legend=legend)
+        end
+    end
+
+    return plt
+end
+
+
+function recordCPM(
+    file::String,
+    cpm::CellPotts{3, T, V, U},
+    timestamps = 0:300,
+    c = cgrad(:tol_light, rev=true);
+    legend=:none,
+    framerate=30,
+    kwargs...) where {T,V,U}
+
+
+    anim = @animate for t in timestamps
+
+        plotObject = meshscatter(cpm.space; legend=legend)
+
+        ModelStep!(cpm)
+
+        plotObject
+    end
+
+    return gif(anim, file, fps = framerate)
+
+end
+
+

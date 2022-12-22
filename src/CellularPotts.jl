@@ -1,7 +1,7 @@
 module CellularPotts
 
 using OffsetArrays, #Allow some arrays to be zero indexed to include medium
-      GLMakie, #Need Makie as well?
+      Plots, #Visualization 
       Tables, #Structure for holding cells and their properties
       Colors, #More color options for the cells (e.g. :Purples)
       ColorSchemes, #For custom cell colors
@@ -82,8 +82,7 @@ include("Penalties.jl")
 include("InitializeCells.jl")
 include("MarkovStep.jl")
 include("CellActions.jl")
-include("Gui_new.jl")
-include("recordSimulation.jl")
+include("Visualization.jl")
 
 export 
 
@@ -121,8 +120,7 @@ export
 #CellActions.jl
        CellDivision!,
        CellDeath!,
-#Gui.jl
-      CellGUI,
-#recordSimulation.jl
-      recordCPM
+#Visualization.jl
+      recordCPM,
+      cellborders!
 end
