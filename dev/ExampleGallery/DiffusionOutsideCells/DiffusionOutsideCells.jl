@@ -19,6 +19,9 @@ cpm = CellPotts(
     [AdhesionPenalty([0 30;30 30]), VolumePenalty([5])]
     );
 
+# Record the model.
+cpm.record = true
+
 
 # Because cell space is represented as a graph, we can use the `laplacian_matrix()` function from the Graphs.jl package to estimate the continuous Laplacian operator that describes diffusion (see these two wikipedia articles for more information: [Graph Laplacians](https://en.wikipedia.org/wiki/Discrete_Laplace_operator#Graph_Laplacians), [Laplacian matrix](https://en.wikipedia.org/wiki/Laplacian_matrix#Laplacian_matrix)). This graphical Laplacian matrix can be easily calculated as the difference between the degree matrix and the adjacency matrix. For our purposes, `laplacian_matrix()` generates a sparse $N^2 \times N^2$ matrix which we can multiply by our state vector to simulate diffusion. We also need to specify that our graph is bi-directional (i.e. undirected).
 const 𝓛 = laplacian_matrix(cpm.space, dir=:both);
@@ -65,17 +68,26 @@ sol = solve(prob, Tsit5(), callback=cb);
 
 # ## Animating the Solution
 # As we move forward in time we see the species leave the cell and eventually degrade in the extracellular space.
-anim = @animate for t in range(tspan...,200)
-    currTime = @sprintf "Time: %.2f" t
-    heatmap(
-        reshape(sol(t), N,N),
+anim = @animate for t in range(1, cpm.step.stepCounter, step=10)
+    
+    currTime = @sprintf "Time: %.2f" t/timeScale
+
+    plt = heatmap(
+        reshape(sol(t/timeScale), N,N)',
         axis=nothing,
+        legend=false,
         framestyle = :box,
-        size=(1200,1200),
+        size=(600,600),
         clim = (0,50),
         c = :twilight,
         title=currTime,
-        titlefontsize = 40)
+        titlefontsize = 36,
+        xlims=(0.5, N+0.5),
+        ylims=(0.5, N+0.5),)
+
+    cellborders!(plt,cpm(t).space)
+
+    plt
 end
 
 gif(anim, "DiffusionOutsideCells.gif", fps = 30)

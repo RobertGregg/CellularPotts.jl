@@ -108,15 +108,25 @@ plot(ts,map((x)->x[2],sol.(ts)),lw=3, ylabel="Amount of X in Cell 1",xlabel="Tim
 # Finally, we can create an animation of the CPM to see the cells dividing. I've dropped the first few frames because the first cell takes a while to divide.
 anim = @animate for t in Iterators.drop(1:cpm.step.stepCounter,5*timeScale)
     currTime = @sprintf "Time: %.2f" t/timeScale
-    heatmap(
-        cpm(t).space.nodeIDs,
+
+    space = cpm(t).space
+    
+    plt = heatmap(
+        space.nodeIDs',
         axis=nothing,
         legend = :none,
         framestyle = :box,
-        size=(1200,1200),
+        aspect_ratio=:equal,
+        size=(600,600),
         c = cgrad(:tol_light, rev=true),
         title=currTime,
-        titlefontsize = 48)
+        titlefontsize = 36,
+        xlims=(0.5, size(space.nodeIDs,1)+0.5),
+        ylims=(0.5, size(space.nodeIDs,2)+0.5))
+
+    cellborders!(plt,space) #very slow
+
+    plt
 end
 
 gif(anim, "BringingODEsToLife.gif", fps = 30)
