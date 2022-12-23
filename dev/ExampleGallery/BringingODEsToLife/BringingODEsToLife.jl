@@ -111,7 +111,7 @@ anim = @animate for t in Iterators.drop(1:cpm.step.stepCounter,5*timeScale)
 
     space = cpm(t).space
     
-    plt = heatmap(
+    plotObject = heatmap(
         space.nodeIDs',
         axis=nothing,
         legend = :none,
@@ -124,9 +124,9 @@ anim = @animate for t in Iterators.drop(1:cpm.step.stepCounter,5*timeScale)
         xlims=(0.5, size(space.nodeIDs,1)+0.5),
         ylims=(0.5, size(space.nodeIDs,2)+0.5))
 
-    cellborders!(plt,space) #very slow
+    cellborders!(plotObject,space) #very slow
 
-    plt
+    plotObject
 end
 
 gif(anim, "BringingODEsToLife.gif", fps = 30)

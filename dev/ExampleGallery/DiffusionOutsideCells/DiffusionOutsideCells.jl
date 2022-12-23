@@ -72,7 +72,7 @@ anim = @animate for t in range(1, cpm.step.stepCounter, step=10)
     
     currTime = @sprintf "Time: %.2f" t/timeScale
 
-    plt = heatmap(
+    plotObject = heatmap(
         reshape(sol(t/timeScale), N,N)',
         axis=nothing,
         legend=false,
@@ -85,9 +85,9 @@ anim = @animate for t in range(1, cpm.step.stepCounter, step=10)
         xlims=(0.5, N+0.5),
         ylims=(0.5, N+0.5),)
 
-    cellborders!(plt,cpm(t).space)
+    cellborders!(plotObject,cpm(t).space)
 
-    plt
+    plotObject
 end
 
 gif(anim, "DiffusionOutsideCells.gif", fps = 30)

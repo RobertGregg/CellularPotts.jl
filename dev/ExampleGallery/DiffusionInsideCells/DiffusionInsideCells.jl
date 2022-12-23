@@ -249,10 +249,10 @@ anim = @animate for t in range(tspan...,200)
         sol(t)[:,:,3],
         axis=nothing,
         framestyle = :box,
-        size=(1200,1200),
+        size=(600,600),
         clim = (0,5),
         title=currTime,
-        titlefontsize = 40)
+        titlefontsize = 24)
 end
 
 gif(anim, "DiffusionInsideCells.gif", fps = 30)

@@ -29,4 +29,4 @@ cpm = CellPotts(space, initialCellState, penalties)
 
 
 # Record the simulation
-recordCPM("OnPatrol.gif", cpm)
+recordCPM("OnPatrol.gif", cpm; property = :nodeTypes)
