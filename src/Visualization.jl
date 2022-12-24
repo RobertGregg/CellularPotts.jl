@@ -7,33 +7,37 @@ function cellborders!(plotObject, space::CellSpace{2, T}) where T
     (row,col) = size(space)
 
 
-    x = zeros(2,row*col)
-    y = zeros(2,row*col)
+    x = fill(NaN, 3*row*col)
+    y = fill(NaN, 3*row*col)
     
-    count = 1
+    count = 0
     for r in 1:row
         for c in 1:col
 
             #vertical
             if space.nodeIDs[r,c] ≠ space.nodeIDs[r,mod1(c+1,col)]
-                x[1,count] = r-0.5
-                x[2,count] = r+0.5
-                y[:,count] .= c+0.5
-                count += 1
+                x[count+1] = r-0.5
+                x[count+2] = r+0.5
+
+                y[count+1] = c+0.5
+                y[count+2] = c+0.5
+                count += 3
             end
 
             #horizontal
             if space.nodeIDs[r,c] ≠ space.nodeIDs[mod1(r+1,row),c]
-                x[:,count] .= r+0.5
-                y[1,count] = c-0.5
-                y[2,count] = c+0.5
-                count += 1
+                x[count+1] = r+0.5
+                x[count+2] = r+0.5
+
+                y[count+1] = c-0.5
+                y[count+2] = c+0.5
+                count += 3
             end
 
         end
     end
 
-    plot!(plotObject, x[:,1:count], y[:,1:count],color=:black, lw=1)
+    plot!(plotObject, x[1:count], y[1:count],color=:black, lw=1, legend=false)
 
     return nothing
 end
