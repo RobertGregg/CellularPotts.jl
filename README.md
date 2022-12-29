@@ -93,6 +93,8 @@ recordCPM("ReadMeExample.gif", cpm)
 
 - [ ] Use automatic differentiation to calculate [cellular forces](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007459) from the Hamiltonian
 
+- [ ] Add a correction factor to adhesion to deal with boundaries.
+
 ## Minor Improvements
 
 - [x] Allow user defined parameters to cells (used `NamedTuple`)
@@ -104,3 +106,4 @@ recordCPM("ReadMeExample.gif", cpm)
 - [ ] Adding cell borders is slow for large spaces
 - [ ] Use abstract typing (e.g. `AbstractVector` vs `Vector`) without creating type instability
 - [x] Do we even need to track to total energy? (nope!)
+- [ ] Use SVectors to store graph edges? 🤔
