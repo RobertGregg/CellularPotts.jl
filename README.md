@@ -107,3 +107,4 @@ recordCPM("ReadMeExample.gif", cpm)
 - [ ] Use abstract typing (e.g. `AbstractVector` vs `Vector`) without creating type instability
 - [x] Do we even need to track to total energy? (nope!)
 - [ ] Use SVectors to store graph edges? 🤔
+- [ ] Add more tests and CI badge
