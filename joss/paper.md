@@ -22,7 +22,6 @@ affiliations:
    index: 3
 date: 27 December 2022
 bibliography: paper.bib
-
 ---
 
 # Summary
@@ -60,9 +59,11 @@ initialCellState = CellTable(
     [1])           #counts
 
 #Add penalties to the model
+  #AdhesionPenalty discourages having neighbors with different cell types
+  #VolumePenalty discourages cells deviating from their desired size
 penalties = [
-    AdhesionPenalty([0 20; 20 0]), #discourages pixels from having neighbors with different cell types
-    VolumePenalty([5]) #discourages cells from deviating from their desired size
+    AdhesionPenalty([0 20; 20 0]),
+    VolumePenalty([5])
     ]
 
 #Create a model object
@@ -71,10 +72,6 @@ cpm = CellPotts(space, initialCellState, penalties)
 #Record a simulation of the model
 recordCPM("Output.gif", cpm)
 ```
-
-# Citations
-
-
 
 # Acknowledgements
 
