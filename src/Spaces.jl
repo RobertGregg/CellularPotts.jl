@@ -15,6 +15,7 @@ mutable struct CellSpace{N, T<:Integer} <: AbstractSimpleGraph{T}
     ne::T                         #Number of edges
     fadjlist::Vector{Vector{T}}   #Sorted adjacency list [src]: (dst, dst, dst)
     gridSize::NTuple{N, T}        #Size of grid (x,y,z...)
+    neighborCount::T              #Number of neighbors an interior vertex has
     isPeriodic::Bool              #Does the grid wrap around?
     nodeIDs::Array{T,N}           #Cell's ID for each node
     nodeTypes::Array{T,N}         #Cell's type for each node
@@ -103,6 +104,7 @@ function CellSpace(gridSize::NTuple{N, T}; isPeriodic=true, neighborhood=:moore)
         ne(g),
         g.fadjlist,
         gridSize,
+        maximum(length, g.fadjlist),
         isPeriodic,
         zeros(T,gridSize),
         zeros(T,gridSize)
@@ -120,7 +122,7 @@ CellSpace(gridSize::T...; isPeriodic=true, neighborhood=:moore) where T<:Integer
 #Needed for induced_subgraph (why?)
 function CellSpace{N,T}(n::Integer=0) where {N, T<:Integer}
     fadjlist = [Vector{T}() for _ in one(T):n]
-    return CellSpace{N,T}(0, fadjlist, (n,n), true, zeros(T,n,n), zeros(T,n,n))
+    return CellSpace{N,T}(0, fadjlist, (n,n), 0, true, zeros(T,n,n), zeros(T,n,n))
 end
 
 ####################################################
@@ -145,7 +147,7 @@ function show(io::IO, space::CellSpace{N,T}) where {N,T}
     end
     
     wrapType = space.isPeriodic ? "Periodic" : "nonPeriodic"
-    numNeigbors = maximum(length, space.fadjlist)
+    numNeigbors = space.neighborCount
 
     print(io, " $(wrapType) $(numNeigbors)-Neighbor CellSpace{$(N),$(T)}")
 end

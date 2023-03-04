@@ -75,9 +75,10 @@ Generates an animation of the CPM model.
 """
 function recordCPM(
     file::String,
-    cpm::CellPotts{2, T, V, U},
+    cpm::CellPotts{2, T, V, U};
     timestamps = 0:300,
-    c = cgrad(:tol_light, rev=true);
+    c = cgrad(:tol_light, rev=true),
+    figureSize = (600,600),
     property = :nodeIDs,
     legend=:none,
     framerate=30,
@@ -95,7 +96,7 @@ function recordCPM(
             legend=legend,
             framestyle=:box,
             aspect_ratio=:equal,
-            size = (600, 600),
+            size = figureSize,
             xlims=(0.5, rows+0.5),
             ylims=(0.5, columns+0.5),
             kwargs...

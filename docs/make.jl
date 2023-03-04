@@ -15,7 +15,8 @@ makedocs(
             "Bringing ODEs To Life" => "ExampleGallery/BringingODEsToLife/BringingODEsToLife.md",
             "Going 3D" => "ExampleGallery/Going3D/Going3D.md",
             "Diffusion Outside Cells" => "ExampleGallery/DiffusionOutsideCells/DiffusionOutsideCells.md",
-            "Diffusion Inside Cells" => "ExampleGallery/DiffusionInsideCells/DiffusionInsideCells.md"],
+            "Diffusion Inside Cells" => "ExampleGallery/DiffusionInsideCells/DiffusionInsideCells.md",
+            "Tight Spaces" => "ExampleGallery/TightSpaces/TightSpaces.md"],
             "API.md"]
 )
 

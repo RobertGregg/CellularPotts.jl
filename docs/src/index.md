@@ -86,6 +86,13 @@ Pkg.add("CellularPotts")
         </a>
     </div>
 
+    <div>
+        <h3>Tight Spaces</h3>
+        <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/TightSpaces/TightSpaces/">
+            <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/DiffusionInsideCells/TightSpaces.gif?raw=true">
+        </a>
+    </div>
+
 </div>
 
 ```

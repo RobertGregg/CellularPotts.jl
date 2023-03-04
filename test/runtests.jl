@@ -7,15 +7,31 @@ using Graphs
 
 
 @testset "Spaces or graphs, who's to say?" begin
-    g = CellSpace(3,3;isPeriodic=false,neighborhood=:vonNeumann)
+    g = CellSpace(3,3; isPeriodic=false, neighborhood=:vonNeumann)
 
     @test nv(g) == 9
     @test ne(g) == 12
     @test eltype(collect(edges(g))) == Graphs.SimpleGraphs.SimpleEdge{Int64}
 end
 
+@testset "Periodic grids" begin
+    g1 = CellSpace(3,3; isPeriodic=false)
+    g2 = CellSpace(3,3; isPeriodic=true)
 
-@testset "Adding Properties" begin
+    @test ne(g1) == 20
+    @test ne(g2) == 36
+end
+
+@testset "Neighborhoods" begin
+    g1 = CellSpace(3,3; neighborhood=:vonNeumann)
+    g2 = CellSpace(3,3; neighborhood=:moore)
+
+    @test ne(g1) == 18
+    @test ne(g2) == 36
+end
+
+
+@testset "Adding Cell Properties" begin
 
     df = CellTable(
     [:Epithelial, :TCell, :BCell],
