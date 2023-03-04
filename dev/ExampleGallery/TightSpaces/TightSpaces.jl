@@ -1,4 +1,3 @@
-using Revise
 using CellularPotts
 using Random
 
@@ -26,5 +25,4 @@ penalties = [
 cpm = CellPotts(space, initialCellState, penalties)
 
 
-
-recordCPM("TightSpaces.gif", cpm, timestamps = 0:1000, figureSize = (2000,200))
+recordCPM("TightSpaces.gif", cpm, timestamps = 0:1000)
