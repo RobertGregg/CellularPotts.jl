@@ -28,12 +28,10 @@ function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty, σᵢ::T) where T<:Int
     #If there are non-periodic boundaries some grid site will have fewer neighbors to contribute to the adhesion penality.
     #This will make cells stick to borders if not accounted for
     if !cpm.space.isPeriodic
-        #Check if current site has too few neighbors
         #Add penality assuming missing neighbors are :Medium
         neighborCount = length(cpm.step.targetNeighborNodes)
 
-        #adhesion += AP.J[τᵢ, 0] * (1-δ(σᵢ, 0)) * (cpm.space.neighborCount - neighborCount)
-        adhesion += 10000
+        adhesion += AP.J[τᵢ, 0] * (1-δ(σᵢ, 0)) * (cpm.space.neighborCount - neighborCount)
     end
 
     return adhesion
