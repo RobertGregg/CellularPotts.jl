@@ -7,7 +7,7 @@
     CellSpace(gridSize::T...; isPeriodic=true, neighborhood=:moore) where T<:Integer
 A concrete type that stores the underlying space cells will occupy.
 
-A `CellSpace()` can be created by supplying a tuple of dimensions or multiple arguments for each dimension, e.g. `CellSpace((3,3,4))` or `CellSpace(3,3,4)`. There are two optional keyword arguements:
+A `CellSpace()` can be created by supplying a tuple of dimensions or multiple arguments for each dimension, e.g. `CellSpace((3,3,4))` or `CellSpace(3,3,4)`. There are two optional keyword arguments:
  - isPeriodic`::Bool`: Determines if the grid has periodic boundaries
  - neighborhood`::Symbol`: Adjacent cells are either a `:moore` or a `:vonNeumann` neighborhood. Moore neighborhoods include adjacent diagonal positions.
 """
@@ -81,7 +81,6 @@ end
 ####################################################
 # Generate graphs using graph products
 ####################################################
-
 
 #https://en.wikipedia.org/wiki/Strong_product_of_graphs
 #Note: It looks like Graphs.jl will eventually add this function

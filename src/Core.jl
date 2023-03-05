@@ -124,6 +124,7 @@ MHStepInfo() = MHStepInfo(0,0,[0],[0],0,0,0, false)
 ####################################################
 
 #This function creates a dictionary that logs changes in the model's state and space
+#TODO this is janky
 function initializeHistory(state)
     
     history = Dict(:state => Dict{Symbol, DataFrame}(), :space => Dict{Symbol, DataFrame}())
@@ -160,7 +161,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     step::MHStepInfo{T}
     getArticulation::ArticulationUtility
     temperature::Float64
-    history::Dict{Symbol,Dict{Symbol, DataFrame}} #TODO needs simplification  
+    history::Dict{Symbol,Dict{Symbol, DataFrame}}
     record::Bool
 
     function CellPotts(space::CellSpace{N,T}, initialCellState::CellTable{V}, penalties::Vector{P}; ) where {N,T,V,P}

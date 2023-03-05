@@ -70,7 +70,7 @@ rows(df::CellTable) = df
 ####################################################
 
 eltype(df::CellTable{T}) where {T} = CellRow{T}
-length(df::CellTable) = length(parent(df)[1])
+length(df::CellTable) = length(first(parent(df)))
 size(df::CellTable) = (length(df),length(parent(df)))
 iterate(df::CellTable, st=0) = st > length(df)-1 ? nothing : (CellRow(st, df), st + 1)
 getindex(df::CellTable,i::Int) = CellRow(i, df)
@@ -111,7 +111,7 @@ function CellTable(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T})
     data =  (;
         names = inverse_rle(names, counts),  #inverse_rle(["a","b"], [2,3]) = ["a","a","b","b","b"] 
         cellIDs = collect(0:totalCells),
-        typeIDs = inverse_rle(0:length(names)-1, counts), #look into enum?
+        typeIDs = inverse_rle(0:length(names)-1, counts),
         volumes = zeros(T,totalCells + 1),
         desiredVolumes = inverse_rle(volumes, counts),
         perimeters = zeros(T,totalCells + 1),
@@ -193,7 +193,7 @@ end
 Given a `cellTable`, add a new row corresponding to a new cell in the model. Property names in the for the cell need to match column names in the cellTable
 """
 function addnewcell(df::CellTable, cell::CellRow)
-    #TODO Need some checks (e.g. all cells have unique ids, all the keys match)
+    #TODO Need some checks (e.g. all the keys match)
     for property in keys(df)
         push!(df[property], cell[property])
     end
