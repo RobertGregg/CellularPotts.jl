@@ -111,7 +111,7 @@ proteinXConc = zeros(200,200)
 anim = @animate for t in Iterators.drop(1:cpm.step.stepCounter,5*timeScale)
     currTime = @sprintf "Time: %.2f" t/timeScale
 
-    space = cpm(t).space
+    space = cpm(t)
     currSol = sol((t+1)/timeScale )
 
     #Map protein concentrations to space

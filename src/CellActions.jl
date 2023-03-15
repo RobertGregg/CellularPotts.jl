@@ -40,18 +40,8 @@ function CellDivision!(cpm::CellPotts, σ::Int)
 
     #Also need to record all of the updates
     if cpm.record
-        #Old Cell
-        push!(cpm.history[:state][:volumes], [cpm.step.stepCounter, σ, cpm.state.volumes[σ]])
-        push!(cpm.history[:state][:perimeters], [cpm.step.stepCounter, σ, cpm.state.perimeters[σ]])
-
-        #New Cell
-        for property in keys(cpm.state)
-            push!(cpm.history[:state][property], [cpm.step.stepCounter, σnew, getproperty(cpm.state,property)[σnew]])
-        end
-
-        #Space
         for i in newCellNodeIDs
-            push!(cpm.history[:space][:nodeIDs], [cpm.step.stepCounter, i, σnew])
+            updateHist!(cpm, cpm.step.stepCounter, i, σnew, cpm.state.cellIDs[σnew])
         end
     end
 

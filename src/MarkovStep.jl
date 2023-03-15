@@ -71,13 +71,7 @@ function MHStep!(cpm::CellPotts)
         cpm.space.nodeTypes[cpm.step.targetNode] = cpm.state.typeIDs[cpm.step.sourceCellID]
 
         if cpm.record
-            push!(cpm.history[:space][:nodeIDs], [cpm.step.stepCounter,   # Time
-                                                 cpm.step.targetNode,    # Position
-                                                 cpm.step.sourceCellID]) # New Value
-
-            push!(cpm.history[:space][:nodeTypes], [cpm.step.stepCounter,
-                                                   cpm.step.targetNode,
-                                                   cpm.state.typeIDs[cpm.step.sourceCellID]])
+            updateHist!(cpm)
         end
 
         #---Cell properties---
@@ -128,16 +122,6 @@ function updateMHStep!(cpm::CellPotts, VP::VolumePenalty)
     cpm.state.volumes[cpm.step.sourceCellID] += 1
     cpm.state.volumes[cpm.step.targetCellID] -= 1
 
-    #Record the changes
-    if cpm.record
-        push!(cpm.history[:state][:volumes], [cpm.step.stepCounter,   # Time
-                                              cpm.step.sourceCellID,    # Position
-                                              cpm.state.volumes[cpm.step.sourceCellID]]) # New Value
-
-        push!(cpm.history[:state][:volumes], [cpm.step.stepCounter,
-                                              cpm.step.targetCellID,
-                                              cpm.state.volumes[cpm.step.targetCellID]])
-    end
     return nothing
 end
 
@@ -146,16 +130,6 @@ function updateMHStep!(cpm::CellPotts, PP::PerimeterPenalty)
     cpm.state.perimeters[cpm.step.sourceCellID] += PP.Δpᵢ
     cpm.state.perimeters[cpm.step.targetCellID] -= PP.Δpⱼ
 
-    #Record the changes
-    if cpm.record
-        push!(cpm.history[:state][:perimeters], [cpm.step.stepCounter,   # Time
-                                                 cpm.step.sourceCellID,    # Position
-                                                 cpm.state.perimeters[cpm.step.sourceCellID]]) # New Value
-
-        push!(cpm.history[:state][:perimeters], [cpm.step.stepCounter,
-                                                 cpm.step.targetCellID,
-                                                 cpm.state.perimeters[cpm.step.targetCellID]])
-    end
     return nothing
 end
 
