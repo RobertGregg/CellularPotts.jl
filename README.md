@@ -84,16 +84,16 @@ recordCPM("ReadMeExample.gif", cpm)
   - Save the data into a dictionary of dataframes
   - Needs to be made more efficient
 
-- [ ] Implement different ways to initialize cell locations
+- [x] Implement different ways to initialize cell locations
   
-  - [ ] Image input
+  - [x] Image input
   - [x] specify locations with property
 
 - [x] Allow cells to have different properties (used `NamedTuple`)
 
 - [ ] Use automatic differentiation to calculate [cellular forces](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007459) from the Hamiltonian
 
-- [ ] Add a correction factor to adhesion to deal with boundaries.
+- [x] Add a correction factor to adhesion to deal with boundaries.
 
 ## Minor Improvements
 
@@ -103,8 +103,10 @@ recordCPM("ReadMeExample.gif", cpm)
 - [x] Could get a big speed improvement if you don't loop through all cells to update articulation points
   - Need to be clever about updating articulation points locally (is this possible?)
   - rewrote [Tarjan's algoirthm](https://en.wikipedia.org/wiki/Biconnected_component) to find articulation points which is O(V+E)
-- [ ] Adding cell borders is slow for large spaces
+- [x] Adding cell borders is slow for large spaces
+  - fixed by using NA
 - [ ] Use abstract typing (e.g. `AbstractVector` vs `Vector`) without creating type instability
 - [x] Do we even need to track to total energy? (nope!)
 - [ ] Use SVectors to store graph edges? 🤔
+  - Only useful for spaces where all nodes are identical (e.g., periodic boundaries)
 - [ ] Add more tests and CI badge

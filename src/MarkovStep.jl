@@ -30,6 +30,11 @@ function MHStep!(cpm::CellPotts)
     #Get all cell IDs neighboring this Node
     cpm.step.sourceNeighborNodes = neighbors(cpm.space, cpm.step.sourceNode)
 
+    #Some space locations are forbidden (see TightSpaces example) 
+    if isempty(cpm.step.sourceNeighborNodes)
+        return nothing
+    end
+
     #Choose a target
     cpm.step.targetNode = rand(cpm.step.sourceNeighborNodes)
     cpm.step.targetCellID = cpm.space.nodeIDs[cpm.step.targetNode]

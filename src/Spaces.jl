@@ -33,7 +33,14 @@ eltype(g::CellSpace{N,T}) where {N,T} = T
 edgetype(g::CellSpace) = SimpleEdge{eltype(g)}
 
 #collect(edges(g::CellSpace)) was giving Vector{Any}
-eltype(::Type{Graphs.SimpleGraphs.SimpleEdgeIter{CellSpace{N, T}}}) where {N, T} = Edge{T}
+eltype(::Type{SimpleEdgeIter{CellSpace{N, T}}}) where {N, T} = Edge{T}
+
+#Forward and backwards adjacencies
+fadj(g::CellSpace) = g.fadjlist
+fadj(g::CellSpace, v::Integer) = g.fadjlist[v]
+
+badj(g::CellSpace) = fadj(g)
+badj(g::CellSpace, v::Integer) = fadj(g, v)
 
 ####################################################
 # Methods to add edges to the space
@@ -100,6 +107,40 @@ function CellSpace(gridSize::NTuple{N, T}; isPeriodic=true, neighborhood=:moore)
     end
 
     return CellSpace{N,T}(
+        ne(g),
+        g.fadjlist,
+        gridSize,
+        maximum(length, g.fadjlist),
+        isPeriodic,
+        zeros(T,gridSize),
+        zeros(T,gridSize)
+        )
+end
+
+####################################################
+# Generate Graph from matrix
+####################################################
+function CellSpace(locationMatrix::Matrix{T}; isPeriodic=true, neighborhood=:moore) where T<:Integer
+
+    gridSize = size(locationMatrix)
+
+    if neighborhood == :vonNeumann
+        g = Graphs.grid(gridSize; periodic=isPeriodic)
+    elseif neighborhood == :moore
+        g = kingsGrid(gridSize; periodic=isPeriodic)
+    else
+        error("Unknown cell neighbor option, current options are :moore and :vonNeumann")
+    end
+
+    #For some reason rem_edge! wasn't removing all the edges
+    for (i,val) in enumerate(locationMatrix)
+        if iszero(val)
+            empty!(g.fadjlist[i])
+        end
+    end
+    g.ne = sum(length.(g.fadjlist)) ÷ 2
+
+    return CellSpace{2,T}(
         ne(g),
         g.fadjlist,
         gridSize,

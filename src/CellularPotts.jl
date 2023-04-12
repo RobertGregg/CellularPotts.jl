@@ -27,7 +27,10 @@ import Graphs:
             edges,
             has_vertex,
             has_edge,
-            add_edge!
+            add_edge!,
+            SimpleGraphs.SimpleEdgeIter,
+            SimpleGraphs.fadj,
+            SimpleGraphs.badj
 
 import Base: eltype,
              getproperty,
@@ -122,5 +125,6 @@ export
        CellDeath!,
 #Visualization.jl
       recordCPM,
-      cellborders!
+      cellborders!,
+      cellMovement!
 end
