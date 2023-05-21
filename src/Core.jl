@@ -123,21 +123,15 @@ MHStepInfo() = MHStepInfo(0,0,[0],[0],0,0,0, false)
 # Logging Function
 ####################################################
 
-#This function creates a dictionary that logs changes in the model's state and space
-#TODO this is janky
-function initializeHistory(state)
-    
-    history = Dict(:state => Dict{Symbol, DataFrame}(), :space => Dict{Symbol, DataFrame}())
-
-    for (property, val) in pairs(parent(state))
-        history[:state][property] = DataFrame(time=Int64[], position=Int64[], value=eltype(val)[])
-    end
-
-    history[:space][:nodeIDs] = DataFrame(time=Int64[], position=Int64[], value = Int64[])
-    history[:space][:nodeTypes] = DataFrame(time=Int64[], position=Int64[], value = Int64[])
-
-    return history
+struct Hist{N, T<:Integer}
+    space::CellSpace{N,T}
+    step::Vector{T}
+    idx::Vector{T}
+    nodeID::Vector{T}
+    nodeType::Vector{T}
 end
+
+Hist(space) = Hist(space,Int[],Int[],Int[],Int[])
 
 ####################################################
 # Structure for the model
@@ -161,7 +155,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     step::MHStepInfo{T}
     getArticulation::ArticulationUtility
     temperature::Float64
-    history::Dict{Symbol,Dict{Symbol, DataFrame}}
+    history::Hist{N,T}
     record::Bool
 
     function CellPotts(space::CellSpace{N,T}, initialCellState::CellTable{V}, penalties::Vector{P}; ) where {N,T,V,P}
@@ -178,7 +172,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
             MHStepInfo(),
             ArticulationUtility(nv(space)),
             20.0,
-            initializeHistory(initialCellState),
+            Hist(space),
             false)
 
         #Position the cells in the model
@@ -196,36 +190,42 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     end
 end
 
-#Given the history, retieve the cpm at a given time step
-function (cpm::CellPotts)(t)
 
-    cpmNew = deepcopy(cpm)
-    cpmNew.state = deepcopy(cpm.initialState)
-    cpmNew.space = deepcopy(cpm.initialSpace)
+
+####################################################
+# Reading and Writing History
+####################################################
+function updateHist!(cpm::CellPotts, step::Int, idx::Int, nodeID::Int, nodeType::Int)
     
-    #loop through state and space
-    for (cpmProperty, record) in pairs(cpm.history)
-        #loop the record history
-        for (property, df) in pairs(record)
-            for row in eachrow(df)
-                if row.time > t
-                    break
-                end
+    push!(cpm.history.step, step)
+    push!(cpm.history.idx, idx)
+    push!(cpm.history.nodeID, nodeID)
+    push!(cpm.history.nodeType, nodeType)
 
-                if cpmProperty == :state && countcells(cpmNew) < row.position
-                    addnewcell(cpmNew.state, cpmNew.state[1])
-                end
-
-                getproperty(getproperty(cpmNew,cpmProperty),property)[row.position] = row.value
-            end
-        end
-    end
-
-    return cpmNew
+    return nothing
 end
 
+updateHist!(cpm::CellPotts) = updateHist!(cpm,
+cpm.step.stepCounter,
+                                          cpm.step.targetNode,
+                                          cpm.step.sourceCellID,
+                                          cpm.state.typeIDs[cpm.step.sourceCellID])
 
 
+#Given the history, retieve the space at a given time step
+function (cpm::CellPotts)(t)
+
+    cpm.history.space.nodeIDs .= cpm.initialSpace.nodeIDs
+    cpm.history.space.nodeTypes .= cpm.initialSpace.nodeTypes
+    
+    stepMatches = 1:searchsortedlast(cpm.history.step, t)
+
+    cpm.history.space.nodeIDs[cpm.history.idx[stepMatches]] .= cpm.history.nodeID[stepMatches]
+    cpm.history.space.nodeTypes[cpm.history.idx[stepMatches]] .= cpm.history.nodeType[stepMatches]
+
+    return cpm.history.space #could also return nothing
+end
+    
 ####################################################
 # Helper functions for CellPotts
 ####################################################
