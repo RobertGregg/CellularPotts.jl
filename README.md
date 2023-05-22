@@ -38,7 +38,7 @@ Also of note, **this package is still in development and is not currently recomm
 
 ## Quick Start
 
-To create a basic Cellular Potts Model, you need provide 3 pieces of information:
+To create a basic Cellular Potts Model, you need to provide 3 pieces of information:
 
 1.  What space will the cells occupy?
 
