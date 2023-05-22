@@ -12,10 +12,7 @@ space = CellSpace(50,50; isPeriodic=true, neighborhood=:moore)
 
 # Next we need to initialize a table of cell information to put into this space.
 
-initialCellState = CellTable(
-    [:Epithelial],
-    [500],
-    [1])
+initialCellState = CellTable(:Epithelial, 500, 1)
 
 # The `CellTable()` function populates a table detailing the current cell state. The 3 required inputs are:
 

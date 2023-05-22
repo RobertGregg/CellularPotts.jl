@@ -6,6 +6,10 @@ using BenchmarkTools
 using Graphs
 
 
+####################################################
+# CellSpace
+####################################################
+
 @testset "Spaces or graphs, who's to say?" begin
     g = CellSpace(3,3; isPeriodic=false, neighborhood=:vonNeumann)
 
@@ -30,6 +34,17 @@ end
     @test ne(g2) == 36
 end
 
+####################################################
+# CellTables
+####################################################
+
+@testset "Lonely cells" begin
+
+    table1 = CellTable(:hello, 1,1)
+    table2 = CellTable([:hello], [1],[1])
+
+    @test parent(table1) == parent(table2)
+end
 
 @testset "Adding Cell Properties" begin
 
@@ -59,3 +74,6 @@ end
 end
 
 
+####################################################
+# Penalties
+####################################################

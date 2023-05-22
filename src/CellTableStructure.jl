@@ -122,6 +122,9 @@ function CellTable(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T})
      
 end
 
+#Alternative method when only creating one cell
+CellTable(names::Symbol, volumes::T, counts::T) where T<:Integer = CellTable([names], [volumes], [counts])
+
 ####################################################
 # Add/remove cells and properties
 ####################################################

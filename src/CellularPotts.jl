@@ -106,6 +106,7 @@ export
       VolumePenalty,
       PerimeterPenalty,
       MigrationPenalty,
+      ChemoTaxisPenalty,
       CellPotts,
 #Penalties.jl
       addPenalty!,

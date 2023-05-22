@@ -73,10 +73,9 @@ A concrete type that encourages cells to protude and drag themselves forward.
 Two integer parameters control how cells protude:
  - `maxAct`: A maximum activity a grid location can have
  - `λ`: A parameter that controls the strength of this penalty
+ - 'gridSize': The size of the space, simply supply size(space)
 
 Increasing `maxAct` will cause grid locations to more likely protrude. Increasing `λ` will cause those protusions to reach farther away. 
-
-`MigrationPenalty` also requires a list of cell types to apply the penalty to and the grid size (Space.gridSize).
 """
 mutable struct MigrationPenalty <: Penalty
     maxAct::Int
@@ -90,16 +89,29 @@ mutable struct MigrationPenalty <: Penalty
 end
 
 
-#Boundary conditions?
-mutable struct ChemoTaxisPenalty{N,T} <: Penalty where {N,T}
-    λ::OffsetVector{Int,Vector{Int}}
-    Species::Array{N,T}
+"""
+    ChemoTaxisPenalty(λ, Species)
+A concrete type that encourages cells to move up or down a concentration gradient.
 
-    function MigrationPenalty(λ::Vector{T₁}, Species::Array{N,T₂}) where {T₁<:Integer,N,T₂}
+Two integer parameters control how cells protude:
+ - `λ`: A parameter that controls the strength of this penalty
+ - `Species`: The concentration profile for a species that should match the size of the cell space
+
+Species concentration profile can be updated dynamically (e.g. by an ODE)
+
+Supplying a positive λ will move cells up the gradient, negative values down the gradient.
+"""
+mutable struct ChemoTaxisPenalty{T<:AbstractArray} <: Penalty
+    λ::OffsetVector{Int,Vector{Int}}
+    species::T
+
+    function ChemoTaxisPenalty(λ::Vector{N}, species::T) where {N<:Integer, T<:AbstractArray}
         λOff = offset([0; λ])
-        return new{N,T}(λOff, Species)
+        return new{T}(λOff, species)
     end
 end
+
+#TODO does adding a parameteric type to penality cause issues?
 
 ####################################################
 # Variables for Markov Step 

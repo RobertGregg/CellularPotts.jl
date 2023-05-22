@@ -51,25 +51,27 @@ function MHStep!(cpm::CellPotts)
         return nothing
     end
 
-    #TODO Add an option to toggle this check
-    #Test if the target cell is an articulation point
-    if cpm.step.targetNode ∈ cpm.getArticulation(cpm.space, cpm.step.targetCellID)
-        return nothing
-    end
-
-    #Get all cell nodes neighboring for target node
+    
+    #Get all cell nodes neighboring target node
     cpm.step.targetNeighborNodes = neighbors(cpm.space, cpm.step.targetNode)
-
+    
     #Calculate the change in energy when target node is modified
     ΔH =  calculateΔH(cpm)
-
-
+    
+    
     #Calculate an acceptance ratio
     acceptRatio = min(1.0,exp(-ΔH/cpm.temperature))
-
-
+    
+    
     if rand() < acceptRatio #If the acceptance ratio is large enough
-        #Need to update properties
+
+        #TODO Add an option to toggle this check
+        #Moved into accept loop b/c computationally intensive
+        #Test if the target cell is an articulation point
+        if cpm.step.targetNode ∈ cpm.getArticulation(cpm.space, cpm.step.targetCellID)
+            return nothing
+        end
+
 
         #Cell IDs
         cpm.space.nodeIDs[cpm.step.targetNode] = cpm.step.sourceCellID

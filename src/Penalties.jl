@@ -153,7 +153,7 @@ end
 #=
 The orginal method to calculate migration penality uses geometric mean. This is problematic because it introduces floating point calculations. Here we instead calculate an integer rounded arithmetic mean and map any neighorbood containing zeros to zero. This mimics the desired behavior of the geometric mean where neighborhoods “with holes” (i.e., lattice sites with activity value zero) are ignored.
 
-This change might become moot when chemotaxis is introduced. Gradient fields will unavoidably introduce floating point calculations.
+This change will become moot when chemotaxis is introduced. Gradient fields will unavoidably introduce floating point calculations.
 =#
 
 function addPenalty!(cpm::CellPotts, MP::MigrationPenalty)
@@ -190,3 +190,12 @@ end
 ####################################################
 # Chemotaxis
 ####################################################
+
+function addPenalty!(cpm::CellPotts, CP::ChemoTaxisPenalty)
+
+    Cᵢ = CP.species[cpm.step.sourceNode]
+    Cⱼ = CP.species[cpm.step.targetNode]
+    τ = cpm.state.typeIDs[cpm.step.sourceCellID]
+
+    return CP.λ[τ] * (Cᵢ - Cⱼ)
+end
