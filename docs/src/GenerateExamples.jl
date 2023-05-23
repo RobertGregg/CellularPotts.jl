@@ -28,7 +28,7 @@ end
 
 #Loop through all the examples, execute them, save markdown file
 
-examplesToUpdate = ["TightSpaces.jl"]
+examplesToUpdate = ["OverHere.jl"]
 
 for (root, dirs, files) in walkdir("./docs/src/ExampleGallery")
     for file in files

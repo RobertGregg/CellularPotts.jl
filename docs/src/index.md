@@ -93,6 +93,13 @@ Pkg.add("CellularPotts")
         </a>
     </div>
 
+    <div>
+        <h3>Over Here</h3>
+        <a href="https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/OverHere/OverHere/">
+            <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/OverHere/OverHere.gif?raw=true">
+        </a>
+    </div>
+
 </div>
 
 ```

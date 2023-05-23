@@ -85,7 +85,7 @@ recordCPM("ReadMeExample.gif", cpm)
   - [x] Division
   - [x] Death
   - [x] Active movement
-  - [ ] Movement up gradients (implemented but needs some testing)
+  - [x] Movement up gradients
 
 - [x] Integrate hybrid modeling schemes
   
