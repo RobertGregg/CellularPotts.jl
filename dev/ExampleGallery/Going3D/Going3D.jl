@@ -5,10 +5,7 @@ using CellularPotts
 space = CellSpace(30,30,30; isPeriodic=false)
 
 
-initialCellState = CellTable(
-    [:Epithelial],
-    [1000],
-    [1])
+initialCellState = CellTable(:Epithelial, 1000, 1)
 
 
 positions = [size(space).÷2]

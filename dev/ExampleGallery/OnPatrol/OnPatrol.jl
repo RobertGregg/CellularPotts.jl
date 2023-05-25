@@ -10,17 +10,18 @@ space = CellSpace(200,200)
 
 initialCellState = CellTable(
     [:Epithelial, :TCell],
-    [500, 400],
-    [75, 5]);
+    [250, 200],
+    [160, 10]);
 
 # Note that for the `MigrationPenalty` we set the epithelial cell's scaling factor to zero. This effectively removes this penalty from the cell type.
 
 penalties = [
-    AdhesionPenalty([0 30 30;
+    AdhesionPenalty([30 30 30;
                     30 30 30
-                    30 30 30]),
-    VolumePenalty([10,10]),
-    MigrationPenalty(50, [0,50], size(space))
+                    30 30 100]),
+    VolumePenalty([30, 20]),
+    PerimeterPenalty([0, 5]),
+    MigrationPenalty(50, [0, 100], size(space))
     ]
 
 # Create a new `CellPotts` model.
@@ -29,4 +30,5 @@ cpm = CellPotts(space, initialCellState, penalties)
 
 
 # Record the simulation
-recordCPM("OnPatrol.gif", cpm; property = :nodeTypes)
+recordCPM("OnPatrol.gif", cpm;
+    property = :nodeTypes, N=10)

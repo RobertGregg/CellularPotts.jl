@@ -15,7 +15,7 @@ const p0 = 50.0;
 # Next we generate a `CellPotts()` model with 3 cells approximately 1000 pixels in size with adhesion and volume constraints.
 cpm = CellPotts(
     CellSpace(N,N), 
-    CellTable([:Epithelial],[1000],[3]),
+    CellTable(:Epithelial, 1000, 3),
     [AdhesionPenalty([0 30;30 30]), VolumePenalty([5])]
     );
 
@@ -85,7 +85,7 @@ anim = @animate for t in range(1, cpm.step.stepCounter, step=10)
         xlims=(0.5, N+0.5),
         ylims=(0.5, N+0.5),)
 
-    cellborders!(plotObject,cpm(t).space)
+    cellborders!(plotObject, cpm(t))
 
     plotObject
 end

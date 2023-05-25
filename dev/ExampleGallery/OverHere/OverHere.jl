@@ -12,13 +12,10 @@ space = CellSpace(xdim, ydim, isPeriodic=false)
 
 # Initialize 10 cells randomly positioned.
 
-initialCellState = CellTable(
-    [:TCells],
-    [200],
-    [10])
+initialCellState = CellTable(:TCells, 200, 10)
 
 # Now to create the static concentration gradient. Higher values will be positioned in the center of the space and expoentially drop off as it moves towards the edges.
-species = [100exp(-((x-xdim/2)^2+(y-xdim/2)^2)/10000) for x in 1:xdim, y in 1:ydim]
+species = [100exp(-((x-xdim/2)^2+(y-xdim/2)^2)/10000) for x in 1:xdim, y in 1:ydim];
 
 # The new penalty added here is the `ChemoTaxisPenalty`. This penalty takes two arguments, the strength of the chemoattraction and the concentration gradient. Here we create a strong gradient by providing a large scaling factor.
 
@@ -26,14 +23,14 @@ penalties = [
     AdhesionPenalty([30 30; 30 30]),
     VolumePenalty([10]),
     ChemoTaxisPenalty([50], species)
-]
+];
 
 # Now we can take these three objects and create a Cellular Potts Model object.
 
 cpm = CellPotts(space, initialCellState, penalties)
 
 # To scale the color gradients properly, we need to know the number of cells in the model
-numCells = countcells(cpm)
+numCells = countcells(cpm);
 
 # Normalize the concentration gradient to the number of cells for visualization
 normSpecies = (numCells/maximum(species)) .* species

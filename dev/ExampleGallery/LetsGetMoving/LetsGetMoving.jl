@@ -10,10 +10,7 @@ space = CellSpace(100,100)
 
 # Much like in the [HelloWorld.jl](https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/) example, we create a single cell that averages 500 pixels in size.
 
-initialCellState = CellTable(
-    [:Epithelial],
-    [500],
-    [1]);
+initialCellState = CellTable(:Epithelial, 500, 1);
 
 # The cell will be positioned at the halfway point within the space. 
 

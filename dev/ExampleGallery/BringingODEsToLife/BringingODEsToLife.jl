@@ -11,10 +11,7 @@ using CellularPotts, DifferentialEquations
 space = CellSpace(200,200)
 
 # In the CellTable we specify one epithelial cell with a volume of 200 pixels
-initialCellState = CellTable(
-    [:Epithelial],
-    [200],
-    [1]);
+initialCellState = CellTable(:Epithelial, 200, 1);
 
 # The cell will be positioned at the halfway point within the space. 
 positions = [size(space) .÷ 2]
