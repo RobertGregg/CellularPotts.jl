@@ -77,3 +77,8 @@ end
 ####################################################
 # Penalties
 ####################################################
+
+@testset "Penalty tests" begin
+
+    @test_throws ErrorException("J needs to be symmetric") AdhesionPenalty([1 2; 3 4])
+end

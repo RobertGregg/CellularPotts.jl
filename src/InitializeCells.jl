@@ -12,7 +12,7 @@
     #2) image colored by cell type
 
 
-function positionCellsRandom!(cpm::CellPotts{N,Int,V}) where {N,Int,V}
+function positionCellsRandom!(cpm::CellPotts)
 
     #Generate random centers for each cell
     #TODO Use Poisson Disc sampling?
@@ -26,7 +26,7 @@ function positionCellsRandom!(cpm::CellPotts{N,Int,V}) where {N,Int,V}
 end
 
 
-function positionCells!(cpm::CellPotts{N,Int,V}) where {N,Int,V}
+function positionCells!(cpm::CellPotts)
 
     #Convert positions to linear LinearIndices
     centers = [LinearIndices(size(cpm.space))[i...] for i in cpm.state.positions]
@@ -40,7 +40,7 @@ function positionCells!(cpm::CellPotts{N,Int,V}) where {N,Int,V}
 end
 
 
-function growcells(cpm, centers)
+function growcells(cpm::CellPotts, centers)
 
     #Unpack some needed variables
     cellIDs = cpm.state.cellIDs

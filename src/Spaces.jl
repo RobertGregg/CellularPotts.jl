@@ -169,8 +169,9 @@ end
 # Misc functions
 ####################################################
 
-arrayids(space::CellSpace{N,T}) where {N,T} = space.nodeIDs
-arraytypes(space::CellSpace{N,T}) where {N,T} = space.nodeIDs
+#TODO nodeIDs and nodeTypes needed?
+nodeIDs(space::CellSpace) = space.nodeIDs
+nodeTypes(space::CellSpace) = space.nodeTypes
 
 ####################################################
 # Show method
@@ -187,9 +188,8 @@ function show(io::IO, space::CellSpace{N,T}) where {N,T}
     end
     
     wrapType = space.isPeriodic ? "Periodic" : "nonPeriodic"
-    numNeigbors = space.neighborCount
 
-    print(io, " $(wrapType) $(numNeigbors)-Neighbor CellSpace{$(N),$(T)}")
+    print(io, " $(wrapType) $(space.neighborCount)-Neighbor CellSpace{$(N),$(T)}")
 end
 
 #https://discourse.julialang.org/t/weird-base-show-behavior-with-custom-struct/91321

@@ -34,7 +34,7 @@
 
 Careful attention has been taken to ensure this package is as performant as I can possibly make it, however, if you spot something egregious in the package, feel free to raise an issue or pull request.
 
-Also of note, **this package is still in development and is not currently recommended for general use**. However, still feel free to try it and gice suggestions if you're curious. 
+Also of note, **this package is still in development and is not currently recommended for general use**. However, still feel free to try it and give suggestions if you're curious. 
 
 ## Quick Start
 
@@ -101,7 +101,7 @@ recordCPM("ReadMeExample.gif", cpm)
 
 - [x] How to save output? (created separate structure to log history)
   
-  - Save the data into a dictionary of dataframes
+  - Save the data into a dictionary of dataframes?
   - Needs to be made more efficient
 
 - [x] Implement different ways to initialize cell locations
@@ -129,7 +129,7 @@ recordCPM("ReadMeExample.gif", cpm)
   - Is only checked with a successful update.
 - [x] Adding cell borders is slow for large spaces
   - fixed by using NA
-- [ ] Be more consistent with typing (e.g. `AbstractVector` vs `Vector`) without creating type instability
+- [x] Be more consistent with typing (e.g. `AbstractVector` vs `Vector`) without creating type instability
 - [x] Do we even need to track to total energy? (nope!)
 - [ ] Use SVectors to store graph edges? 🤔
   - Only useful for spaces where all nodes are identical (e.g., periodic boundaries)

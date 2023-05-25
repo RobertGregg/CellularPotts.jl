@@ -42,11 +42,13 @@ function cellborders!(plotObject, space::CellSpace{2, T}) where T
     return nothing
 end
 
+#TODO Need proper scale
+cellMovement!(plotObject, cpm) = cellMovement!(plotObject, cpm, 1)
 
-function cellMovement!(plotObject,cpm)
+function cellMovement!(plotObject, cpm, colorMax)
 
     #Active cell movement
-    migrationIndex = findfirst(x->typeof(x)==MigrationPenalty, cpm.penalties)
+    migrationIndex = findfirst(x->x isa MigrationPenalty, cpm.penalties)
 
     if isnothing(migrationIndex)
         return nothing
@@ -55,14 +57,17 @@ function cellMovement!(plotObject,cpm)
     #transparent colors
     transparentToColor = range(colorant"rgba(255,255,255,0.0)", colorant"rgba(60,4,104,0.6)")
 
+    normConst = colorMax / cpm.penalties[migrationIndex].maxAct
+
     heatmap!(plotObject,
-            Matrix(cpm.penalties[migrationIndex].nodeMemory)',
+            normConst .* Matrix(cpm.penalties[migrationIndex].nodeMemory)',
             c = transparentToColor,
             colorbar_entry = false)
 
     return nothing
 end
 
+#TODO Color issue with Patrol, set lower clim (?)
 """
     recordCPM(
         file::String,
@@ -76,20 +81,30 @@ Generates an animation of the CPM model.
 function recordCPM(
     file::String,
     cpm::CellPotts{2, T, V, U};
-    timestamps = 0:300,
+    timestamps = 0:3000,
     c = cgrad(:tol_light, rev=true),
     figureSize = (600,600),
     property = :nodeIDs,
     legend=:none,
     framerate=30,
+    frameskip = 1,
     kwargs...) where {T,V,U}
 
     (rows,columns) = size(cpm.space)
 
+    #TODO How to color by any property?
+    if property == :nodeIDs
+        colorMax = countcells(cpm)
+    elseif property == :nodeTypes
+        colorMax = countcelltypes(cpm)
+    else
+        colorMax = Inf
+    end
+
     anim = @animate for t in timestamps
 
         plotObject = heatmap(
-            getproperty(cpm.space,property)',
+            getproperty(cpm.space, property)',
             c = c,
             grid=false,
             axis=nothing,
@@ -99,17 +114,18 @@ function recordCPM(
             size = figureSize,
             xlims=(0.5, rows+0.5),
             ylims=(0.5, columns+0.5),
+            clim=(0,colorMax),
             kwargs...
             )
 
         cellborders!(plotObject, cpm.space)
 
-        cellMovement!(plotObject,cpm)
+        cellMovement!(plotObject,cpm, colorMax)
 
         ModelStep!(cpm)
 
         plotObject
-    end
+    end every frameskip
 
     return gif(anim, file, fps = framerate)
 

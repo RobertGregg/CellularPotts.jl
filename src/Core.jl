@@ -20,13 +20,15 @@ Requires a symmetric matrix `J` where `J[n,m]` gives the adhesion penality for c
 
 **Note**: `J` is automatically transformed to be a zero-indexed offset array.
 """
-struct AdhesionPenalty <: Penalty
-    J::OffsetMatrix{Int, Matrix{Int}}
+struct AdhesionPenalty{T} <: Penalty
+    J::T
 
-    function AdhesionPenalty(J::Matrix{Int})
+    function AdhesionPenalty(J::AbstractMatrix{<:Real})
         issymmetric(J) ? nothing : error("J needs to be symmetric")
-        
-        return new(offset(J))
+        Joff = offset(J)
+
+        T = typeof(Joff)
+        return new{T}(Joff)
     end
 end
 
@@ -38,12 +40,14 @@ Requires a vector `λᵥ` with n penalties where n is the number of cell types. 
 
 **Note**: `λᵥ` is automatically transformed to be a zero-indexed offset array and does not require the volume penalty for `:Medium`.
 """
-struct VolumePenalty <: Penalty
-    λᵥ::OffsetVector{Int,Vector{Int}}
+struct VolumePenalty{T} <: Penalty
+    λᵥ::T
 
-    function VolumePenalty(λᵥ::Vector{Int})
+    function VolumePenalty(λᵥ::AbstractVector{<:Real})
         λᵥOff = offset([0; λᵥ])
-        return new(λᵥOff)
+
+        T = typeof(λᵥOff)
+        return new{T}(λᵥOff)
     end
 end
 
@@ -55,14 +59,16 @@ Requires a vector `λₚ` with n penalties where n is the number of cell types. 
 
 **Note**: `λₚ` is automatically transformed to be a zero-indexed offset array and does not require the perimeter penalty for `:Medium`.
 """
-mutable struct PerimeterPenalty <: Penalty
-    λₚ::OffsetVector{Int,Vector{Int}}
+mutable struct PerimeterPenalty{T} <: Penalty
+    λₚ::T
     Δpᵢ::Int
     Δpⱼ::Int
 
-    function PerimeterPenalty(λₚ::Vector{Int}) 
+    function PerimeterPenalty(λₚ::AbstractVector{<:Real}) 
         λₚOff = offset([0; λₚ])
-        return new(λₚOff, 0, 0)
+
+        T = typeof(λₚOff)
+        return new{T}(λₚOff, 0, 0)
     end
 end
 
@@ -77,14 +83,16 @@ Two integer parameters control how cells protude:
 
 Increasing `maxAct` will cause grid locations to more likely protrude. Increasing `λ` will cause those protusions to reach farther away. 
 """
-mutable struct MigrationPenalty <: Penalty
+mutable struct MigrationPenalty{T} <: Penalty
     maxAct::Int
-    λ::OffsetVector{Int,Vector{Int}}
+    λ::T
     nodeMemory::SparseMatrixCSC{Int,Int}
 
-    function MigrationPenalty(maxAct::T, λ::Vector{T}, gridSize::NTuple{N,T}) where {T<:Integer, N}
+    function MigrationPenalty(maxAct::I, λ::AbstractVector{<:Real}, gridSize::NTuple{N,I}) where {I<:Integer, N}
         λOff = offset([0; λ])
-        return new(maxAct, λOff, spzeros(T,gridSize))
+
+        T=typeof(λOff)
+        return new{T}(maxAct, λOff, spzeros(T,gridSize))
     end
 end
 
@@ -101,17 +109,18 @@ Species concentration profile can be updated dynamically (e.g. by an ODE)
 
 Supplying a positive λ will move cells up the gradient, negative values down the gradient.
 """
-mutable struct ChemoTaxisPenalty{T<:AbstractArray} <: Penalty
-    λ::OffsetVector{Int,Vector{Int}}
-    species::T
+mutable struct ChemoTaxisPenalty{T,M} <: Penalty
+    λ::T
+    species::M
 
-    function ChemoTaxisPenalty(λ::Vector{N}, species::T) where {N<:Integer, T<:AbstractArray}
+    function ChemoTaxisPenalty(λ::AbstractVector{<:Real}, species::M) where M<:AbstractArray
         λOff = offset([0; λ])
-        return new{T}(λOff, species)
+
+        T = typeof(λOff)
+        return new{T,M}(λOff, species)
     end
 end
 
-#TODO does adding a parameteric type to penality cause issues?
 
 ####################################################
 # Variables for Markov Step 
@@ -218,7 +227,7 @@ function updateHist!(cpm::CellPotts, step::Int, idx::Int, nodeID::Int, nodeType:
 end
 
 updateHist!(cpm::CellPotts) = updateHist!(cpm,
-cpm.step.stepCounter,
+                                          cpm.step.stepCounter,
                                           cpm.step.targetNode,
                                           cpm.step.sourceCellID,
                                           cpm.state.typeIDs[cpm.step.sourceCellID])
@@ -258,8 +267,8 @@ Count the number of cell types in the model
 """
 countcelltypes(cpm::CellPotts) = countcelltypes(cpm.state)
 
-arrayids(cpm::CellPotts) = arrayids(cpm.space)
-arraytypes(cpm::CellPotts) = arraytypes(cpm.space)
+nodeIDs(cpm::CellPotts) = nodeIDs(cpm.space)
+nodeTypes(cpm::CellPotts) = nodeTypes(cpm.space)
 
 #Given a cellID calculate it's perimeter 
 function calcuatePerimeter(cpm::CellPotts, cellID::Int)
@@ -283,8 +292,23 @@ function calcuatePerimeter(cpm::CellPotts, cellID::Int)
 end
 
 ####################################################
+# Penalty names
+####################################################
+
+#Given a penalty type, output a string for that type
+#These make printing info for CPM easier.
+penaltyType(::AdhesionPenalty) = "Adhesion"
+penaltyType(::VolumePenalty) = "Volume"
+penaltyType(::PerimeterPenalty) = "Perimeter"
+penaltyType(::MigrationPenalty) = "Migration"
+penaltyType(::ChemoTaxisPenalty) = "ChemoTaxis"
+
+####################################################
 # Override Base.show
 ####################################################
+
+show(io::IO, P::Penalty) = print(io, penaltyType(P))
+
 
 function show(io::IO, cpm::CellPotts) 
     println(io,"Cell Potts Model:")
@@ -315,10 +339,10 @@ function show(io::IO, cpm::CellPotts)
     end
 
     print(io,"Model Penalties:")
-    for p in Base.uniontypes(eltype(cpm.penalties))
-        p = Symbol(p)
-        print(io," $(replace(String(p),"Penalty"=>""))")
+    for p in penaltyType.(cpm.penalties)
+        print(io," ", p)
     end
+
     print(io,"\n")
     println(io,"Temperature: ", cpm.temperature)
     print(io,"Steps: ", cpm.step.stepCounter)

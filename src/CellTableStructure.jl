@@ -98,13 +98,13 @@ The first row in the table is reserved for `:Medium` which is the name given to 
     
 Of note, `desiredPerimeters` are calculated as the minimal perimeter given the cell's volume. 
 """
-function CellTable(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
+function CellTable(names::AbstractVector{S}, volumes::AbstractVector{T}, counts::AbstractVector{T}) where {S<:Union{Symbol, String}, T<:Integer} 
 
     #Does not include Medium
     totalCells = sum(counts)
 
     #Add Medium
-    pushfirst!(names, :Medium)
+    pushfirst!(names, first(names) isa Symbol ? :Medium : "Medium")
     pushfirst!(counts, one(T))
     pushfirst!(volumes, zero(T))
 
@@ -123,7 +123,7 @@ function CellTable(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T})
 end
 
 #Alternative method when only creating one cell
-CellTable(names::Symbol, volumes::T, counts::T) where T<:Integer = CellTable([names], [volumes], [counts])
+CellTable(names::Union{Symbol, String}, volumes::T, counts::T) where T<:Integer = CellTable([names], [volumes], [counts])
 
 ####################################################
 # Add/remove cells and properties
