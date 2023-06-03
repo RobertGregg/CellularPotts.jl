@@ -150,9 +150,10 @@ struct Hist{N, T<:Integer}
     idx::Vector{T}
     nodeID::Vector{T}
     nodeType::Vector{T}
+    penalty::Vector{Vector{Float64}}
 end
 
-Hist(space) = Hist(space,Int[],Int[],Int[],Int[])
+Hist(space) = Hist(space,Int[],Int[],Int[],Int[], Vector{Float64}[])
 
 ####################################################
 # Structure for the model
@@ -222,6 +223,11 @@ function updateHist!(cpm::CellPotts, step::Int, idx::Int, nodeID::Int, nodeType:
     push!(cpm.history.idx, idx)
     push!(cpm.history.nodeID, nodeID)
     push!(cpm.history.nodeType, nodeType)
+
+    push!(cpm.history.penalty, zeros(length(cpm.penalties)))
+    for i in eachindex(cpm.penalties)
+        last(cpm.history.penalty)[i] = addPenalty!(cpm, cpm.penalties[i])
+    end
 
     return nothing
 end

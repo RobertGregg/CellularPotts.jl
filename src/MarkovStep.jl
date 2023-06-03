@@ -72,14 +72,14 @@ function MHStep!(cpm::CellPotts)
             return nothing
         end
 
+        if cpm.record
+            updateHist!(cpm)
+        end
 
         #Cell IDs
         cpm.space.nodeIDs[cpm.step.targetNode] = cpm.step.sourceCellID
         cpm.space.nodeTypes[cpm.step.targetNode] = cpm.state.typeIDs[cpm.step.sourceCellID]
 
-        if cpm.record
-            updateHist!(cpm)
-        end
 
         #---Cell properties---
         for i in eachindex(cpm.penalties)

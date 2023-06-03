@@ -422,3 +422,77 @@ P[:] = l * P0[:]
 
 
 Pnew = P0 + Δu
+
+
+#############################################
+# Automatic differentiation
+#############################################
+
+#Start with simple central difference approximation
+
+# -Fₓ(x) ≈ ∂H/∂σ(x) ⋅ ∂σ(x)/∂x ≈ (1/2h)⋅( H(σ+dₓσ(x)) - H(σ-dₓσ(x)))
+
+#how do you know what direction the neighbor target is facing?
+
+#Ex 3 by 3 gridS
+space = reshape(1:9,3,3)
+spaceIndex = CartesianIndices(A)
+
+#=
+1  4  7
+2  5  8
+3  6  9
+=#
+
+spaceIndex[5] - spaceIndex[8] #CartesianIndex(0, -1)
+
+Tuple(spaceIndex[5] - spaceIndex[8])
+
+
+#############################################
+# Relative penality contributions
+#############################################
+using CellularPotts, Plots
+
+cpm = CellPotts(
+    CellSpace(50, 50),
+    CellTable(:Epithelial, 300, 1),
+    [AdhesionPenalty(fill(30,2,2)), VolumePenalty([5]), PerimeterPenalty([5])]
+)
+
+cpm.record = true
+
+for i=1:100
+    ModelStep!(cpm)
+end
+
+
+
+plot(stack(last(cpm.history.penalty, 100))')
+
+for i in eachindex(cpm.penalties)
+    display(histogram(stack(cpm.history.penalty)[i,:], title=cpm.penalties[i]))
+end
+
+
+rows, columns = size(cpm.space)
+
+plt = heatmap(
+        cpm.space.nodeTypes',
+        c = cgrad(:tol_light, rev=true),
+        grid=false,
+        axis=nothing,
+        legend=:none,
+        framestyle=:box,
+        aspect_ratio=:equal,
+        size = (600,600),
+        xlims=(0.5, rows+0.5),
+        ylims=(0.5, columns+0.5),
+        clim=(0,2)
+            )
+
+cellborders!(plt, cpm.space)
+
+
+recordCPM("OnPatrol.gif", cpm;
+    property = :nodeTypes, frameskip=10, c=:RdBu_3)

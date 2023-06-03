@@ -160,7 +160,7 @@ end
 function recordCPM(
     file::String,
     cpm::CellPotts{3, T, V, U},
-    timestamps = 0:300,
+    timestamps = 0:3000,
     c = cgrad(:tol_light, rev=true);
     legend=:none,
     framerate=30,
@@ -174,7 +174,7 @@ function recordCPM(
         ModelStep!(cpm)
 
         plotObject
-    end
+    end every 10
 
     return gif(anim, file, fps = framerate)
 
