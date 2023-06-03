@@ -18,8 +18,8 @@ initialCellState = CellTable(
 penalties = [
     AdhesionPenalty([30 30 30;
                     30 30 30
-                    30 30 100]),
-    VolumePenalty([30, 20]),
+                    30 30 50]),
+    VolumePenalty([30, 30]),
     PerimeterPenalty([0, 5]),
     MigrationPenalty(50, [0, 100], size(space))
     ]
@@ -28,7 +28,12 @@ penalties = [
 
 cpm = CellPotts(space, initialCellState, penalties)
 
+# Finally, lets run the model for a few steps to let the initial cell positions to equalibrate.
+
+for i=1:50
+    ModelStep!(cpm)
+end
 
 # Record the simulation
 recordCPM("OnPatrol.gif", cpm;
-    property = :nodeTypes, N=10)
+    property = :nodeTypes, frameskip=10, c=:RdBu_3)

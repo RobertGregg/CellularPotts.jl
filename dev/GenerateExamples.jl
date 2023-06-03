@@ -1,7 +1,7 @@
 using CellularPotts, Literate, Random 
 
 
-Random.seed!(314159)
+Random.seed!(314)
 
 #Function to replace name of gif with actual gif
 function gifReplace(content, root, fileName)
@@ -28,7 +28,7 @@ end
 
 #Loop through all the examples, execute them, save markdown file
 
-examplesToUpdate = ["OverHere.jl"]
+examplesToUpdate = ["OnPatrol.jl"]
 
 for (root, dirs, files) in walkdir("./docs/src/ExampleGallery")
     for file in files
