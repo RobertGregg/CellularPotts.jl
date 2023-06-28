@@ -338,7 +338,7 @@ function show(io::IO, cpm::CellPotts)
         end
     end
 
-    if length(cellCounts) > 1
+    if length(cellCounts) > 2 #Includes Medium
         println(io," [Total → $(length(cpm.state.names)-1)]")
     else
         print(io,"\n")

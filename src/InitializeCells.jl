@@ -31,6 +31,9 @@ function positionCells!(cpm::CellPotts)
     #Convert positions to linear LinearIndices
     centers = [LinearIndices(size(cpm.space))[i...] for i in cpm.state.positions]
 
+    #Remove the medium position
+    popfirst!(centers)
+
     cellMembership = growcells(cpm, centers)
 
 
