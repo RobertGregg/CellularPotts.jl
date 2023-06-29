@@ -179,6 +179,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     temperature::Float64
     history::Hist{N,T}
     record::Bool
+    checkCellFragment::Bool
 
     function CellPotts(space::CellSpace{N,T}, initialCellState::CellTable{V}, penalties::Vector{P}; ) where {N,T,V,P}
 
@@ -195,7 +196,8 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
             ArticulationUtility(nv(space)),
             20.0,
             Hist(space),
-            false)
+            false,
+            true)
 
         #Position the cells in the model
         if :positions ∈ keys(initialCellState)
