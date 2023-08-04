@@ -65,10 +65,13 @@ function MHStep!(cpm::CellPotts)
     
     if rand() < acceptRatio #If the acceptance ratio is large enough
 
-        #TODO Add an option to toggle this check
         #Moved into accept loop b/c computationally intensive
         #Test if the target cell is an articulation point
-        if cpm.checkCellFragment && cpm.step.targetNode ∈ cpm.getArticulation(cpm.space, cpm.step.targetCellID)
+        # if cpm.checkCellFragment && cpm.step.targetNode ∈ cpm.getArticulation(cpm.space, cpm.step.targetCellID)
+        #     return nothing
+        # end
+
+        if cpm.checkCellFragment && isfragmented(cpm)
             return nothing
         end
 

@@ -17,11 +17,11 @@ initialCellState = CellTable(
 
 penalties = [
     AdhesionPenalty([30 30 30;
-                    30 30 30
-                    30 30 50]),
+                    30 20 30
+                    30 30 40]),
     VolumePenalty([30, 30]),
     PerimeterPenalty([0, 5]),
-    MigrationPenalty(50, [0, 100], size(space))
+    MigrationPenalty(75, [0, 100], size(space))
     ]
 
 # Create a new `CellPotts` model.

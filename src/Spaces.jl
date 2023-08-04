@@ -3,19 +3,18 @@
 ####################################################
 
 """
-    CellSpace(gridSize::NTuple{N, T}; isPeriodic=true, neighborhood=:moore)
-    CellSpace(gridSize::T...; isPeriodic=true, neighborhood=:moore) where T<:Integer
+    CellSpace(gridSize::NTuple{N, T}; isPeriodic=true, neighborhood=:vonNeumann)
+    CellSpace(gridSize::T...; isPeriodic=true, neighborhood=:vonNeumann) where T<:Integer
 A concrete type that stores the underlying space cells will occupy.
 
 A `CellSpace()` can be created by supplying a tuple of dimensions or multiple arguments for each dimension, e.g. `CellSpace((3,3,4))` or `CellSpace(3,3,4)`. There are two optional keyword arguments:
  - isPeriodic`::Bool`: Determines if the grid has periodic boundaries
- - neighborhood`::Symbol`: Adjacent cells are either a `:moore` or a `:vonNeumann` neighborhood. Moore neighborhoods include adjacent diagonal positions.
+ - neighborhood`::Symbol`: Adjacent cells can have a `:vonNeumann` (default) or `:moore` neighborhood. Moore neighborhoods include adjacent diagonal positions.
 """
-mutable struct CellSpace{N, T<:Integer} <: AbstractSimpleGraph{T}
+mutable struct CellSpace{T<:Integer, C, N} <: AbstractSimpleGraph{T}
     ne::T                         #Number of edges
     fadjlist::Vector{Vector{T}}   #Sorted adjacency list [src]: (dst, dst, dst)
     gridSize::NTuple{N, T}        #Size of grid (x,y,z...)
-    neighborCount::T              #Number of neighbors an interior vertex has
     isPeriodic::Bool              #Does the grid wrap around?
     nodeIDs::Array{T,N}           #Cell's ID for each node
     nodeTypes::Array{T,N}         #Cell's type for each node

@@ -175,7 +175,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
     state::CellTable{V}
     penalties::Vector{U}
     step::MHStepInfo{T}
-    getArticulation::ArticulationUtility
+    fragment::FragmentUntility
     temperature::Float64
     history::Hist{N,T}
     record::Bool
@@ -193,7 +193,7 @@ mutable struct CellPotts{N, T<:Integer, V<:NamedTuple, U}
             initialCellState,
             U[p for p in penalties],
             MHStepInfo(),
-            ArticulationUtility(nv(space)),
+            FragmentUntility(nv(space)),
             20.0,
             Hist(space),
             false,
@@ -234,16 +234,17 @@ function updateHist!(cpm::CellPotts, step::Int, idx::Int, nodeID::Int, nodeType:
     return nothing
 end
 
-updateHist!(cpm::CellPotts) = updateHist!(cpm,
-                                          cpm.step.stepCounter,
-                                          cpm.step.targetNode,
-                                          cpm.step.sourceCellID,
-                                          cpm.state.typeIDs[cpm.step.sourceCellID])
+updateHist!(cpm::CellPotts) = updateHist!(
+    cpm,
+    cpm.step.stepCounter,
+    cpm.step.targetNode,
+    cpm.step.sourceCellID,
+    cpm.state.typeIDs[cpm.step.sourceCellID])
 
 
 #Given the history, retieve the space at a given time step
 function (cpm::CellPotts)(t)
-
+    
     cpm.history.space.nodeIDs .= cpm.initialSpace.nodeIDs
     cpm.history.space.nodeTypes .= cpm.initialSpace.nodeTypes
     

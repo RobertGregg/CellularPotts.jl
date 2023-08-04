@@ -92,6 +92,7 @@ export
       CellSpace,
 #ArticulationPoints.jl
       ArticulationUtility,
+      isfragmented,
 #CellTableStructure.jl
       CellTable,
       addcellproperty,
@@ -126,5 +127,6 @@ export
 #Visualization.jl
       recordCPM,
       cellborders!,
-      cellMovement!
+      cellMovement!,
+      plotcpm
 end

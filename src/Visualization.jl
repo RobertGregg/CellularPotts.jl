@@ -1,3 +1,47 @@
+function plotcpm(
+    cpm::CellPotts{2, T, V, U};
+    c = cgrad(:tol_light, rev=true),
+    figureSize = (600,600),
+    property = :nodeIDs,
+    legend=:none,
+    kwargs...
+    ) where {T,V,U}
+
+    (rows,columns) = size(cpm.space)
+
+    #TODO How to color by any property?
+    if property == :nodeIDs
+        colorMax = countcells(cpm)
+    elseif property == :nodeTypes
+        colorMax = countcelltypes(cpm)
+    else
+        colorMax = Inf
+    end
+
+    plotObject = heatmap(
+            getproperty(cpm.space, property)',
+            c = c,
+            grid=false,
+            axis=nothing,
+            legend=legend,
+            framestyle=:box,
+            aspect_ratio=:equal,
+            size = figureSize,
+            xlims=(0.5, rows+0.5),
+            ylims=(0.5, columns+0.5),
+            clim=(0,colorMax),
+            kwargs...
+            )
+
+        cellborders!(plotObject, cpm.space)
+
+        cellMovement!(plotObject,cpm, colorMax)
+    
+    return plotObject
+end
+
+
+
 """
     cellborders!(plotObject, space::CellSpace)
 Add line borders to differentiate cells in a plot.
