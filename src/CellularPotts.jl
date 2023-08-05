@@ -75,39 +75,47 @@ offset(x) = OffsetArray(x, Origin(0))
 #This is enough for this package (b/c we only use 0-indexed vectors)
 deleteat!(v::OffsetVector{T, Vector{T}}, i::T) where T<:Integer = deleteat!(parent(v),i-first(v.offsets))
 
+#loop through all unique pairs in v
+allpairs(v) = Iterators.filter(i -> isless(i...), Iterators.product(v,v))
 
-include("Spaces.jl")
-include("ArticulationPoints.jl")
-include("CellTableStructure.jl")
+####################################################
+# Files to include
+####################################################
+
+for file in readdir("src/Structures")
+      include(joinpath("Structures",file))
+end
+
 include("Core.jl")
-include("Penalties.jl")
+include("CalculatePenalty.jl")
 include("InitializeCells.jl")
-include("MarkovStep.jl")
+include("MarkovStepper.jl")
 include("CellActions.jl")
 include("Visualization.jl")
 
 export 
 
-#Spaces.jl
-      CellSpace,
-#ArticulationPoints.jl
-      ArticulationUtility,
+#Articulation.jl
+      Articulation,
       isfragmented,
-#CellTableStructure.jl
+#CellSpace.jl
+      CellSpace,
+#CellState.jl
       CellState,
       addcellproperty,
       addnewcell,
       removecell,
-#Core.jl
-      countcells,
-      countcelltypes,
+#Penalty.jl
       Penalty,
       AdhesionPenalty,
       VolumePenalty,
       PerimeterPenalty,
       MigrationPenalty,
       ChemoTaxisPenalty,
+#Core.jl
       CellPotts,
+      countcells,
+      countcelltypes,
 #Penalties.jl
       addPenalty!,
       perimeterLocal,
@@ -126,6 +134,7 @@ export
        CellDeath!,
 #Visualization.jl
       recordCPM,
+      #TODO need consistant name capitalization 
       cellborders!,
       cellMovement!,
       plotcpm

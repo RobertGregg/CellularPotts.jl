@@ -30,7 +30,7 @@ mutable struct CellPotts{T<:Integer, C, N, V<:NamedTuple, U}
         #See https://github.com/JuliaLang/julia/pull/44131 for why Unions are used
         U = Union{typeof.(penalties)...}
 
-        cpm =  new{N,T,V,U}(
+        cpm =  new{T,C,N,V,U}(
             space,
             space,
             state,
@@ -45,7 +45,7 @@ mutable struct CellPotts{T<:Integer, C, N, V<:NamedTuple, U}
 
         #Position the cells in the model
         #TODO need a better way to position cells
-        if :positions ∈ keys(states)
+        if :positions ∈ keys(state)
             positionCells!(cpm)
         else
             positionCellsRandom!(cpm)
@@ -59,65 +59,18 @@ mutable struct CellPotts{T<:Integer, C, N, V<:NamedTuple, U}
     end
 end
 
-
-
-####################################################
-# Reading and Writing History
-####################################################
-#TODO History update is complicated still
-function updateHistory!(cpm::CellPotts, step::Int, idx::Int, nodeID::Int, nodeType::Int)
-    
-    push!(cpm.history.step, step)
-    push!(cpm.history.idx, idx)
-    push!(cpm.history.nodeID, nodeID)
-    push!(cpm.history.nodeType, nodeType)
-
-    push!(cpm.history.penalty, zeros(length(cpm.penalties)))
-    for i in eachindex(cpm.penalties)
-        last(cpm.history.penalty)[i] = addPenalty!(cpm, cpm.penalties[i])
-    end
-
-    return nothing
-end
-
-updateHistory!(cpm::CellPotts) = updateHistory!(
-    cpm,
-    cpm.step.counter,
-    cpm.step.target.node,
-    cpm.step.source.id,
-    cpm.state.typeIDs[cpm.step.source.id])
-
-
-#Given the history, retieve the space at a given time step
-function (cpm::CellPotts)(t)
-    
-    cpm.history.space.nodeIDs .= cpm.initialSpace.nodeIDs
-    cpm.history.space.nodeTypes .= cpm.initialSpace.nodeTypes
-    
-    stepMatches = 1:searchsortedlast(cpm.history.step, t)
-
-    cpm.history.space.nodeIDs[cpm.history.idx[stepMatches]] .= cpm.history.nodeID[stepMatches]
-    cpm.history.space.nodeTypes[cpm.history.idx[stepMatches]] .= cpm.history.nodeType[stepMatches]
-
-    return cpm.history.space #could also return nothing
-end
-    
 ####################################################
 # Helper functions for CellPotts
 ####################################################
 
 """
     countcells(cpm::CellPotts)
-    countcells(df::CellState)
-
 Count the number of cells in the model 
 """
 countcells(cpm::CellPotts) = countcells(cpm.state)
 
 """
     countcelltypes(cpm::CellPotts)
-    countcelltypes(df::CellState)
-
 Count the number of cell types in the model 
 """
 countcelltypes(cpm::CellPotts) = countcelltypes(cpm.state)
@@ -125,26 +78,43 @@ countcelltypes(cpm::CellPotts) = countcelltypes(cpm.state)
 nodeIDs(cpm::CellPotts) = nodeIDs(cpm.space)
 nodeTypes(cpm::CellPotts) = nodeTypes(cpm.space)
 
-#Given a cellID calculate it's perimeter 
-function calcuatePerimeter(cpm::CellPotts, cellID::Int)
 
-    perimeter = 0
+####################################################
+# Reading and Writing History
+####################################################
+function updateHistory!(cpm::CellPotts)
 
-    #Loop through all of space and count neighbors
-    for (node, id) in enumerate(cpm.space.nodeIDs)
-        if id ≠ cellID
-            continue
-        end
+    step = cpm.step
+    
+    #Node types are not saved in the step
+    nodeType = cpm.state.typeIDs[cpm.step.source.id]
 
-        for neighbor in neighbors(cpm.space, node)
-            if cpm.space.nodeIDs[neighbor] ≠ cellID
-                perimeter += 1
-            end
-        end
-    end
+    push!(cpm.history.counter, step.counter)
+    push!(cpm.history.position, step.target.node)
+    push!(cpm.history.nodeID, step.source.id)
+    push!(cpm.history.nodeType, nodeType)
 
-    return perimeter
+    return nothing
 end
+
+
+#Given the history, reconstruct the space at a given time step
+function (cpm::CellPotts)(t::Integer)
+
+    space = cpm.history.space
+    
+    #Reset the space history
+    space.nodeIDs .= cpm.initialSpace.nodeIDs
+    space.nodeTypes .= cpm.initialSpace.nodeTypes
+    
+    lastMatch = 1:searchsortedlast(cpm.history.counter, t)
+
+    space.nodeIDs[cpm.history.position[lastMatch]] .= cpm.history.nodeID[lastMatch]
+    space.nodeTypes[cpm.history.position[lastMatch]] .= cpm.history.nodeType[lastMatch]
+
+    return space #could also return nothing
+end
+    
 
 ####################################################
 # Override Base.show
@@ -185,5 +155,5 @@ function show(io::IO, cpm::CellPotts)
 
     print(io,"\n")
     println(io,"Temperature: ", cpm.temperature)
-    print(io,"Steps: ", cpm.step.stepCounter)
+    print(io,"Steps: ", cpm.step.counter)
 end

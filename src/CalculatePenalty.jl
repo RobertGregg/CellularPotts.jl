@@ -1,11 +1,9 @@
-#Note, the Type definitions are in Core.jl (e.g. struct AdhesionPenalty ... end)
-
 ####################################################
 # Adhesion 
 ####################################################
 
 function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty)
-    return addPenalty!(cpm, AP, cpm.step.sourceCellID) - addPenalty!(cpm, AP, cpm.step.targetCellID) 
+    return addPenalty!(cpm, AP, cpm.step.source.id) - addPenalty!(cpm, AP, cpm.step.target.id) 
 end
 
 function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty, σᵢ::T) where T<:Integer
@@ -14,7 +12,7 @@ function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty, σᵢ::T) where T<:Int
 
     τᵢ = cpm.state.typeIDs[σᵢ]
 
-    for neighbor in cpm.step.targetNeighborNodes
+    for neighbor in cpm.step.target.neighbors
         #Given a node index, get the cellID
         σⱼ = cpm.space.nodeIDs[neighbor]
 
@@ -27,11 +25,11 @@ function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty, σᵢ::T) where T<:Int
 
     #If there are non-periodic boundaries some grid site will have fewer neighbors to contribute to the adhesion penality.
     #This will make cells stick to borders if not accounted for
-    if !cpm.space.isPeriodic
+    if !cpm.space.periodic
         #Add penality assuming missing neighbors are :Medium
-        neighborCount = length(cpm.step.targetNeighborNodes)
+        targetNeighborCount = length(cpm.step.target.neighbors)
 
-        adhesion += AP.J[τᵢ, 0] * (1-δ(σᵢ, 0)) * (cpm.space.neighborCount - neighborCount)
+        adhesion += AP.J[τᵢ, 0] * (1-δ(σᵢ, 0)) * (maxNeighborCount(cpm) - targetNeighborCount)
     end
 
     return adhesion
@@ -42,8 +40,8 @@ end
 ####################################################
 
 function addPenalty!(cpm::CellPotts, VP::VolumePenalty)
-    σᵢ = cpm.step.sourceCellID
-    σⱼ = cpm.step.targetCellID
+    σᵢ = cpm.step.source.id
+    σⱼ = cpm.step.target.id
     sourceVolume = addPenalty!(cpm, VP, σᵢ) + addPenalty!(cpm, VP, σⱼ)
    
     #Change the volumes and recalculate penalty
@@ -74,9 +72,9 @@ end
 ####################################################
 
 function addPenalty!(cpm::CellPotts, PP::PerimeterPenalty)
-    node = cpm.step.targetNode
-    σᵢ = cpm.step.sourceCellID
-    σⱼ = cpm.step.targetCellID
+    node = cpm.step.target.node
+    σᵢ = cpm.step.source.id
+    σⱼ = cpm.step.target.id
     sourcePerimeter = addPenalty!(cpm, PP, σᵢ) + addPenalty!(cpm, PP, σⱼ)
 
     #Unlike volumes which change by ±1, perimeter is more complicated
@@ -146,6 +144,27 @@ function perimeterLocal(space::CellSpace, n₀::T, σ::T) where T<: Integer
     return perimeter
 end
 
+#Given a cellID calculate it's perimeter 
+function calcuatePerimeter(cpm::CellPotts, cellID::Int)
+
+    perimeter = 0
+
+    #Loop through all of space and count neighbors
+    for (node, id) in enumerate(nodeIDs(cpm))
+        if id ≠ cellID
+            continue
+        end
+
+        for neighbor in neighbors(cpm.space, node)
+            if nodeIDs(cpm)[neighbor] ≠ cellID
+                perimeter += 1
+            end
+        end
+    end
+
+    return perimeter
+end
+
 ####################################################
 # Migration
 ####################################################
@@ -158,7 +177,7 @@ This change will become moot when chemotaxis is introduced. Gradient fields will
 
 function addPenalty!(cpm::CellPotts, MP::MigrationPenalty)
 
-    return addPenalty!(cpm, MP, cpm.step.targetNode, cpm.step.targetCellID) - addPenalty!(cpm, MP, cpm.step.sourceNode, cpm.step.sourceCellID)
+    return addPenalty!(cpm, MP, cpm.step.target.node, cpm.step.target.id) - addPenalty!(cpm, MP, cpm.step.source.node, cpm.step.source.id)
 end
 
 
@@ -194,8 +213,8 @@ end
 function addPenalty!(cpm::CellPotts, CP::ChemoTaxisPenalty)
 
     Cᵢ = CP.species[cpm.step.sourceNode]
-    Cⱼ = CP.species[cpm.step.targetNode]
-    τ = cpm.state.typeIDs[cpm.step.sourceCellID]
+    Cⱼ = CP.species[cpm.step.target.node]
+    τ = cpm.state.typeIDs[cpm.step.source.id]
 
     return CP.λ[τ] * (Cᵢ - Cⱼ)
 end

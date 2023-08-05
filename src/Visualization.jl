@@ -1,11 +1,11 @@
 function plotcpm(
-    cpm::CellPotts{2, T, V, U};
+    cpm::CellPotts{T, C, 2, V, U};
     c = cgrad(:tol_light, rev=true),
     figureSize = (600,600),
     property = :nodeIDs,
     legend=:none,
     kwargs...
-    ) where {T,V,U}
+    ) where {T, C, V, U}
 
     (rows,columns) = size(cpm.space)
 
@@ -46,7 +46,7 @@ end
     cellborders!(plotObject, space::CellSpace)
 Add line borders to differentiate cells in a plot.
 """
-function cellborders!(plotObject, space::CellSpace{2, T}) where T
+function cellborders!(plotObject, space::CellSpace{T, C, 2}) where {T,C}
 
     (row,col) = size(space)
 
@@ -124,7 +124,7 @@ Generates an animation of the CPM model.
 """
 function recordCPM(
     file::String,
-    cpm::CellPotts{2, T, V, U};
+    cpm::CellPotts{T, C, 2, V, U};
     timestamps = 0:3000,
     c = cgrad(:tol_light, rev=true),
     figureSize = (600,600),
@@ -132,7 +132,7 @@ function recordCPM(
     legend=:none,
     framerate=30,
     frameskip = 1,
-    kwargs...) where {T,V,U}
+    kwargs...) where {T, C, V, U}
 
     (rows,columns) = size(cpm.space)
 
@@ -203,12 +203,12 @@ end
 
 function recordCPM(
     file::String,
-    cpm::CellPotts{3, T, V, U},
+    cpm::CellPotts{T, C, 3, V, U},
     timestamps = 0:3000,
     c = cgrad(:tol_light, rev=true);
     legend=:none,
     framerate=30,
-    kwargs...) where {T,V,U}
+    kwargs...) where {T, C, V, U}
 
 
     anim = @animate for t in timestamps

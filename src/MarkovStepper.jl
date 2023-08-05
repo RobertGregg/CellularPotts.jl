@@ -21,39 +21,44 @@ function MHStep!(cpm::CellPotts)
 
     #Reset the success flag
     cpm.step.success = false
-    
+
+    source = cpm.step.source
+    target = cpm.step.target
+
     #Pick a random location on the graph
-    cpm.step.sourceNode = rand(1:nv(cpm.space))
+    source.node = rand(1:nv(cpm.space))
     #What cell does it belong to?
-    cpm.step.sourceCellID = cpm.space.nodeIDs[cpm.step.sourceNode]
+    source.id = cpm.space.nodeIDs[source.node]
+    source.type = cpm.space.nodeTypes[source.node]
 
     #Get all cell IDs neighboring this Node
-    cpm.step.sourceNeighborNodes = neighbors(cpm.space, cpm.step.sourceNode)
+    source.neighbors = neighbors(cpm.space, source.node)
 
     #Some space locations are forbidden (see TightSpaces example) 
-    if isempty(cpm.step.sourceNeighborNodes)
+    if isempty(source.neighbors)
         return nothing
     end
 
     #Choose a target
-    cpm.step.targetNode = rand(cpm.step.sourceNeighborNodes)
-    cpm.step.targetCellID = cpm.space.nodeIDs[cpm.step.targetNode]
+    target.node = rand(source.neighbors)
+    target.id = cpm.space.nodeIDs[target.node]
+    target.type = cpm.space.nodeTypes[target.node]
     
     #Some checks before attempting a flip
 
     #target and source same cell? 
-    if cpm.step.targetCellID == cpm.step.sourceCellID
+    if target.id == source.id
         return nothing
     end
 
     #sourceCell surrounded by only sourceCells?
-    if all(isequal(cpm.step.sourceCellID, cpm.space.nodeIDs[n]) for n in cpm.step.sourceNeighborNodes)
+    if all(isequal(source.id, cpm.space.nodeIDs[n]) for n in source.neighbors)
         return nothing
     end
 
     
     #Get all cell nodes neighboring target node
-    cpm.step.targetNeighborNodes = neighbors(cpm.space, cpm.step.targetNode)
+    target.neighbors = neighbors(cpm.space, target.node)
     
     #Calculate the change in energy when target node is modified
     ΔH =  calculateΔH(cpm)
@@ -71,17 +76,17 @@ function MHStep!(cpm::CellPotts)
         #     return nothing
         # end
 
-        if cpm.checkCellFragment && isfragmented(cpm)
+        if cpm.checkArticulation && isfragmented(cpm)
             return nothing
         end
 
-        if cpm.record
-            updateHist!(cpm)
+        if cpm.recordHistory
+            updateHistory!(cpm)
         end
 
         #Cell IDs
-        cpm.space.nodeIDs[cpm.step.targetNode] = cpm.step.sourceCellID
-        cpm.space.nodeTypes[cpm.step.targetNode] = cpm.state.typeIDs[cpm.step.sourceCellID]
+        cpm.space.nodeIDs[target.node] = source.id
+        cpm.space.nodeTypes[target.node] = source.type
 
 
         #---Cell properties---
@@ -109,7 +114,7 @@ function ModelStep!(cpm::CellPotts)
     end
 
     #Increment the step counter
-    cpm.step.stepCounter += 1
+    cpm.step.counter += 1
 
     #Model updates after MCS
     for i in eachindex(cpm.penalties)
@@ -129,15 +134,15 @@ updateMHStep!(cpm::CellPotts, penalty::Penalty) = nothing
 
 function updateMHStep!(cpm::CellPotts, VP::VolumePenalty)
     #Update cell volumes
-    cpm.state.volumes[cpm.step.sourceCellID] += 1
-    cpm.state.volumes[cpm.step.targetCellID] -= 1
+    cpm.state.volumes[cpm.step.source.id] += 1
+    cpm.state.volumes[cpm.step.target.id] -= 1
 
     return nothing
 end
 
 function updateMHStep!(cpm::CellPotts, PP::PerimeterPenalty)
     #Update cell perimeters
-    cpm.state.perimeters[cpm.step.sourceCellID] += PP.Δpᵢ
+    cpm.state.perimeters[cpm.step.source.id] += PP.Δpᵢ
     cpm.state.perimeters[cpm.step.targetCellID] -= PP.Δpⱼ
 
     return nothing
@@ -146,13 +151,13 @@ end
 
 function updateMHStep!(cpm::CellPotts, MP::MigrationPenalty)
 
-    τ = cpm.state.typeIDs[cpm.step.sourceCellID]
+    τ = cpm.state.typeIDs[cpm.step.source.id]
     
     #Do not update cells with λ==0
     if iszero(MP.λ[τ])
-        MP.nodeMemory[cpm.step.targetNode] = 0
+        MP.nodeMemory[cpm.step.target.node] = 0
     else
-        MP.nodeMemory[cpm.step.targetNode] = MP.maxAct
+        MP.nodeMemory[cpm.step.target.node] = MP.maxAct
     end
     
     return nothing

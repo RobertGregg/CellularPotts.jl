@@ -6,9 +6,9 @@
 
 using CellularPotts
 
-space = CellSpace(50,50; isPeriodic=true, neighborhood=:moore)
+space = CellSpace(50,50; periodic=true, diagonal=true)
 
-# Here we create a 50 by 50 square grid with periodic boundary conditions where grid locations are connected to their 8 closest neighbors (4-cell neighborhoods are also available using the `:vonNeumann` option). By default, `isPeriodic` is set to true and `neighborhood` uses the 8 closest neighbors.
+# Here we create a 50 by 50 square grid with periodic boundary conditions where grid locations are connected to their 8 closest neighbors, also called Moore neighbors (4-cell neighborhoods that exclude diagonal neighbors are called Von Neumann). By default, `periodic` is set to true and `diagonal` is set to false.
 
 # Next we need to initialize a table of cell information to put into this space.
 

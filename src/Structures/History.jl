@@ -2,14 +2,13 @@
 # Logging Function
 ####################################################
 
-#TODO Why does History need space?
+#TODO Why does History need penalty?
 struct History{T<:Integer, C, N}
     space::CellSpace{T,C,N}
-    step::Vector{T}
-    idx::Vector{T}
+    counter::Vector{T}
+    position::Vector{T}
     nodeID::Vector{T}
     nodeType::Vector{T}
-    penalty::Vector{Vector{Float64}}
 end
 
-History(space) = History(space,Int[],Int[],Int[],Int[], Vector{Float64}[])
+History(space) = History(space,Int[],Int[],Int[],Int[])
