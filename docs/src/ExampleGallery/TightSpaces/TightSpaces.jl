@@ -16,7 +16,7 @@ spaceImage[20:80,20:80] .= 0
 
 space = CellSpace(spaceImage, isPeriodic=false)
 
-initialCellState = CellTable(:Epithelial, 500, 1);
+initialCellState = CellState(:Epithelial, 500, 1);
 
 positions = [90,10]
 

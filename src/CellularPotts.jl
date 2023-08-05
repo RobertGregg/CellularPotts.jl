@@ -94,7 +94,7 @@ export
       ArticulationUtility,
       isfragmented,
 #CellTableStructure.jl
-      CellTable,
+      CellState,
       addcellproperty,
       addnewcell,
       removecell,

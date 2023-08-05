@@ -5,13 +5,13 @@
 # We begin by loading in both CellularPotts and DifferentialEquations
 using CellularPotts, DifferentialEquations
 
-# On the CellularPotts side, we need to create a new CellPotts model which requires a CellSpace, a CellTable, and a list of penalties
+# On the CellularPotts side, we need to create a new CellPotts model which requires a CellSpace, a CellState, and a list of penalties
 
 # The space will use is a 200×200 grid that defaults to periodic boundary conditions
 space = CellSpace(200,200)
 
-# In the CellTable we specify one epithelial cell with a volume of 200 pixels
-initialCellState = CellTable(:Epithelial, 200, 1);
+# In the CellState we specify one epithelial cell with a volume of 200 pixels
+initialCellState = CellState(:Epithelial, 200, 1);
 
 # The cell will be positioned at the halfway point within the space. 
 positions = [size(space) .÷ 2]

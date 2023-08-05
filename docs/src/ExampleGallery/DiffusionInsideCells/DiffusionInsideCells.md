@@ -37,7 +37,7 @@ The `CellPotts()` model requires three inputs (space, cell table, and penalties)
 ````julia
 cpm = CellPotts(
     CellSpace(N,N),
-    addcellproperty(CellTable(:Epithelial, 500, 1), :positions, [(N,N) .÷ 2]), #Need to add keyword options to CellTable...
+    addcellproperty(CellState(:Epithelial, 500, 1), :positions, [(N,N) .÷ 2]), #Need to add keyword options to CellState...
     [AdhesionPenalty([0 30; 30 30]), VolumePenalty([5])]
     );
 ````

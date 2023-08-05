@@ -57,7 +57,7 @@ using CellularPotts
 space = CellSpace(50,50; isPeriodic=true, neighborhood=:moore)
 
 #Describe the cells in the model
-initialCellState = CellTable(
+initialCellState = CellState(
     [:Epithelial], #names
     [500],         #sizes
     [1])           #counts

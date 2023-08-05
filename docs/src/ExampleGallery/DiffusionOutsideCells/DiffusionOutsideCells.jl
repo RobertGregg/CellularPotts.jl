@@ -15,7 +15,7 @@ const p0 = 50.0;
 # Next we generate a `CellPotts()` model with 3 cells approximately 1000 pixels in size with adhesion and volume constraints.
 cpm = CellPotts(
     CellSpace(N,N), 
-    CellTable(:Epithelial, 1000, 3),
+    CellState(:Epithelial, 1000, 3),
     [AdhesionPenalty([0 30;30 30]), VolumePenalty([5])]
     );
 

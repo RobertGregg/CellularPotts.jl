@@ -40,15 +40,15 @@ end
 
 @testset "Lonely cells" begin
 
-    table1 = CellTable(:hello, 1,1)
-    table2 = CellTable([:hello], [1],[1])
+    table1 = CellState(:hello, 1,1)
+    table2 = CellState([:hello], [1],[1])
 
     @test parent(table1) == parent(table2)
 end
 
 @testset "Adding Cell Properties" begin
 
-    df = CellTable(
+    df = CellState(
     [:Epithelial, :TCell, :BCell],
     [500, 100, 100],
     [1, 1, 1])

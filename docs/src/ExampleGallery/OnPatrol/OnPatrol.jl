@@ -6,9 +6,9 @@
 using CellularPotts
 space = CellSpace(200,200)
 
-# Initialize a new `CellTable` with 75 epithelial cells and 5 T-Cells
+# Initialize a new `CellState` with 75 epithelial cells and 5 T-Cells
 
-initialCellState = CellTable(
+initialCellState = CellState(
     [:Epithelial, :TCell],
     [250, 200],
     [160, 10]);

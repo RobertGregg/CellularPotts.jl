@@ -4,10 +4,10 @@ using BenchmarkTools
 space1 = CellSpace(50,50; isPeriodic=true, neighborhood=:moore)
 space2 = CellSpace(50,50; isPeriodic=true, neighborhood=:vonNeumann)
 
-initialCellState1 = CellTable(:Epithelial, 500, 1)
+initialCellState1 = CellState(:Epithelial, 500, 1)
 initialCellState1 = addcellproperty(initialCellState1, :positions,  [(25,25)])
 
-initialCellState2 = CellTable(:Epithelial, 500, 1)
+initialCellState2 = CellState(:Epithelial, 500, 1)
 initialCellState2 = addcellproperty(initialCellState2, :positions,  [(25,25)])
 
 

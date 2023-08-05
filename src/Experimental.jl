@@ -137,7 +137,7 @@ using Plots
 const N = 200
 const ΔP = zeros(N,N)
 
-cpm = CellPotts(CellSpace(N,N), CellTable([:Epithelial],[500],[10]), [AdhesionPenalty([0 30;30 30]),VolumePenalty([5])]);
+cpm = CellPotts(CellSpace(N,N), CellState([:Epithelial],[500],[10]), [AdhesionPenalty([0 30;30 30]),VolumePenalty([5])]);
 
 #Doing this because we're not using DifferentialEquations
 P = zeros(N,N)
@@ -185,7 +185,7 @@ heatmap(P)
 
 N = 10
 
-cpm = CellPotts(CellSpace(N,N), CellTable([:Epithelial],[10],[1]), [AdhesionPenalty([0 30;30 30]),VolumePenalty([5])]);
+cpm = CellPotts(CellSpace(N,N), CellState([:Epithelial],[10],[1]), [AdhesionPenalty([0 30;30 30]),VolumePenalty([5])]);
 
 P = zeros(N,N)
 nodes = findall(isequal(1), cpm.space.nodeIDs[:])
@@ -246,7 +246,7 @@ using CellularPotts, Plots
 
 cpm = CellPotts(
     CellSpace(50, 50),
-    CellTable(:Epithelial, 300, 1),
+    CellState(:Epithelial, 300, 1),
     [AdhesionPenalty(fill(30,2,2)), VolumePenalty([5]), PerimeterPenalty([5])]
 )
 
