@@ -39,9 +39,9 @@ function CellDivision!(cpm::CellPotts, σ::Int)
 
 
     #Also need to record all of the updates
-    if cpm.record
+    if cpm.recordHistory
         for i in newCellNodeIDs
-            updateHist!(cpm, cpm.step.stepCounter, i, σnew, cpm.state.cellIDs[σnew])
+            updateHistory!(cpm, cpm.step.counter, i, σnew, cpm.state.cellIDs[σnew])
         end
     end
 

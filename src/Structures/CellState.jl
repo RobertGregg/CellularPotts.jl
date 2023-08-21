@@ -159,8 +159,7 @@ addcellproperty(df::CellState, propertyName::Symbol, propertyValue) = addcellpro
 
 function addcellproperty(df::CellState, propertyName::Symbol, cellPropertyDict::Dict{Symbol, T}) where T
 
-    U = Union{Missing, T}
-    newColumn = U[]
+    newColumn = Union{Missing, T}[]
 
     for cellName in df.names
         if !haskey(cellPropertyDict, cellName)

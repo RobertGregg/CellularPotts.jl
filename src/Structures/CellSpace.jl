@@ -90,10 +90,11 @@ end
 ####################################################
 # Generate graphs using graph products
 ####################################################
+#This honestly feels like witchcraft 
 
 #https://en.wikipedia.org/wiki/Strong_product_of_graphs
 #Note: It looks like Graphs.jl will eventually add this function
-strong_product(g::G, h::G) where G <: AbstractSimpleGraph = union(cartesian_product(g,h),tensor_product(g,h))
+strong_product(g, h) = union(cartesian_product(g,h), tensor_product(g,h))
 
 #https://en.wikipedia.org/wiki/King%27s_graph
 kingsGrid(dims; periodic=true) = mapfoldl(periodic ? cycle_graph : path_graph, strong_product, reverse(dims))
@@ -124,7 +125,7 @@ end
 ####################################################
 function CellSpace(locationMatrix::Matrix{T}; periodic=true, diagonal=false) where T<:Integer
 
-    space = CellSpace(size(locationMatrix); periodic , diagonal)
+    space = CellSpace(size(locationMatrix); periodic, diagonal)
 
     #For some reason rem_edge! wasn't removing all the edges
     for (i,val) in enumerate(locationMatrix)
@@ -146,10 +147,10 @@ end
 CellSpace(gridSize::T...; periodic=true, diagonal=false) where T<:Integer = CellSpace(gridSize; periodic, diagonal)
 
 #Needed for induced_subgraph (why?)
-# function CellSpace{T,C,N}(n::Integer=0) where {T<:Integer,C,N}
-#     fadjlist = [Vector{T}() for _ in one(T):n]
-#     return CellSpace{T,C,N}(0, fadjlist, (n,n), 0, true, zeros(T,n,n), zeros(T,n,n))
-# end
+function CellSpace{T,C,N}(n::Integer=0) where {T<:Integer,C,N}
+    fadjlist = [Vector{T}() for _ in one(T):n]
+    return CellSpace{T,C,N}(0, fadjlist, (n,n), true, zeros(T,n,n), zeros(T,n,n))
+end
 
 ####################################################
 # Misc functions

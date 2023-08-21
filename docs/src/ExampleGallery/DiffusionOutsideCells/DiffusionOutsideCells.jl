@@ -20,7 +20,7 @@ cpm = CellPotts(
     );
 
 # Record the model.
-cpm.record = true;
+cpm.recordHistory = true;
 
 
 # Because cell space is represented as a graph, we can use the `laplacian_matrix()` function from the Graphs.jl package to estimate the continuous Laplacian operator that describes diffusion (see these two wikipedia articles for more information: [Graph Laplacians](https://en.wikipedia.org/wiki/Discrete_Laplace_operator#Graph_Laplacians), [Laplacian matrix](https://en.wikipedia.org/wiki/Laplacian_matrix#Laplacian_matrix)). This graphical Laplacian matrix can be easily calculated as the difference between the degree matrix and the adjacency matrix. For our purposes, `laplacian_matrix()` generates a sparse $N^2 \times N^2$ matrix which we can multiply by our state vector to simulate diffusion. We also need to specify that our graph is bi-directional (i.e. undirected).
@@ -68,7 +68,7 @@ sol = solve(prob, Tsit5(), callback=cb);
 
 # ## Animating the Solution
 # As we move forward in time we see the species leave the cell and eventually degrade in the extracellular space.
-anim = @animate for t in range(1, cpm.step.stepCounter, step=10)
+anim = @animate for t in range(1, cpm.step.counter, step=10)
     
     currTime = @sprintf "Time: %.2f" t/timeScale
 

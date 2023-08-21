@@ -60,7 +60,7 @@ anim = @animate for t in 0:1000
 
     cellborders!(plotObject, cpm.space)
 
-    cellMovement!(plotObject,cpm)
+    cellmovement!(plotObject,cpm)
 
     ModelStep!(cpm)
 

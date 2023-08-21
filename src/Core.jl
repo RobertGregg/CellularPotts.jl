@@ -11,26 +11,25 @@ Requires three inputs:
  - `state` -- a table where rows are cells and columns are cell properties, generated using `CellState()`.
  - `penalties` -- a vector of penalties to append to the model.
 """
-mutable struct CellPotts{T<:Integer, C, N, V<:NamedTuple, U}
-    #TODO Create a little initial space/state struct
+mutable struct CellPotts{T<:Integer, C, N, S<:NamedTuple, U}
     initialSpace::CellSpace{T,C,N}
     space::CellSpace{T,C,N}
-    initialState::CellState{V}
-    state::CellState{V}
+    initialState::CellState{S}
+    state::CellState{S}
     penalties::Vector{U}
     step::MHStep{T}
-    fragment::Articulation
+    fragment::Articulation{T}
     temperature::Float64
     history::History{T,C,N}
     recordHistory::Bool
     checkArticulation::Bool
 
-    function CellPotts(space::CellSpace{T,C,N}, state::CellState{V}, penalties::Vector{P}) where {T,C,N,V,P}
+    function CellPotts(space::CellSpace{T,C,N}, state::CellState{S}, penalties::Vector{P}) where {T,C,N,S,P}
 
         #See https://github.com/JuliaLang/julia/pull/44131 for why Unions are used
         U = Union{typeof.(penalties)...}
 
-        cpm =  new{T,C,N,V,U}(
+        cpm =  new{T,C,N,S,U}(
             space,
             space,
             state,
@@ -78,27 +77,32 @@ countcelltypes(cpm::CellPotts) = countcelltypes(cpm.state)
 nodeIDs(cpm::CellPotts) = nodeIDs(cpm.space)
 nodeTypes(cpm::CellPotts) = nodeTypes(cpm.space)
 
+#Given a node, get all neighboring nodes that match the node's id
+cellneighbors(space,node) = Iterators.filter(n->space.nodeIDs[n]==space.nodeIDs[node], neighbors(space,node))
 
 ####################################################
 # Reading and Writing History
 ####################################################
-function updateHistory!(cpm::CellPotts)
+function updateHistory!(cpm, counter, node, id, type)
 
-    step = cpm.step
-    
-    #Node types are not saved in the step
-    nodeType = cpm.state.typeIDs[cpm.step.source.id]
-
-    push!(cpm.history.counter, step.counter)
-    push!(cpm.history.position, step.target.node)
-    push!(cpm.history.nodeID, step.source.id)
-    push!(cpm.history.nodeType, nodeType)
+    push!(cpm.history.counter, counter)
+    push!(cpm.history.position, node)
+    push!(cpm.history.nodeID, id)
+    push!(cpm.history.nodeType, type)
 
     return nothing
 end
 
+updateHistory!(cpm::CellPotts) = updateHistory!(
+    cpm, 
+    cpm.step.counter,
+    cpm.step.target.node,
+    cpm.step.source.id,
+    cpm.step.source.type)
+
 
 #Given the history, reconstruct the space at a given time step
+#TODO find a better way to loop through history with restarting every time
 function (cpm::CellPotts)(t::Integer)
 
     space = cpm.history.space

@@ -35,7 +35,7 @@ function plotcpm(
 
         cellborders!(plotObject, cpm.space)
 
-        cellMovement!(plotObject,cpm, colorMax)
+        cellmovement!(plotObject,cpm, colorMax)
     
     return plotObject
 end
@@ -87,9 +87,9 @@ function cellborders!(plotObject, space::CellSpace{T, C, 2}) where {T,C}
 end
 
 #TODO Need proper scale
-cellMovement!(plotObject, cpm) = cellMovement!(plotObject, cpm, 1)
+cellmovement!(plotObject, cpm) = cellmovement!(plotObject, cpm, 1)
 
-function cellMovement!(plotObject, cpm, colorMax)
+function cellmovement!(plotObject, cpm, colorMax)
 
     #Active cell movement
     migrationIndex = findfirst(x->x isa MigrationPenalty, cpm.penalties)
@@ -164,7 +164,7 @@ function recordCPM(
 
         cellborders!(plotObject, cpm.space)
 
-        cellMovement!(plotObject,cpm, colorMax)
+        cellmovement!(plotObject,cpm, colorMax)
 
         ModelStep!(cpm)
 

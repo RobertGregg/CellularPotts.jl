@@ -89,6 +89,7 @@ end
 include("Core.jl")
 include("CalculatePenalty.jl")
 include("InitializeCells.jl")
+include("Fragmentation.jl")
 include("MarkovStepper.jl")
 include("CellActions.jl")
 include("Visualization.jl")
@@ -116,6 +117,7 @@ export
       CellPotts,
       countcells,
       countcelltypes,
+      cellneighbors,
 #Penalties.jl
       addPenalty!,
       perimeterLocal,
@@ -134,8 +136,7 @@ export
        CellDeath!,
 #Visualization.jl
       recordCPM,
-      #TODO need consistant name capitalization 
       cellborders!,
-      cellMovement!,
+      cellmovement!,
       plotcpm
 end

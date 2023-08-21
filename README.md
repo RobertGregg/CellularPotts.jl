@@ -40,9 +40,9 @@ Also of note, **this package is still in development and is not currently recomm
 
 To create a basic Cellular Potts Model, you need to provide 3 pieces of information:
 
-1.  What space will the cells occupy?
+1. What space will the cells occupy?
 
-2.  What cells do you want to include in the model?
+2. What cells do you want to include in the model?
 
 3. What penalties do you want to add to encourage certain behaviors?
 
@@ -78,59 +78,16 @@ recordCPM("ReadMeExample.gif", cpm)
 
 <img title="ReadMeEaxmple" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/HelloWorld/HelloWorld.gif?raw=true">
 
-## Major Improvements
+## Improvements
 
-- [ ] Introduce more cell properties
-  
-  - [x] Division
-  - [x] Death
-  - [x] Active movement
-  - [x] Movement up gradients
+- [ ] `CellDivision!()` currently cannot update custom cell state properties
 
-- [x] Integrate hybrid modeling schemes
-  
-  - [x] ODE Modeling (intracellular)
-  
-  - [x] PDE Modeling (extracellular + intracellular)
-  
-  - Maybe use [Neural networks](https://github.com/SciML/NeuralPDE.jl) to speed up the PDE computation?
-  
-  - Stochastic jumps?
-
-- [x] Create an Examples folder
-
-- [x] How to save output? (created separate structure to log history)
-  
-  - Save the data into a dictionary of dataframes?
-  - Needs to be made more efficient
-
-- [x] Implement different ways to initialize cell locations
-  
-  - [x] Image input
-  - [x] specify locations with property
-
-- [x] Allow cells to have different properties (used `NamedTuple`)
+- [ ] Keyword options for cell state (to add cell properties)
 
 - [ ] Use automatic differentiation to calculate [cellular forces](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007459) from the Hamiltonian
 
-- [x] Add a correction factor to adhesion to deal with boundaries.
+- [ ] Create more unit tests for reproducibility
 
-- [ ] Create unit tests for reproducibility
-
-## Minor Improvements
-
-- [x] Allow user defined parameters to cells (used `NamedTuple`)
-  - Not sure how users will integrate these parameters into the model...
-- [x] Allow cells of the same type to be different sizes (?)
-  - Just specify different desired volumes
-- [x] Could get a big speed improvement if you don't loop through all cells to update articulation points
-  - Need to be clever about updating articulation points locally (is this possible?)
-  - rewrote [Tarjan's algoirthm](https://en.wikipedia.org/wiki/Biconnected_component) to find articulation points which is O(V+E)
-  - Is only checked with a successful update.
-- [x] Adding cell borders is slow for large spaces
-  - fixed by using NA
-- [x] Be more consistent with typing (e.g. `AbstractVector` vs `Vector`) without creating type instability
-- [x] Do we even need to track to total energy? (nope!)
 - [ ] Use SVectors to store graph edges? 🤔
   - Only useful for spaces where all nodes are identical (e.g., periodic boundaries)
 - [ ] Add more tests and CI badge

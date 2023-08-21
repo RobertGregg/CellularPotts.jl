@@ -29,7 +29,7 @@ function addPenalty!(cpm::CellPotts, AP::AdhesionPenalty, σᵢ::T) where T<:Int
         #Add penality assuming missing neighbors are :Medium
         targetNeighborCount = length(cpm.step.target.neighbors)
 
-        adhesion += AP.J[τᵢ, 0] * (1-δ(σᵢ, 0)) * (maxNeighborCount(cpm) - targetNeighborCount)
+        adhesion += AP.J[τᵢ, 0] * (1-δ(σᵢ, 0)) * (maxNeighborCount(cpm.space) - targetNeighborCount)
     end
 
     return adhesion
@@ -177,7 +177,10 @@ This change will become moot when chemotaxis is introduced. Gradient fields will
 
 function addPenalty!(cpm::CellPotts, MP::MigrationPenalty)
 
-    return addPenalty!(cpm, MP, cpm.step.target.node, cpm.step.target.id) - addPenalty!(cpm, MP, cpm.step.source.node, cpm.step.source.id)
+    source = cpm.step.source
+    target = cpm.step.target
+
+    return addPenalty!(cpm, MP, target.node, target.id) - addPenalty!(cpm, MP, source.node, source.id)
 end
 
 
@@ -187,7 +190,7 @@ function addPenalty!(cpm::CellPotts, MP::MigrationPenalty, node::T, σ::T) where
     average = MP.nodeMemory[node]
     nodeCount = 1
 
-    for neighbor in neighbors(cpm.space,node)
+    for neighbor in neighbors(cpm.space, node)
         neighborMemory = MP.nodeMemory[neighbor]
 
         if σ == cpm.space.nodeIDs[neighbor]

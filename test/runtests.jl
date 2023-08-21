@@ -11,7 +11,7 @@ using Graphs
 ####################################################
 
 @testset "Spaces or graphs, who's to say?" begin
-    g = CellSpace(3,3; isPeriodic=false, neighborhood=:vonNeumann)
+    g = CellSpace(3,3; periodic=false, diagonal=false)
 
     @test nv(g) == 9
     @test ne(g) == 12
@@ -19,16 +19,20 @@ using Graphs
 end
 
 @testset "Periodic grids" begin
-    g1 = CellSpace(3,3; isPeriodic=false)
-    g2 = CellSpace(3,3; isPeriodic=true)
+    g1 = CellSpace(3,3; periodic=false, diagonal=false)
+    g2 = CellSpace(3,3; periodic=true, diagonal=false)
+    g3 = CellSpace(3,3; periodic=false, diagonal=true)
+    g4 = CellSpace(3,3; periodic=true, diagonal=true)
 
-    @test ne(g1) == 20
-    @test ne(g2) == 36
+    @test ne(g1) == 12
+    @test ne(g2) == 18
+    @test ne(g3) == 20
+    @test ne(g4) == 36
 end
 
 @testset "Neighborhoods" begin
-    g1 = CellSpace(3,3; neighborhood=:vonNeumann)
-    g2 = CellSpace(3,3; neighborhood=:moore)
+    g1 = CellSpace(3,3; diagonal=false)
+    g2 = CellSpace(3,3; diagonal=true)
 
     @test ne(g1) == 18
     @test ne(g2) == 36
@@ -81,4 +85,83 @@ end
 @testset "Penalty tests" begin
 
     @test_throws ErrorException("J needs to be symmetric") AdhesionPenalty([1 2; 3 4])
+end
+
+
+####################################################
+# Articulation Point Detector
+####################################################
+
+@testset "General Fragment Test" begin
+    space = CellSpace(5,5; periodic=true, diagonal=true)
+
+    initialCellState = CellState(:Epithelial, 8, 1)
+
+    penalties = [AdhesionPenalty([0 20; 20 0]), VolumePenalty([5])]
+
+    cpm = CellPotts(space, initialCellState, penalties)
+
+    #Rework cpm to have an articulation point
+    cpm.space.nodeIDs .= 0
+    pos = [[2,2], [2,3], [3,2], [3,3], [3,4], [4,3], [4,4], [5,5]]
+    
+    for (i,j) in pos
+        cpm.space.nodeIDs[i,j] = 1
+        cpm.space.nodeTypes[i,j] = 1
+    end
+
+    cpm.step.source.node = 24
+    cpm.step.source.id = 0
+    cpm.step.source.type = 0
+    cpm.step.source.neighbors = neighbors(cpm.space,24)
+
+    cpm.step.target.node = 19
+    cpm.step.target.id = 1
+    cpm.step.target.type = 1
+    cpm.step.target.neighbors = neighbors(cpm.space,19)
+
+    @test isfragmented(cpm) == true
+end
+
+
+@testset "Euler Characteristic" begin
+    space = CellSpace(5,5; periodic=true, diagonal=false)
+
+    initialCellState = CellState(:Epithelial, 8, 1)
+
+    penalties = [AdhesionPenalty([0 20; 20 0]), VolumePenalty([5])]
+
+    cpm = CellPotts(space, initialCellState, penalties)
+
+    #Rework cpm to have an articulation point
+    cpm.space.nodeIDs .= 0
+    pos = [[2,2], [2,3], [3,2], [3,3], [3,4], [4,3], [4,4], [5,4]]
+    
+    for (i,j) in pos
+        cpm.space.nodeIDs[i,j] = 1
+        cpm.space.nodeTypes[i,j] = 1
+    end
+
+    #Test Articulation Point
+    cpm.step.source.node = 24
+    cpm.step.source.id = 0
+    cpm.step.source.type = 0
+    cpm.step.source.neighbors = neighbors(cpm.space,24)
+
+    cpm.step.target.node = 19
+    cpm.step.target.id = 1
+    cpm.step.target.type = 1
+    cpm.step.target.neighbors = neighbors(cpm.space,19)
+
+    @test isfragmented(cpm) == true
+
+    #Test not an articulation point
+    cpm.step.source.node = 11
+    cpm.step.source.neighbors = neighbors(cpm.space,11)
+
+    cpm.step.target.node = 12
+    cpm.step.target.neighbors = neighbors(cpm.space,12)
+
+    @test isfragmented(cpm) == false
+
 end

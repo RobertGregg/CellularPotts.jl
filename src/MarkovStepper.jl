@@ -71,11 +71,6 @@ function MHStep!(cpm::CellPotts)
     if rand() < acceptRatio #If the acceptance ratio is large enough
 
         #Moved into accept loop b/c computationally intensive
-        #Test if the target cell is an articulation point
-        # if cpm.checkCellFragment && cpm.step.targetNode ∈ cpm.getArticulation(cpm.space, cpm.step.targetCellID)
-        #     return nothing
-        # end
-
         if cpm.checkArticulation && isfragmented(cpm)
             return nothing
         end
@@ -143,7 +138,7 @@ end
 function updateMHStep!(cpm::CellPotts, PP::PerimeterPenalty)
     #Update cell perimeters
     cpm.state.perimeters[cpm.step.source.id] += PP.Δpᵢ
-    cpm.state.perimeters[cpm.step.targetCellID] -= PP.Δpⱼ
+    cpm.state.perimeters[cpm.step.target.id] -= PP.Δpⱼ
 
     return nothing
 end

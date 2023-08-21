@@ -38,7 +38,7 @@ cpm = CellPotts(space, initialCellState, penalties);
 # ## DifferentialEquations.jl setup
 
 # Currently by default CellularPotts models to not record states as they change overtime to increase computional speed. To have the model record past states we can toggle the appropriate keyword.
-cpm.record = true;
+cpm.recordHistory = true;
 
 # As ProteinX evolves over time for each cell, the CPM model also needs to step forward in time to try and minimize its energy. To facilitate this, we can use the callback feature from DifferentialEquations.jl. Here specifically we use the `PeriodicCallback` function which will stop the ODE solve at regular time intervals and run some other function for us (Here it will be the `ModelStep!` function). 
 
@@ -105,7 +105,7 @@ plot(ts,map((x)->x[2],sol.(ts)),lw=3, ylabel="Amount of X in Cell 1",xlabel="Tim
 # Finally, we can create an animation of the CPM to see the cells dividing. I've dropped the first few frames because the first cell takes a while to divide.
 proteinXConc = zeros(200,200)
 
-anim = @animate for t in Iterators.drop(1:cpm.step.stepCounter,5*timeScale)
+anim = @animate for t in Iterators.drop(1:cpm.step.counter,5*timeScale)
     currTime = @sprintf "Time: %.2f" t/timeScale
 
     space = cpm(t)
