@@ -1,219 +1,3 @@
-using OrdinaryDiffEq
-
-function fish_stock!(ds, s, p, t)
-    max_population, h = p
-    ds[1] = s[1] * (1 - (s[1] / max_population)) - h
-end
-
-stock = 400.0
-max_population = 500.0
-min_threshold = 60.0
-
-
-prob = ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
-integrator = init(prob, Tsit5(); advance_to_tstop = true)
-
-
-
-# We step 364 days with this call.
-step!(integrator, 30.0, true)
-
-
-# Only allow fishing if stocks are high enough
-integrator.p[2] = integrator.u[1] > min_threshold ? rand(300:500) : 0.0
-# Notify the integrator that conditions may be altered
-u_modified!(integrator, true)
-# Then apply our catch modifier
-step!(integrator, 1.0, true)
-# Store yearly stock in the model for plotting
-stockHistory = integrator.u[1]
-# And reset for the next year
-integrator.p[2] = 0.0
-u_modified!(integrator, true)
-
-#############################################
-
-using OrdinaryDiffEq
-
-
-
-function cellCycle!(du, u, p, t)
-    α₁, α₂, α₃, β₁, β₂, β₃, K₁, K₂, K₃, n₁, n₂, n₃ = p
-
-    CDK1, PIK1, APC = u
-
-    du[1] = dCDK1 = α₁ - β₁ * CDK1 * APC^n₁ / (K₁^n₁ + APC^n₁)
-    du[2] = dPIK1 = α₂*(1-PIK1) * CDK1^n₂ / (K₂^n₂ + CDK1^n₂) - β₂ * PIK1
-    du[3] = dAPC = α₃*(1-APC) * PIK1^n₃ / (K₃^n₃ + PIK1^n₃) - β₃ * APC
-
-    return nothing
-end
-
-u0 = zeros(3)
-p = [0.1, 3.0, 3.0,
-     3.0, 1.0, 1.0,
-     0.5, 0.5, 0.5,
-     8.0, 8.0, 8.0]
-t0 = (0.0, 25.0)
-
-
-prob = ODEProblem(cellCycle!, u0, t0, p)
-
-sol = solve(prob, Tsit5())
-
-#############################################
-
-#= 
-Some chemical will reside in a somewhat circular boundary.
-Diffusion in and out of the boundary is slow compared to free diffusion
-Two reactions for this chemical:
-    x --> 2x
-    x --> ∅ 
-=#
-using DifferentialEquations, Graphs, Plots, Printf
-
-
-dims = (30,30)
-numberOfSpecies = 1
-numberOfNodes = prod(dims) # number of sites
-grid = Graphs.grid(dims)
-
-center = LinearIndices(dims)[dims .÷2...]
-starting_state = zeros(Int,numberOfSpecies, numberOfNodes)
-starting_state[center] = 25
-
-tspan = (0.0, 10.0)
-rates = [2.0, 1.0] # x generation is slower so everthing will be removed eventually
-
-prob = DiscreteProblem(starting_state, tspan, rates)
-
-reactstoch = [[1 => 1],[1 => 1]]
-netstoch = [[1 => 1],[1 => -1]]
-majumps = MassActionJump(rates, reactstoch, netstoch)
-
-hopConstants = ones(numberOfSpecies, numberOfNodes)
-#boundary is harder to hop over
-hopConstants[gdistances(grid, center) .== 6] .= -1.0
-
-
-alg = DirectCRDirect()
-jump_prob = JumpProblem(prob,
-                        alg,
-                        majumps;
-                        hopping_constants=hopConstants,
-                        spatial_system = grid,
-                        save_positions=(true, false))
-
-sol = solve(jump_prob, SSAStepper())
-
-
-#maxium value obtained
-maxu = maximum(maximum.(sol.u))
-
-anim = @animate for t in range(tspan..., 300)
-    currTime = @sprintf "Time: %.2f" t
-    heatmap(
-        reshape(sol(t), dims),
-        axis=nothing,
-       #clims = (0,maxu),
-        framestyle = :box,
-        title=currTime)
-end
-
-gif(anim, "test.gif", fps = 60)
-
-
-
-#############################################
-#Graph diffusion
-
-
-#######################
-using Graphs, LinearAlgebra, SparseArrays
-using CellularPotts
-using Plots
-
-
-const N = 200
-const ΔP = zeros(N,N)
-
-cpm = CellPotts(CellSpace(N,N), CellTable([:Epithelial],[500],[10]), [AdhesionPenalty([0 30;30 30]),VolumePenalty([5])]);
-
-#Doing this because we're not using DifferentialEquations
-P = zeros(N,N)
-for i in eachindex(cpm.space.nodeIDs)
-    if !iszero(cpm.space.nodeIDs[i])
-        P[i] = rand()
-    end
-end
-P0 = copy(P)
-
-heatmap(P0)
-
-#Updates the laplacian 
-function ∇²(Δu,u,space)
-
-    Δx² = nv(space) #Grid spacing
-    D=1.0 #Diffusion coefficient
-    h = D/Δx²
-
-    for vertex in vertices(space)
-        if iszero(space.nodeIDs[vertex])
-            continue
-        end
-
-        for neighbor in neighbors(space, vertex)
-            if space.nodeIDs[vertex] == space.nodeIDs[neighbor]
-                @inbounds Δu[vertex] += u[neighbor] - u[vertex]
-            end
-        end
-    end
-    
-
-    Δu .*= h
-
-
-    return nothing
-end
-
-for i=1:10000
-    ∇²(ΔP,P,cpm.space)
-    P .+= ΔP
-end
-
-heatmap(P)
-
-N = 10
-
-cpm = CellPotts(CellSpace(N,N), CellTable([:Epithelial],[10],[1]), [AdhesionPenalty([0 30;30 30]),VolumePenalty([5])]);
-
-P = zeros(N,N)
-nodes = findall(isequal(1), cpm.space.nodeIDs[:])
-P[nodes] = rand(length(nodes))
-
-P0 = copy(P)
-
-laplaceCell = laplacian_matrix(cpm.space[nodes], dir=:both)/N^2
-
-for i=1:10000
-    P[nodes] -= laplaceCell*P[nodes]
-end
-
-
-heatmap(P0)
-heatmap(P)
-
-
-l = laplacian_matrix(cpm.space, dir=:both)
-P[:] = l * P0[:]
-
-Δu = zeros(N,N);
-∇²(Δu,u,cpm.space)
-
-
-Pnew = P0 + Δu
-
-
 #############################################
 # Automatic differentiation
 #############################################
@@ -246,11 +30,11 @@ using CellularPotts, Plots
 
 cpm = CellPotts(
     CellSpace(50, 50),
-    CellTable(:Epithelial, 300, 1),
+    CellState(:Epithelial, 300, 1),
     [AdhesionPenalty(fill(30,2,2)), VolumePenalty([5]), PerimeterPenalty([5])]
 )
 
-cpm.record = true
+cpm.recordHistory = true
 
 for i=1:100
     ModelStep!(cpm)
@@ -286,3 +70,133 @@ cellborders!(plt, cpm.space)
 
 recordCPM("OnPatrol.gif", cpm;
     property = :nodeTypes, frameskip=10, c=:RdBu_3)
+
+
+#############################################
+# Parallelization
+#############################################
+
+
+####################################################
+# Metropolis–Hasting Step
+####################################################
+
+function MHStep_parallel!(cpm::CellPotts)
+
+    #Reset the success flag
+    cpm.step.success = false
+
+    source = cpm.step.source
+    target = cpm.step.target
+
+    #Pick a random location on the graph
+    source.node = rand(1:nv(cpm.space))
+    #What cell does it belong to?
+    source.id = cpm.space.nodeIDs[source.node]
+    source.type = cpm.space.nodeTypes[source.node]
+
+    #Get all cell IDs neighboring this Node
+    source.neighbors = neighbors(cpm.space, source.node)
+
+    #Some space locations are forbidden (see TightSpaces example) 
+    if isempty(source.neighbors)
+        return false
+    end
+
+    #Choose a target
+    target.node = rand(source.neighbors)
+    target.id = cpm.space.nodeIDs[target.node]
+    target.type = cpm.space.nodeTypes[target.node]
+    
+    #Some checks before attempting a flip
+
+    #target and source same cell? 
+    if target.id == source.id
+        return false
+    end
+
+    #sourceCell surrounded by only sourceCells?
+    if all(isequal(source.id, cpm.space.nodeIDs[n]) for n in source.neighbors)
+        return false
+    end
+
+    
+    #Get all cell nodes neighboring target node
+    target.neighbors = neighbors(cpm.space, target.node)
+    
+    #Calculate the change in energy when target node is modified
+    ΔH =  calculateΔH(cpm)
+    
+    
+    #Calculate an acceptance ratio
+    acceptRatio = min(1.0,exp(-ΔH/cpm.temperature))
+    
+    
+    if rand() < acceptRatio #If the acceptance ratio is large enough
+
+        #Moved into accept loop b/c computationally intensive
+        if cpm.checkArticulation && isfragmented(cpm)
+            return false
+        end
+
+        return true
+    end
+
+    return false
+end
+
+
+####################################################
+# Model Step
+####################################################
+
+function ModelStep_parallel!(cpm::CellPotts)
+
+    modelLock = Threads.SpinLock()
+    #Repeat MHStep! for each pixel in the model
+    Threads.@threads for _ in 1:nv(cpm.space)
+        
+        if MHStep_parallel!(cpm)
+            Threads.lock(modelLock)
+            if cpm.recordHistory
+                updateHistory!(cpm)
+            end
+
+            #Cell IDs
+            cpm.space.nodeIDs[target.node] = source.id
+            cpm.space.nodeTypes[target.node] = source.type
+
+
+            #---Cell properties---
+            for i in eachindex(cpm.penalties)
+                updateMHStep!(cpm, cpm.penalties[i])
+            end
+
+            #Finally update the success flag 
+            cpm.step.success = true
+            Threads.unlock(modelLock)
+        end
+    end
+
+    #Increment the step counter
+    cpm.step.counter += 1
+
+    #Model updates after MCS
+    for i in eachindex(cpm.penalties)
+        updateModelStep!(cpm, cpm.penalties[i])
+    end
+
+    return nothing
+end
+
+
+function f()
+    l = Threads.SpinLock()
+    x = 0
+    Threads.@threads for i in 1:10^7
+        Threads.lock(l)
+        x += 1  # this block is executed only in one thread
+        Threads.unlock(l)
+    end
+    return x
+end

@@ -23,7 +23,7 @@ space = CellSpace(xdim, ydim, isPeriodic=false)
 Initialize 10 cells randomly positioned.
 
 ````julia
-initialCellState = CellTable(:TCells, 200, 10)
+initialCellState = CellState(:TCells, 200, 10)
 ````
 
 ````

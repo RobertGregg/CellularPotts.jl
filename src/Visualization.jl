@@ -1,8 +1,52 @@
+function plotcpm(
+    cpm::CellPotts{T, C, 2, V, U};
+    c = cgrad(:tol_light, rev=true),
+    figureSize = (600,600),
+    property = :nodeIDs,
+    legend=:none,
+    kwargs...
+    ) where {T, C, V, U}
+
+    (rows,columns) = size(cpm.space)
+
+    #TODO How to color by any property?
+    if property == :nodeIDs
+        colorMax = countcells(cpm)
+    elseif property == :nodeTypes
+        colorMax = countcelltypes(cpm)
+    else
+        colorMax = Inf
+    end
+
+    plotObject = heatmap(
+            getproperty(cpm.space, property)',
+            c = c,
+            grid=false,
+            axis=nothing,
+            legend=legend,
+            framestyle=:box,
+            aspect_ratio=:equal,
+            size = figureSize,
+            xlims=(0.5, rows+0.5),
+            ylims=(0.5, columns+0.5),
+            clim=(0,colorMax),
+            kwargs...
+            )
+
+        cellborders!(plotObject, cpm.space)
+
+        cellmovement!(plotObject,cpm, colorMax)
+    
+    return plotObject
+end
+
+
+
 """
     cellborders!(plotObject, space::CellSpace)
 Add line borders to differentiate cells in a plot.
 """
-function cellborders!(plotObject, space::CellSpace{2, T}) where T
+function cellborders!(plotObject, space::CellSpace{T, C, 2}) where {T,C}
 
     (row,col) = size(space)
 
@@ -43,9 +87,9 @@ function cellborders!(plotObject, space::CellSpace{2, T}) where T
 end
 
 #TODO Need proper scale
-cellMovement!(plotObject, cpm) = cellMovement!(plotObject, cpm, 1)
+cellmovement!(plotObject, cpm) = cellmovement!(plotObject, cpm, 1)
 
-function cellMovement!(plotObject, cpm, colorMax)
+function cellmovement!(plotObject, cpm, colorMax)
 
     #Active cell movement
     migrationIndex = findfirst(x->x isa MigrationPenalty, cpm.penalties)
@@ -80,7 +124,7 @@ Generates an animation of the CPM model.
 """
 function recordCPM(
     file::String,
-    cpm::CellPotts{2, T, V, U};
+    cpm::CellPotts{T, C, 2, V, U};
     timestamps = 0:3000,
     c = cgrad(:tol_light, rev=true),
     figureSize = (600,600),
@@ -88,7 +132,7 @@ function recordCPM(
     legend=:none,
     framerate=30,
     frameskip = 1,
-    kwargs...) where {T,V,U}
+    kwargs...) where {T, C, V, U}
 
     (rows,columns) = size(cpm.space)
 
@@ -120,7 +164,7 @@ function recordCPM(
 
         cellborders!(plotObject, cpm.space)
 
-        cellMovement!(plotObject,cpm, colorMax)
+        cellmovement!(plotObject,cpm, colorMax)
 
         ModelStep!(cpm)
 
@@ -159,12 +203,12 @@ end
 
 function recordCPM(
     file::String,
-    cpm::CellPotts{3, T, V, U},
+    cpm::CellPotts{T, C, 3, V, U},
     timestamps = 0:3000,
     c = cgrad(:tol_light, rev=true);
     legend=:none,
     framerate=30,
-    kwargs...) where {T,V,U}
+    kwargs...) where {T, C, V, U}
 
 
     anim = @animate for t in timestamps

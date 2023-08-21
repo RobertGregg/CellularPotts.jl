@@ -28,7 +28,7 @@ end
 
 function positionCells!(cpm::CellPotts)
 
-    #Convert positions to linear LinearIndices
+    #Convert positions to LinearIndices
     centers = [LinearIndices(size(cpm.space))[cpm.state.positions[i]...] for i in 1:countcells(cpm)]
 
     cellMembership = growcells(cpm, centers)
