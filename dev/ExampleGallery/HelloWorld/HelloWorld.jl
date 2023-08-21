@@ -6,15 +6,15 @@
 
 using CellularPotts
 
-space = CellSpace(50,50; isPeriodic=true, neighborhood=:moore)
+space = CellSpace(50,50; periodic=true, diagonal=true)
 
-# Here we create a 50 by 50 square grid with periodic boundary conditions where grid locations are connected to their 8 closest neighbors (4-cell neighborhoods are also available using the `:vonNeumann` option). By default, `isPeriodic` is set to true and `neighborhood` uses the 8 closest neighbors.
+# Here we create a 50 by 50 square grid with periodic boundary conditions where grid locations are connected to their 8 closest neighbors, also called Moore neighbors (4-cell neighborhoods that exclude diagonal neighbors are called Von Neumann). By default, `periodic` is set to true and `diagonal` is set to false.
 
 # Next we need to initialize a table of cell information to put into this space.
 
-initialCellState = CellTable(:Epithelial, 500, 1)
+initialCellState = CellState(:Epithelial, 500, 1)
 
-# The `CellTable()` function populates a table detailing the current cell state. The 3 required inputs are:
+# The `CellState()` function populates a table detailing the current cell state. The 3 required inputs are:
 
 # 1. A list of cell types    
 # 2. A list of desired cell sizes (volumes)
@@ -22,7 +22,7 @@ initialCellState = CellTable(:Epithelial, 500, 1)
     
 # The inputs are simple in this case. We want one cell type called "Epithelial" with a size of 500 pixels and we want only one of them.
     
-# The table `CellTable()` generates has each row representing a cell and each column listing a property given to that cell. Other information, like the column's type, is also provided.
+# The table `CellState()` generates has each row representing a cell and each column listing a property given to that cell. Other information, like the column's type, is also provided.
     
 # The first row will always show properties for "Medium", the name given to grid locations without a cell type. Most values related to Medium are either default or missing altogether. Here we see our one epithelial cell has a desired volume of 500 and perimeter of 264 which is the minimal perimeter penalty calculated from the desired volume. 
     
@@ -51,7 +51,7 @@ cpm = CellPotts(space, initialCellState, penalties)
 # Calling this object gives a quick summary of the model's current state. Note that a "temperature" of 20 is given to the model by default. Higher temperatures allow the model to more likely accept changes that increase the overall penalty (e.g. cells could deviate further from their desired volume). The model object also tracks how many time steps have been performed. 
 
 # !!! note 
-#     Because we added the `:positions` property to our CellTable, the CellPotts initializer placed the cells in the grid centered at those positions. If we did not specify a :positions property, cells would be randomly placed in the space.
+#     Because we added the `:positions` property to our CellState, the CellPotts initializer placed the cells in the grid centered at those positions. If we did not specify a :positions property, cells would be randomly placed in the space.
 
 # Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`
 

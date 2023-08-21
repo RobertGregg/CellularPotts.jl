@@ -25,7 +25,7 @@ const ΔX = zeros(N,N);
 # The `CellPotts()` model requires three inputs (space, cell table, and penalties). Here we create an N×N space with 1 500 pixel cell that has penalities for adhesion and volume. Further to the HelloWorld example for more explanation. 
 cpm = CellPotts(
     CellSpace(N,N), 
-    addcellproperty(CellTable(:Epithelial, 500, 1), :positions, [(N,N) .÷ 2]), #Need to add keyword options to CellTable...
+    addcellproperty(CellState(:Epithelial, 500, 1), :positions, [(N,N) .÷ 2]), #Need to add keyword options to CellState...
     [AdhesionPenalty([0 30; 30 30]), VolumePenalty([5])]
     );
 
@@ -52,7 +52,7 @@ function cpmUpdate!(integrator, cpm)
             end
            
             #Extract the target cell ID
-            targetCellID = cpm.step.targetCellID
+            targetCellID = cpm.step.target.id
 
             #Redistribute the lost material into the target cell (skip if target is not a cell)
             if !iszero(targetCellID)
@@ -66,21 +66,21 @@ function cpmUpdate!(integrator, cpm)
                 totalX = sum(X[targetNodes])
 
                 #Ignore if the total is zero, otherwise scale each value in the cell up to account for the loss 
-                R[targetNodes] .*= iszero(totalR) ? 1.0 : 1.0 + R[cpm.step.targetNode]/totalR
-                P[targetNodes] .*= iszero(totalP) ? 1.0 : 1.0 + P[cpm.step.targetNode]/totalP
-                X[targetNodes] .*= iszero(totalX) ? 1.0 : 1.0 + X[cpm.step.targetNode]/totalX
+                R[targetNodes] .*= iszero(totalR) ? 1.0 : 1.0 + R[cpm.step.target.node]/totalR
+                P[targetNodes] .*= iszero(totalP) ? 1.0 : 1.0 + P[cpm.step.target.node]/totalP
+                X[targetNodes] .*= iszero(totalX) ? 1.0 : 1.0 + X[cpm.step.target.node]/totalX
             end
 
             #Extract the source cell ID
-            sourceCellID = cpm.step.sourceCellID
+            sourceCellID = cpm.step.source.id
 
             #Redistribute the gained material into the source cell (skip if source is not a cell)
             if !iszero(sourceCellID)
 
                 #Copy over the value from the source to avoid artificial diffusion gradients 
-                R[cpm.step.targetNode] = R[cpm.step.sourceNode]
-                P[cpm.step.targetNode] = P[cpm.step.sourceNode]
-                X[cpm.step.targetNode] = X[cpm.step.sourceNode]
+                R[cpm.step.target.node] = R[cpm.step.source.node]
+                P[cpm.step.target.node] = P[cpm.step.source.node]
+                X[cpm.step.target.node] = X[cpm.step.source.node]
 
                 #Find all the current locations for the source cell
                 sourceNodes = findall(isequal(sourceCellID), cpm.space.nodeIDs)
@@ -91,21 +91,21 @@ function cpmUpdate!(integrator, cpm)
                 totalX = sum(X[sourceNodes])
                 
                 #Redistribute to account for the added in the source cell 
-                R[sourceNodes] .*= iszero(totalR) ? 1.0 : 1.0 - R[cpm.step.targetNode]/totalR
-                P[sourceNodes] .*= iszero(totalP) ? 1.0 : 1.0 - P[cpm.step.targetNode]/totalP
-                X[sourceNodes] .*= iszero(totalX) ? 1.0 : 1.0 - X[cpm.step.targetNode]/totalX
+                R[sourceNodes] .*= iszero(totalR) ? 1.0 : 1.0 - R[cpm.step.target.node]/totalR
+                P[sourceNodes] .*= iszero(totalP) ? 1.0 : 1.0 - P[cpm.step.target.node]/totalP
+                X[sourceNodes] .*= iszero(totalX) ? 1.0 : 1.0 - X[cpm.step.target.node]/totalX
 
             else
                 #If the source was not a cell, remove the value to conserve mass
-                R[cpm.step.targetNode] = 0.0
-                P[cpm.step.targetNode] = 0.0
-                X[cpm.step.targetNode] = 0.0
+                R[cpm.step.target.node] = 0.0
+                P[cpm.step.target.node] = 0.0
+                X[cpm.step.target.node] = 0.0
             end
         end
     end
 
     #Increment the step counter
-    cpm.step.stepCounter += 1
+    cpm.step.counter += 1
 
     return nothing
 end;
@@ -132,7 +132,7 @@ function ∇²(Δu,u,space)
     #Loop through vertices skipping any not apart of a cell
     for vertex in vertices(space)
 
-        #If the nodeID is zero, then not cell is present
+        #If the nodeID is zero, then no cell is present
         if iszero(space.nodeIDs[vertex])
             continue
         end

@@ -6,9 +6,9 @@
 using CellularPotts
 space = CellSpace(200,200)
 
-# Initialize a new `CellTable` with 75 epithelial cells and 5 T-Cells
+# Initialize a new `CellState` with 75 epithelial cells and 5 T-Cells
 
-initialCellState = CellTable(
+initialCellState = CellState(
     [:Epithelial, :TCell],
     [250, 200],
     [160, 10]);
@@ -17,11 +17,11 @@ initialCellState = CellTable(
 
 penalties = [
     AdhesionPenalty([30 30 30;
-                    30 30 30
-                    30 30 50]),
+                    30 20 30
+                    30 30 40]),
     VolumePenalty([30, 30]),
     PerimeterPenalty([0, 5]),
-    MigrationPenalty(50, [0, 100], size(space))
+    MigrationPenalty(75, [0, 100], size(space))
     ]
 
 # Create a new `CellPotts` model.
