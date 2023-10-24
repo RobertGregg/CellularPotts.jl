@@ -164,3 +164,17 @@ end
     @test isfragmented(cpm) == false
 
 end
+
+@testset "Run a Model" begin
+
+    penalties = 
+
+    cpm = CellPotts(
+        CellSpace(10,10),
+        CellState([:Epithelial, :TCell, :BCell], [5, 10, 10], [1, 1, 1]),
+        [AdhesionPenalty(ones(4,4)), VolumePenalty([5,5,5])])
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter == 1
+end
