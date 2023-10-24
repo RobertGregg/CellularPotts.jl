@@ -3,7 +3,7 @@
 [docs-img]: https://img.shields.io/badge/docs-dev-blue.svg
 [docs-url]: https://robertgregg.github.io/CellularPotts.jl/dev/
 
-[![][docs-img]][docs-url]
+[![][docs-img]][docs-url] [![codecov](https://codecov.io/gh/RobertGregg/CellularPotts.jl/graph/badge.svg?token=D3GKFH900T)](https://codecov.io/gh/RobertGregg/CellularPotts.jl)
 
 **CellularPotts.jl** is a Julia package designed to simulate behaviors observed in biological cells. These behaviors can be as simple as cell adhesion, or as complex as entire multi-scale models. Users of this package can create 2D and 3D environments with any number of cell types, sizes, and behaviors. Simulations can be recorded and visualized as animations with the help of the Plots.jl package. The goals of this package are to create a flexible coding environment to explore how cell behaviors can coalesce into complex dynamics while still maintaining high performance. Compared to other excellent software for Cellular Potts modeling (e.g., [Morpheus](https://morpheus.gitlab.io/), [Artistoo](https://artistoo.net/), [CompuCell3D](https://compucell3d.org/)), CellularPotts.jl is unique in its approach for a few reasons:
 
@@ -58,9 +58,9 @@ space = CellSpace(50,50; isPeriodic=true, neighborhood=:moore)
 
 #Describe the cells in the model
 initialCellState = CellState(
-    [:Epithelial], #names
-    [500],         #sizes
-    [1])           #counts
+    :Epithelial, #names
+    500,         #sizes
+    1)           #counts
 
 #Add penalties to the model
 penalties = [
