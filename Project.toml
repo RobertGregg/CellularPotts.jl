@@ -1,7 +1,7 @@
 name = "CellularPotts"
 uuid = "11b7dee7-cd95-48a5-a457-717aae94d0bd"
 authors = ["Robert <robwgregg@gmail.com> and contributors"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
@@ -29,7 +29,7 @@ ColorSchemes = "3"
 Colors = "0.12"
 DataFrames = "1"
 DifferentialEquations = "7"
-Documenter = "0.27"
+Documenter = "^0"
 Graphs = "1"
 Literate = "2"
 Metis = "1"
@@ -37,7 +37,7 @@ OffsetArrays = "1"
 Plots = "1"
 PrettyTables = "2"
 Revise = "3"
-StatsBase = "0.33"
+StatsBase = "^0"
 Tables = "1"
 julia = "1"
 
