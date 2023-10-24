@@ -86,8 +86,12 @@ recordCPM("ReadMeExample.gif", cpm)
 
 - [ ] Use automatic differentiation to calculate [cellular forces](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007459) from the Hamiltonian
 
-- [ ] Create more unit tests for reproducibility
+- [ ] Create more unit tests for reproducibility (low code coverage)
 
 - [ ] Use SVectors to store graph edges? 🤔
+  
   - Only useful for spaces where all nodes are identical (e.g., periodic boundaries)
-- [ ] Add more tests and CI badge
+
+- [x] Add CI and CodeCov badge
+
+- [ ] Reduce heavy package dependencies using package extensions
