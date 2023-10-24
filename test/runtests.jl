@@ -2,7 +2,6 @@ using Revise
 using CellularPotts
 using Test
 using Documenter
-using BenchmarkTools
 using Graphs
 
 
