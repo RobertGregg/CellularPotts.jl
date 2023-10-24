@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.0'
           - '1.9'
           - 'nightly'
         os:
@@ -37,7 +36,10 @@ jobs:
       - uses: julia-actions/julia-runtest@v1
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
+        with:
+          file: lcov.info
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          
 
 
