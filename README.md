@@ -54,7 +54,7 @@ using Pkg; Pkg.add("CellularPotts")
 using CellularPotts
 
 #Create a space (50×50) for cells to exist in
-space = CellSpace(50,50; isPeriodic=true, neighborhood=:moore)
+space = CellSpace(50,50; periodic=true, diagonal=true)
 
 #Describe the cells in the model
 initialCellState = CellState(
