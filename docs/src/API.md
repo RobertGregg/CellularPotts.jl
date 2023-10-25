@@ -12,5 +12,5 @@ Pages = ["API.md"]
 
 ```@autodocs
 Modules = [CellularPotts]
-Pages = ["Core.jl", "CellSpace.jl"]
+Pages = ["Core.jl", "CellSpace.jl", "CellState.jl", "Penalty.jl", "CalculatePenalty.jl", "InitializeCells.jl", "Fragmentation.jl", "MarkovStepper.jl","CellActions.jl", "Visualization.jl"]
 ```
