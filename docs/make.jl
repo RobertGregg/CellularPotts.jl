@@ -17,7 +17,8 @@ makedocs(
             "Diffusion Outside Cells" => "ExampleGallery/DiffusionOutsideCells/DiffusionOutsideCells.md",
             "Diffusion Inside Cells" => "ExampleGallery/DiffusionInsideCells/DiffusionInsideCells.md",
             "Tight Spaces" => "ExampleGallery/TightSpaces/TightSpaces.md",
-            "Over Here" => "ExampleGallery/OverHere/OverHere.md"],
+            "Over Here" => "ExampleGallery/OverHere/OverHere.md"
+            "Travel Time" => "ExampleGallery/TravelTime/TravelTime.md"],
             "API.md"]
 )
 
