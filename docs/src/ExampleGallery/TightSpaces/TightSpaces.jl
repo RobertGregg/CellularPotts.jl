@@ -14,7 +14,7 @@ Random.seed!(314159)
 spaceImage = ones(Int, 100,100)
 spaceImage[20:80,20:80] .= 0
 
-space = CellSpace(spaceImage, isPeriodic=false)
+space = CellSpace(spaceImage, periodic=false)
 
 initialCellState = CellState(:Epithelial, 500, 1);
 

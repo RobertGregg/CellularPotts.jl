@@ -8,7 +8,7 @@ using CellularPotts, Plots
 
 const xdim = 200
 const ydim = 200
-space = CellSpace(xdim, ydim, isPeriodic=false)
+space = CellSpace(xdim, ydim, periodic=false)
 
 # Initialize 10 cells randomly positioned.
 

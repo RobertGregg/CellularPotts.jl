@@ -165,16 +165,152 @@ end
 
 end
 
-@testset "Run a Model" begin
+####################################################
+# Example Gallery
+####################################################
 
-    penalties = 
+@testset "Hello World" begin
 
-    cpm = CellPotts(
-        CellSpace(10,10),
-        CellState([:Epithelial, :TCell, :BCell], [5, 10, 10], [1, 1, 1]),
-        [AdhesionPenalty(ones(4,4)), VolumePenalty([5,5,5])])
+    file = "../docs/src/ExampleGallery/HelloWorld/HelloWorld.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) == :recordCPM ? nothing : expr
+
+    include(skipRecord, file) #creates the hello world model
 
     ModelStep!(cpm)
 
     @test cpm.step.counter == 1
+end
+
+@testset "Going 3D" begin
+
+    file = "../docs/src/ExampleGallery/Going3D/Going3D.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) == :recordCPM ? nothing : expr
+
+    include(skipRecord, file)
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter == 1
+end
+
+@testset "Lets Get Moving" begin
+
+    file = "../docs/src/ExampleGallery/LetsGetMoving/LetsGetMoving.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) == :recordCPM ? nothing : expr
+
+    include(skipRecord, file) 
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter == 1
+end
+
+@testset "OnPatrol" begin
+
+    file = "../docs/src/ExampleGallery/OnPatrol/OnPatrol.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) == :recordCPM ? nothing : expr
+
+    include(skipRecord, file) 
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter > 1 #ModelStep used in script 
+end
+
+
+@testset "Over Here" begin
+
+    file = "../docs/src/ExampleGallery/OverHere/OverHere.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim] ? nothing : expr
+
+    include(skipRecord, file) 
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter == 1 #ModelStep used in script 
+end
+
+
+@testset "Bringing ODEs To Life" begin
+
+    file = "../docs/src/ExampleGallery/BringingODEsToLife/BringingODEsToLife.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot] ? nothing : expr
+
+    include(skipRecord, file) 
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter > 1 #ModelStep used in script 
+end
+
+
+@testset "Diffusion Inside Cells" begin
+
+    file = "../docs/src/ExampleGallery/DiffusionInsideCells/DiffusionInsideCells.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot, :plot!] ? nothing : expr
+
+    include(skipRecord, file) 
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter > 1 #ModelStep used in script 
+end
+
+
+@testset "Diffusion Outside Cells" begin
+
+    file = "../docs/src/ExampleGallery/DiffusionOutsideCells/DiffusionOutsideCells.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot, :plot!] ? nothing : expr
+
+    include(skipRecord, file) 
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter > 1 #ModelStep used in script 
+end
+
+
+@testset "Tight Spaces" begin
+
+    file = "../docs/src/ExampleGallery/TightSpaces/TightSpaces.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot, :plot!] ? nothing : expr
+
+    include(skipRecord, file) 
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter == 1 #ModelStep used in script 
+end
+
+
+@testset "Travel Time" begin
+
+    file = "../docs/src/ExampleGallery/TravelTime/TravelTime.jl"
+
+    #Skip expressions that create visualizations
+    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot, :plot!, scatter] ? nothing : expr
+
+    include(skipRecord, file) 
+
+    ModelStep!(cpm)
+
+    @test cpm.step.counter > 1 #ModelStep used in script 
 end

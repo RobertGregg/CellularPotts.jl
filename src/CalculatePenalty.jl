@@ -215,7 +215,7 @@ end
 
 function addPenalty!(cpm::CellPotts, CP::ChemoTaxisPenalty)
 
-    Cᵢ = CP.species[cpm.step.sourceNode]
+    Cᵢ = CP.species[cpm.step.source.node]
     Cⱼ = CP.species[cpm.step.target.node]
     τ = cpm.state.typeIDs[cpm.step.source.id]
 
