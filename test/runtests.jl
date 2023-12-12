@@ -2,7 +2,10 @@ using CellularPotts
 using Test
 using Documenter
 using Graphs
+using Random
 
+#Setting global random seed for tests
+Random.seed!(314)
 
 ####################################################
 # CellSpace
@@ -250,6 +253,8 @@ end
     include(skipRecord, file) 
 
     ModelStep!(cpm)
+
+    println(length(last(sol)))
 
     @test cpm.step.counter > 1 #ModelStep used in script 
 end
