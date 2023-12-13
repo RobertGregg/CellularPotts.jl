@@ -8,7 +8,7 @@ using CellularPotts, Plots
 
 const xdim = 200
 const ydim = 200
-space = CellSpace(xdim, ydim, periodic=false)
+space = CellSpace(xdim, ydim, periodic=false, diagonal=true)
 
 # Initialize 10 cells randomly positioned.
 
@@ -39,7 +39,7 @@ anim = @animate for t in 1:2000
 
     plotObject = contourf(normSpecies,
     c=:temperaturemap,
-    levels = 50,
+    levels=50,
     alpha=0.2,
     linewidth=0,
     grid=false,
@@ -54,7 +54,7 @@ anim = @animate for t in 1:2000
 
     heatmap!(plotObject,
     cpm.space.nodeIDs',
-    c = cgrad([RGBA(1,1,1,0), RGBA(0,0,0,1)], [0.5/numCells], categorical=true),
+    c = cgrad([RGBA(1,1,1,0), RGBA(0,0,0,0.3)], [0.5/numCells], categorical=true),
     clim = (0,numCells)
     )
 
