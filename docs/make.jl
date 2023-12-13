@@ -4,7 +4,7 @@ using CellularPotts
 
 makedocs(
     sitename = "CellularPotts.jl",
-    format = Documenter.HTML(),
+    format = Documenter.HTML(size_threshold=5_000_000), #max size 5mb
     modules = [CellularPotts],
     pages = [
         "Introduction" => "index.md",
