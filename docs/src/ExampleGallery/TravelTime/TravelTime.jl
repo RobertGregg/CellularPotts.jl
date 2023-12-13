@@ -19,23 +19,23 @@ using Random, Statistics
 Random.seed!(314);
 
 #Models have same space and cell initializations
-space = CellSpace(200,200)
+space = CellSpace(100,100)
 
 #Center the moving cell to avoid edges and put stationary cell off into a corner
-positions = [(30,30),(100,100)]
+positions = [(20,20),(50,50)]
 
 #Cells will have same volume
-initialCellState = CellState([:MovingCell, :StationaryCell], [500, 500], [1,1])
+initialCellState = CellState([:StationaryCell, :MovingCell], [200, 200], [1,1])
 initialCellState = addcellproperty(initialCellState, :positions, positions)
 
 #Add a migration penalty to one cell encourage cell movement
 penalties = [
-    AdhesionPenalty([30 30 30;
-                    30 20 30
-                    30 30 40]),
+    AdhesionPenalty([0 30 30;
+                    30 0 30
+                    30 30 0]),
     VolumePenalty([30, 30]),
-    PerimeterPenalty([0, 5]),
-    MigrationPenalty(75, [0, 100], size(space)) # 0 means no migration
+    PerimeterPenalty([0, 10]),
+    MigrationPenalty(40, [0, 40], size(space)) # 0 means no migration
     ]
 
 #Generate the model
@@ -87,7 +87,6 @@ end
 plot!(p1, trajectoryRandom[1,:], trajectoryRandom[2,:])
 plot!(p1, trajectoryDirected[1,:], trajectoryDirected[2,:])
 
-
 # # Plot Mean Squared Displacement
 
 MeanSqDis(cpm, τ, id) = mean([sum(abs2, meanPosition(cpm(i+τ).nodeIDs, id) - meanPosition(cpm(i).nodeIDs, id)) for i in 1:τ:cpm.step.counter-τ])
@@ -95,19 +94,13 @@ MeanSqDis(cpm, τ, id) = mean([sum(abs2, meanPosition(cpm(i+τ).nodeIDs, id) - m
 # Here we choose a lag time of 50 steps (arbitrary)
 
 scatter([MeanSqDis(cpm, τ, 1) for τ in 1:50],
-    title = "Random Motion",
+    labels = "Random")
+
+scatter!([MeanSqDis(cpm, τ, 2) for τ in 1:50],
+    title = "Random vs Directed Motion",
     xlabel = "Lag Time",
     ylabel = "Mean Squared Displacement",
-    legend = false,
-    framestyle = :box)
-
-# And plotting the directed motion
-
-scatter([MeanSqDis(cpm, τ, 2) for τ in 1:50],
-    title = "Directed Motion",
-    xlabel = "Lag Time",
-    ylabel = "Mean Squared Displacement",
-    legend = false,
-    framestyle = :box)
+    framestyle = :box,
+    labels = "Directed")
 
 # Here we see that, as a function of lag time, mean squared displacement for random motion does produce a linear relationship whereas directed motion is deflected upward. 
