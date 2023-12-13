@@ -12,7 +12,7 @@ function gifReplace(content, root, fileName)
     partialPath = replace(root, "./"=>"", "\\"=>"/")
     newURLPath = join([partialPath, gifFile], "/")
 
-    oldStr = "````\n\"$(gifFile)\"\n````"
+    oldStr = r"```@raw html\n<img src=\"data:image\/gif.+\n```"
 
     newStr = 
     """
@@ -28,8 +28,7 @@ end
 
 #Loop through all the examples, execute them, save markdown file
 
-examplesToUpdate = ["TravelTime.jl"]
-
+examplesToUpdate = ["OnPatrol.jl"]
 for (root, dirs, files) in walkdir(joinpath(@__DIR__,"ExampleGallery"))
     for file in files
         if endswith(file,".jl") && file ∈ examplesToUpdate

@@ -4,7 +4,7 @@
 
 # Start by loading in the `CellularPotts.jl` package and creating a space where cells can exist.
 using CellularPotts
-space = CellSpace(200,200)
+space = CellSpace(200,200; diagonal=true)
 
 # Initialize a new `CellState` with 75 epithelial cells and 5 T-Cells
 
