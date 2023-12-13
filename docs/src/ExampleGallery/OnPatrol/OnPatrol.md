@@ -79,7 +79,7 @@ recordCPM("OnPatrol.gif", cpm;
 
 ```@raw html
 <p style="text-align:center;">
-    <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master//Users/robert/Documents/code/CellularPotts.jl/docs/src/ExampleGallery/OnPatrol/OnPatrol.gif?raw=true" width="445">
+    <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/OnPatrol/OnPatrol.gif?raw=true" width="445">
 </p>
 ```
 
