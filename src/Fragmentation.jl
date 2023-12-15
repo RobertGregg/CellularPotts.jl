@@ -81,3 +81,5 @@ function isfragmented(cpm::CellPotts{T,4,2,S,U}) where {T,S,U}
     return iszero(V-E+F) ? false : true
 end
     
+#TODO 3D version is possible
+# V-E+F-B=1 where B is the number of "boxes"

@@ -82,8 +82,10 @@ allpairs(v) = Iterators.filter(i -> isless(i...), Iterators.product(v,v))
 # Files to include
 ####################################################
 
-for file in readdir(joinpath(@__DIR__, "Structures"))
-      include(joinpath(@__DIR__, "Structures", file))
+for (root, dirs, files) in walkdir(joinpath(@__DIR__, "Structures"))
+      for file in files
+            include(joinpath(root, file))
+      end
 end
 
 include("Core.jl")
