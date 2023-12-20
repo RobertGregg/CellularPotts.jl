@@ -10,23 +10,16 @@ More complex geometrics (2D and 3D) could be created by modifying the spaceImage
 
 ````julia
 using CellularPotts
-using Random
 using Plots
 
-Random.seed!(314159)
 
 #Make a space that looks like a box frame
 spaceImage = ones(Int, 100,100)
-spaceImage[20:80,20:80] .= 0
+spaceImage[10:90,10:90] .= 0
 
 space = CellSpace(spaceImage; periodic=false, diagonal=true)
 
-initialCellState = CellState(:Epithelial, 500, 1);
-
-positions = [90,10]
-
-initialCellState = addcellproperty(initialCellState, :positions, positions)
-
+initialCellState = CellState(:Epithelial, 500, 1; positions = (5,5));
 
 penalties = [
     AdhesionPenalty([0 30;
@@ -36,9 +29,6 @@ penalties = [
     ]
 
 cpm = CellPotts(space, initialCellState, penalties)
-
-
-
 
 
 (rows,columns) = size(cpm.space)
@@ -58,10 +48,10 @@ anim = @animate for t in 0:1000
         ylims=(0.5, columns+0.5)
         )
 
-    plot!(plotObject,[19.5, 19.5],[19.5, 80.5], color=:black)
-    plot!(plotObject,[80.5, 80.5],[19.5, 80.5], color=:black)
-    plot!(plotObject,[19.5, 80.5],[19.5, 19.5], color=:black)
-    plot!(plotObject,[19.5, 80.5],[80.5, 80.5], color=:black)
+    plot!(plotObject,[9.5, 9.5],[9.5, 90.5], color=:black)
+    plot!(plotObject,[90.5, 90.5],[9.5, 90.5], color=:black)
+    plot!(plotObject,[9.5, 90.5],[9.5, 9.5], color=:black)
+    plot!(plotObject,[9.5, 90.5],[90.5, 90.5], color=:black)
 
     cellborders!(plotObject, cpm.space)
 

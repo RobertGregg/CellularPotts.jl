@@ -11,12 +11,8 @@ using CellularPotts, DifferentialEquations
 space = CellSpace(200,200)
 
 # In the CellState we specify one epithelial cell with a volume of 200 pixels
-initialCellState = CellState(:Epithelial, 200, 1);
-
 # The cell will be positioned at the halfway point within the space. 
-positions = [size(space) .÷ 2]
-initialCellState = addcellproperty(initialCellState, :positions, positions)
-
+initialCellState = CellState(:Epithelial, 200, 1, positions = size(space) .÷ 2);
 
 # From the DifferentialEquations example, a theoretical protein X was created for each cell that increases linearly in time with rate parameter α
 const α = 0.3;

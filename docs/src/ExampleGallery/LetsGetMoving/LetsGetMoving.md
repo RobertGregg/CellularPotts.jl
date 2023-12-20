@@ -22,35 +22,7 @@ space = CellSpace(100,100; diagonal=true)
 Much like in the [HelloWorld.jl](https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/) example, we create a single cell that averages 500 pixels in size.
 
 ````julia
-initialCellState = CellState(:Epithelial, 500, 1);
-````
-
-The cell will be positioned at the halfway point within the space.
-
-````julia
-positions = [size(space) .÷ 2]
-````
-
-````
-1-element Vector{Tuple{Int64, Int64}}:
- (50, 50)
-````
-
-And that property is added to the CellState
-
-````julia
-initialCellState = addcellproperty(initialCellState, :positions, positions)
-````
-
-````
-┌────────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┬─────────────────────┐
-│      names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │           positions │
-│     Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │ Tuple{Int64, Int64} │
-├────────────┼─────────┼─────────┼─────────┼────────────────┼────────────┼───────────────────┼─────────────────────┤
-│     Medium │       0 │       0 │       0 │              0 │          0 │                 0 │            (50, 50) │
-│ Epithelial │       1 │       1 │       0 │            500 │          0 │               264 │            (50, 50) │
-└────────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴───────────────────┴─────────────────────┘
-
+initialCellState = CellState(:Epithelial, 500, 1; positions = size(space) .÷ 2);
 ````
 
 Now the important part. To enable this type of cellular movement, we can add a `MigrationPenalty` to the model. This penalty requires 3 inputs:

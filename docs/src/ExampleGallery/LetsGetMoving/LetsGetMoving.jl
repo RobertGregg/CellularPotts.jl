@@ -10,15 +10,7 @@ space = CellSpace(100,100; diagonal=true)
 
 # Much like in the [HelloWorld.jl](https://robertgregg.github.io/CellularPotts.jl/dev/ExampleGallery/HelloWorld/HelloWorld/) example, we create a single cell that averages 500 pixels in size.
 
-initialCellState = CellState(:Epithelial, 500, 1);
-
-# The cell will be positioned at the halfway point within the space. 
-
-positions = [size(space) .÷ 2]
-
-# And that property is added to the CellState
-
-initialCellState = addcellproperty(initialCellState, :positions, positions)
+initialCellState = CellState(:Epithelial, 500, 1; positions = size(space) .÷ 2);
 
 # Now the important part. To enable this type of cellular movement, we can add a `MigrationPenalty` to the model. This penalty requires 3 inputs:
 

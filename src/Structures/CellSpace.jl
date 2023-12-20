@@ -127,13 +127,20 @@ function CellSpace(locationMatrix::Matrix{T}; periodic=true, diagonal=false) whe
 
     space = CellSpace(size(locationMatrix); periodic, diagonal)
 
+    #Keep the nodes but remove the edges
     #For some reason rem_edge! wasn't removing all the edges
     for (i,val) in enumerate(locationMatrix)
         if iszero(val)
+            #Forward edges
             empty!(space.fadjlist[i])
+
+            #Backward edges
+            for connections in space.fadjlist
+                filter!(!isequal(i), connections)
+            end
         end
     end
-    space.ne = sum(length.(space.fadjlist)) ÷ 2
+    space.ne = sum(length, space.fadjlist) ÷ 2
 
     return space
 end

@@ -11,12 +11,7 @@ using CellularPotts
 space = CellSpace(30,30,30; periodic=false)
 
 
-initialCellState = CellState(:Epithelial, 1000, 1)
-
-
-positions = [size(space).÷2]
-
-initialCellState = addcellproperty(initialCellState, :positions, positions)
+initialCellState = CellState(:Epithelial, 1000, 1; positions = size(space).÷2)
 
 penalties = [
     AdhesionPenalty([0 30;

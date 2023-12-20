@@ -98,7 +98,11 @@ The first row in the table is reserved for `:Medium` which is the name given to 
     
 Of note, `desiredPerimeters` are calculated as the minimal perimeter given the cell's volume. 
 """
-function CellState(names::AbstractVector{S}, volumes::AbstractVector{T}, counts::AbstractVector{T}) where {S<:Union{Symbol, String}, T<:Integer} 
+function CellState(
+    names::AbstractVector{S},
+    volumes::AbstractVector{T},
+    counts::AbstractVector{T};
+    positions = nothing) where {S<:Union{Symbol, String}, T<:Integer} 
 
     #Does not include Medium
     totalCells = sum(counts)
@@ -118,12 +122,25 @@ function CellState(names::AbstractVector{S}, volumes::AbstractVector{T}, counts:
         desiredPerimeters = estPerimeter.(inverse_rle(volumes, counts))
     )
 
-    return CellState(map(offset, data))
-     
+    state = CellState(map(offset, data))
+
+    #Add the cell positions if provided
+    if !isnothing(positions) 
+        state = addcellproperty(state,:positions,positions)
+    end
+
+    return state
 end
 
 #Alternative method when only creating one cell
-CellState(names::Union{Symbol, String}, volumes::T, counts::T) where T<:Integer = CellState([names], [volumes], [counts])
+function CellState(names::Union{Symbol, String}, volumes::T, counts::T; positions=nothing) where T<:Integer
+
+    if isnothing(positions) || length(positions) == counts
+        return CellState([names], [volumes], [counts]; positions)
+    end
+
+    return CellState([names], [volumes], [counts]; positions = [positions])
+end
 
 ####################################################
 # Add/remove cells and properties
@@ -192,10 +209,14 @@ end
 """
     addnewcell(df::CellState, cell<:NamedTuple)
 
-Given a `CellState`, add a new row corresponding to a new cell in the model. Property names in the for the cell need to match column names in the CellState
+Given a `CellState`, add a new row corresponding to a new cell in the model. Property names for the cell need to match column names in the CellState
 """
 function addnewcell(df::CellState, cell::CellRow)
-    #TODO Need some checks (e.g. all the keys match)
+    
+    if propertynames(df) ≠ propertynames(cell)
+        error("Mismatch between CellState and new cell properties, check propertynames()")
+    end
+
     for property in keys(df)
         push!(df[property], cell[property])
     end

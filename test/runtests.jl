@@ -3,6 +3,7 @@ using Test
 using Documenter
 using Graphs
 using Random
+using BenchmarkTools
 
 #Setting global random seed for tests
 Random.seed!(314)
@@ -49,6 +50,18 @@ end
     table2 = CellState([:hello], [1],[1])
 
     @test parent(table1) == parent(table2)
+end
+
+@testset "Testing positions keyword" begin
+
+    table1 = CellState(:hello, 1,1; positions=(25,25))
+    table2 = CellState([:hello], [1],[1]; positions=[(25,25)])
+
+    table3 = CellState([:hello], [10], [3]; positions=[(1,1),(2,2),(3,3)])
+    table4 = CellState(:hello, 10, 3; positions=[(1,1),(2,2),(3,3)])
+
+    @test parent(table1) == parent(table2)
+    @test parent(table3) == parent(table4)
 end
 
 @testset "Adding Cell Properties" begin
@@ -317,4 +330,24 @@ end
     ModelStep!(cpm)
 
     @test cpm.step.counter > 1 #ModelStep used in script 
+end
+
+####################################################
+# Benchmarks
+####################################################
+
+@testset "Allocations" begin
+
+    cpm = CellPotts(
+        CellSpace(50,50),
+        CellState(:Epithelial, 25, 10),
+        [
+            AdhesionPenalty([0 30; 30 0]),
+            VolumePenalty([5]),
+            PerimeterPenalty([0,10]),
+            MigrationPenalty(50, [50], (50,50))
+            ]
+        )
+    
+    @test (@ballocated ModelStep!(cpm)) == 0
 end
