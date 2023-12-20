@@ -22,11 +22,14 @@ Random.seed!(314);
 space = CellSpace(100,100)
 
 #Center the moving cell to avoid edges and put stationary cell off into a corner
-positions = [(20,20),(50,50)]
+positions = 
 
 #Cells will have same volume
-initialCellState = CellState([:StationaryCell, :MovingCell], [200, 200], [1,1])
-initialCellState = addcellproperty(initialCellState, :positions, positions)
+initialCellState = CellState(
+    [:StationaryCell, :MovingCell],
+    [200, 200],
+    [1,1];
+    positions = [(20,20),(50,50)])
 
 #Add a migration penalty to one cell encourage cell movement
 penalties = [

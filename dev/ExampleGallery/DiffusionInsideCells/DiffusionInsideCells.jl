@@ -25,7 +25,7 @@ const ΔX = zeros(N,N);
 # The `CellPotts()` model requires three inputs (space, cell table, and penalties). Here we create an N×N space with 1 500 pixel cell that has penalities for adhesion and volume. Further to the HelloWorld example for more explanation. 
 cpm = CellPotts(
     CellSpace(N,N), 
-    addcellproperty(CellState(:Epithelial, 500, 1), :positions, [(N,N) .÷ 2]), #Need to add keyword options to CellState...
+    CellState(:Epithelial, 500, 1, positions = (N,N) .÷ 2),
     [AdhesionPenalty([0 30; 30 30]), VolumePenalty([5])]
     );
 
