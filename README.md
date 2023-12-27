@@ -46,9 +46,10 @@ space = CellSpace(50,50; periodic=true, diagonal=true)
 
 #Describe the cells in the model
 initialCellState = CellState(
-    :Epithelial, #names
-    500,         #sizes
-    1)           #counts
+    :Epithelial,         #cell names
+    500,                 #size of cells
+    1,                   #number of cells
+    positions = (25,25))
 
 #Add penalties to the model
 penalties = [
