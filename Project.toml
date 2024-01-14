@@ -1,7 +1,7 @@
 name = "CellularPotts"
 uuid = "11b7dee7-cd95-48a5-a457-717aae94d0bd"
 authors = ["Robert <robwgregg@gmail.com> and contributors"]
-version = "0.3.2"
+version = "0.3.3"
 
 [deps]
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
