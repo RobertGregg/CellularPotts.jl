@@ -2,7 +2,7 @@
 #Uses a breadth first search to determine if all vertices can be reached after node removal
 #Not faster than Tajan's algorithm but much simplier
 
-#TODO Need to find the allocations
+#TODO Need to limit the allocations
 function isfragmented(cpm::CellPotts)
 
     #Unpack cpm and reset state (no allocations right?)
@@ -78,8 +78,9 @@ function isfragmented(cpm::CellPotts{T,4,2,S,U}) where {T,S,U}
         end
     end
 
-    return iszero(V-E+F) ? false : true
+    return !iszero(V-E+F)
 end
     
 #TODO 3D version is possible
 # V-E+F-B=1 where B is the number of "boxes"
+# box = Graphs.grid((2,2,2); periodic=false)

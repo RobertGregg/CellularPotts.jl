@@ -73,6 +73,25 @@ Careful attention has been taken to ensure this package is as performant as I ca
 
 Also of note, **this package is still in development and is not currently recommended for general use**. However, still feel free to try it and give suggestions if you're curious. 
 
+## How to Cite
+
+If you happen to use CellularPotts.jl in your research, feel free to cite our paper:
+
+https://doi.org/10.1093/bioinformatics/btad773
+
+```
+@article{gregg2024cellularpotts,
+  title={CellularPotts. jl: simulating multiscale cellular models in Julia},
+  author={Gregg, Robert W and Benos, Panayiotis V},
+  journal={Bioinformatics},
+  volume={40},
+  number={1},
+  pages={btad773},
+  year={2024},
+  publisher={Oxford University Press}
+}
+```
+
 ## Future Improvements
 
 - [ ] `CellDivision!()` currently cannot update custom cell state properties

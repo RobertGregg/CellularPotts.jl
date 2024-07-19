@@ -79,45 +79,6 @@ nodeTypes(cpm::CellPotts) = nodeTypes(cpm.space)
 
 #Given a node, get all neighboring nodes that match the node's id
 cellneighbors(space,node) = Iterators.filter(n->space.nodeIDs[n]==space.nodeIDs[node], neighbors(space,node))
-
-####################################################
-# Reading and Writing History
-####################################################
-function updateHistory!(cpm, counter, node, id, type)
-
-    push!(cpm.history.counter, counter)
-    push!(cpm.history.position, node)
-    push!(cpm.history.nodeID, id)
-    push!(cpm.history.nodeType, type)
-
-    return nothing
-end
-
-updateHistory!(cpm::CellPotts) = updateHistory!(
-    cpm, 
-    cpm.step.counter,
-    cpm.step.target.node,
-    cpm.step.source.id,
-    cpm.step.source.type)
-
-
-#Given the history, reconstruct the space at a given time step
-#TODO find a better way to loop through history with restarting every time
-function (cpm::CellPotts)(t::Integer)
-
-    space = cpm.history.space
-    
-    #Reset the space history
-    space.nodeIDs .= cpm.initialSpace.nodeIDs
-    space.nodeTypes .= cpm.initialSpace.nodeTypes
-    
-    lastMatch = 1:searchsortedlast(cpm.history.counter, t)
-
-    space.nodeIDs[cpm.history.position[lastMatch]] .= cpm.history.nodeID[lastMatch]
-    space.nodeTypes[cpm.history.position[lastMatch]] .= cpm.history.nodeType[lastMatch]
-
-    return space #could also return nothing
-end
     
 
 ####################################################
