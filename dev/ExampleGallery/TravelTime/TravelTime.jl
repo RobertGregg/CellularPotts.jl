@@ -21,10 +21,8 @@ Random.seed!(314);
 #Models have same space and cell initializations
 space = CellSpace(100,100)
 
-#Center the moving cell to avoid edges and put stationary cell off into a corner
-positions = 
 
-#Cells will have same volume
+#Cells will have same volume, the moving cell will be in the center and the stationary cell will be placed in the corner
 initialCellState = CellState(
     [:StationaryCell, :MovingCell],
     [200, 200],
