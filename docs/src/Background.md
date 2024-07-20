@@ -3,6 +3,7 @@
 For the following explaination we will be using this Cellular Potts Model:
 
 ```@example CPMmodel
+import Pkg; Pkg.add("Graphs") # hide
 using CellularPotts, Graphs, Random
 
 Random.seed!(314)
