@@ -3,6 +3,7 @@
 For the following explanation we will be using this Cellular Potts Model:
 
 ```@example CPMmodel
+import Pkg; Pkg.add("Graphs") # hide
 using CellularPotts, Graphs, Random
 
 Random.seed!(314)
@@ -19,6 +20,7 @@ cpm = CellPotts(
 Cellular Potts Models (CPMs) are essentially just non-negative integer matrices with very specific rules and interpretations. A value of zero represents a location in space where no cell is present (which we call "Medium") whereas a nonzero value denotes part of a cell.
 
 ```@setup CPMmodel
+import Pkg; Pkg.add("Plots")
 using CellularPotts, Plots, Random
 
 Random.seed!(314)

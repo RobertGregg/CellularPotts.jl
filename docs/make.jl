@@ -1,6 +1,5 @@
 using Documenter
 using CellularPotts
-using Graphs, Plots
 
 
 makedocs(
