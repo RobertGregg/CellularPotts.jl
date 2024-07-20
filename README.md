@@ -109,6 +109,8 @@ https://doi.org/10.1093/bioinformatics/btad773
 - [x] Add CI and CodeCov badge
 
 - [x] Reduce heavy package dependencies using package extensions
+
+- [ ] recordCPM is very slow, can it be made faster?
   
   - [ ] Not using package extensions yet but some heavy dependencies were removed
 
