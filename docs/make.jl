@@ -8,6 +8,7 @@ makedocs(
     modules = [CellularPotts],
     pages = [
         "Introduction" => "index.md",
+        "What are Cellular Potts Models?" => "Background.md",
         "Examples" => [
             "Hello World" => "ExampleGallery/HelloWorld/HelloWorld.md",
             "Let's Get Moving" => "ExampleGallery/LetsGetMoving/LetsGetMoving.md",

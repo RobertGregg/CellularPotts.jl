@@ -6,7 +6,14 @@ end
 
 # Introduction
 
-CPMs simulate a collection of cells interacting with one another. These interactions can range anywhere from simple contact between cells to complex cytokine communication.
+CellularPotts.jl is a package designed to model complex behaviors observed in biological cells. This is accomplished using (you guessed it) Cellular Potts Modeling (CPM). See [What are Cellular Potts Models?](@ref) for more information on how CPMs work. The goal of CellularPotts.jl is to provide a simple interface that is expressive enough to handle diverse behaviors like:
+
+- Adhesion
+- Division
+- Movement though chemotaxis and contraction of actin filaments
+- Cytokine diffusion inside and outside of cells
+
+These behaviors can be combined to develop complex simulations of tumor micro-environments, immune cell activation, stem-cell differentiation, and much more. 
 
 # Installation
 
@@ -16,6 +23,8 @@ Pkg.add("CellularPotts")
 ```
 
 # Example Gallery
+
+For a basic introduction, check out the [Hello World](@ref) example or other examples shown below.
 
 !!! tip
     Click on an image to go to example page
