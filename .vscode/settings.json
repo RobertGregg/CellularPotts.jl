@@ -10,5 +10,6 @@
         "latex",
         "plaintext",
         "markdown"
-    ]
+    ],
+    "julia.environmentPath": "c:\\Users\\robwg\\OneDrive - University of Florida\\CellularPotts.jl"
 }
