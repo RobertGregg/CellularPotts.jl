@@ -189,7 +189,7 @@ end
     file = "../docs/src/ExampleGallery/HelloWorld/HelloWorld.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) == :recordCPM ? nothing : expr
+    skipRecord(expr) = first(expr.args) == :record ? nothing : expr
 
     include(skipRecord, file) #creates the hello world model
 
@@ -203,7 +203,7 @@ end
     file = "../docs/src/ExampleGallery/Going3D/Going3D.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) == :recordCPM ? nothing : expr
+    skipRecord(expr) = first(expr.args) == :record ? nothing : expr
 
     include(skipRecord, file)
 
@@ -217,7 +217,7 @@ end
     file = "../docs/src/ExampleGallery/LetsGetMoving/LetsGetMoving.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) == :recordCPM ? nothing : expr
+    skipRecord(expr) = first(expr.args) == :record ? nothing : expr
 
     include(skipRecord, file) 
 
@@ -231,7 +231,7 @@ end
     file = "../docs/src/ExampleGallery/OnPatrol/OnPatrol.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) == :recordCPM ? nothing : expr
+    skipRecord(expr) = first(expr.args) == :record ? nothing : expr
 
     include(skipRecord, file) 
 
@@ -246,7 +246,7 @@ end
     file = "../docs/src/ExampleGallery/OverHere/OverHere.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim] ? nothing : expr
+    skipRecord(expr) = first(expr.args) ∈ [:record, :gif, :anim] ? nothing : expr
 
     include(skipRecord, file) 
 
@@ -261,7 +261,7 @@ end
     file = "../docs/src/ExampleGallery/BringingODEsToLife/BringingODEsToLife.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot] ? nothing : expr
+    skipRecord(expr) = first(expr.args) ∈ [:record, :gif, :anim, :plot] ? nothing : expr
 
     include(skipRecord, file) 
 
@@ -278,7 +278,7 @@ end
     file = "../docs/src/ExampleGallery/DiffusionInsideCells/DiffusionInsideCells.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot, :plot!] ? nothing : expr
+    skipRecord(expr) = first(expr.args) ∈ [:record, :gif, :anim, :plot, :plot!] ? nothing : expr
 
     include(skipRecord, file) 
 
@@ -293,7 +293,7 @@ end
     file = "../docs/src/ExampleGallery/DiffusionOutsideCells/DiffusionOutsideCells.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot, :plot!] ? nothing : expr
+    skipRecord(expr) = first(expr.args) ∈ [:record, :gif, :anim, :plot, :plot!] ? nothing : expr
 
     include(skipRecord, file) 
 
@@ -308,7 +308,7 @@ end
     file = "../docs/src/ExampleGallery/TightSpaces/TightSpaces.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot, :plot!] ? nothing : expr
+    skipRecord(expr) = first(expr.args) ∈ [:record, :gif, :anim, :plot, :plot!] ? nothing : expr
 
     include(skipRecord, file) 
 
@@ -323,7 +323,7 @@ end
     file = "../docs/src/ExampleGallery/TravelTime/TravelTime.jl"
 
     #Skip expressions that create visualizations
-    skipRecord(expr) = first(expr.args) ∈ [:recordCPM, :gif, :anim, :plot, :plot!, scatter] ? nothing : expr
+    skipRecord(expr) = first(expr.args) ∈ [:record, :visualize, :gif, :anim, :plot, :plot!, scatter] ? nothing : expr
 
     include(skipRecord, file) 
 
