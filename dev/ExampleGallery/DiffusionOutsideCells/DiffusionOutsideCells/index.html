@@ -4,7 +4,7 @@ using Graphs
 using Plots, Printf</code></pre><h2 id="Defining-the-Cellular-Potts-Model"><a class="docs-heading-anchor" href="#Defining-the-Cellular-Potts-Model">Defining the Cellular Potts Model</a><a id="Defining-the-Cellular-Potts-Model-1"></a><a class="docs-heading-anchor-permalink" href="#Defining-the-Cellular-Potts-Model" title="Permalink"></a></h2><p>We begin by defining the dimensionality of the space cells will occupy (an N×N grid) and a variable to represent the constant concentration value inside each cell.</p><pre><code class="language-julia hljs">const N = 200
 const p0 = 50.0;</code></pre><p>Next we generate a <code>CellPotts()</code> model with 3 cells approximately 1000 pixels in size with adhesion and volume constraints.</p><pre><code class="language-julia hljs">cpm = CellPotts(
     CellSpace(N,N),
-    CellState(:Epithelial, 1000, 3),
+    CellState(:Epithelial, 1000, 8),
     [AdhesionPenalty([0 30;30 30]), VolumePenalty([5])]
     );</code></pre><p>Record the model.</p><pre><code class="language-julia hljs">cpm.recordHistory = true;</code></pre><p>Because cell space is represented as a graph, we can use the <code>laplacian_matrix()</code> function from the Graphs.jl package to estimate the continuous Laplacian operator that describes diffusion (see these two wikipedia articles for more information: <a href="https://en.wikipedia.org/wiki/Discrete_Laplace_operator#Graph_Laplacians">Graph Laplacians</a>, <a href="https://en.wikipedia.org/wiki/Laplacian_matrix#Laplacian_matrix">Laplacian matrix</a>). This graphical Laplacian matrix can be easily calculated as the difference between the degree matrix and the adjacency matrix. For our purposes, <code>laplacian_matrix()</code> generates a sparse <span>$N^2 \times N^2$</span> matrix which we can multiply by our state vector to simulate diffusion. We also need to specify that our graph is bi-directional (i.e. undirected).</p><pre><code class="language-julia hljs">const 𝓛 = laplacian_matrix(cpm.space, dir=:both);</code></pre><p>To couple the Cellular Potts and PDE models, we use a periodic callback that stops the ODE solver and updates the CPM. Additionally, this function updates grid values that cells occupy with the constant intracellular cell concentration (p0).</p><pre><code class="language-julia hljs">function cpmUpdate!(integrator, cpm)
     ModelStep!(cpm)
@@ -31,23 +31,16 @@ sol = solve(prob, Tsit5(), callback=cb);</code></pre><h2 id="Animating-the-Solut
     currTime = @sprintf &quot;Time: %.2f&quot; t/timeScale
 
     plotObject = heatmap(
-        reshape(sol(t/timeScale), N,N)&#39;,
-        axis=nothing,
-        legend=false,
-        framestyle = :box,
-        size=(600,600),
+        reshape(sol(t/timeScale), N,N),
         clim = (0,50),
         c = :twilight,
         title=currTime,
-        titlefontsize = 36,
-        xlims=(0.5, N+0.5),
-        ylims=(0.5, N+0.5),)
+        titlelocation=:left,
+        titlefontsize = 32)
 
-    cellborders!(plotObject, cpm(t))
-
-    plotObject
+    visualize!(cpm(t); colorby=:none)
 end
 
 gif(anim, &quot;DiffusionOutsideCells.gif&quot;, fps = 30)</code></pre><p style="text-align:center;">
     <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/DiffusionOutsideCells/DiffusionOutsideCells.gif?raw=true" width="445">
-</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../Going3D/Going3D/">« Going 3D</a><a class="docs-footer-nextpage" href="../../DiffusionInsideCells/DiffusionInsideCells/">Diffusion Inside Cells »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Saturday 20 July 2024 03:33">Saturday 20 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../Going3D/Going3D/">« Going 3D</a><a class="docs-footer-nextpage" href="../../DiffusionInsideCells/DiffusionInsideCells/">Diffusion Inside Cells »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Tuesday 13 August 2024 16:59">Tuesday 13 August 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -23,45 +23,24 @@ space = CellSpace(xdim, ydim, periodic=false, diagonal=true)</code></pre><pre><c
     AdhesionPenalty([30 30; 30 30]),
     VolumePenalty([10]),
     ChemoTaxisPenalty([50], species)
-];</code></pre><p>Now we can take these three objects and create a Cellular Potts Model object.</p><pre><code class="language-julia hljs">cpm = CellPotts(space, initialCellState, penalties)</code></pre><pre><code class="nohighlight hljs">Cell Potts Model:
-Grid: 200×200
-Cell Counts: [TCells → 10]
-Model Penalties: Adhesion Volume ChemoTaxis
-Temperature: 20.0
-Steps: 0</code></pre><p>To scale the color gradients properly, we need to know the number of cells in the model</p><pre><code class="language-julia hljs">numCells = countcells(cpm);</code></pre><p>Normalize the concentration gradient to the number of cells for visualization</p><pre><code class="language-julia hljs">normSpecies = (numCells/maximum(species)) .* species
+];</code></pre><p>Now we can take these three objects and create a Cellular Potts Model object.</p><pre><code class="language-julia hljs">cpm = CellPotts(space, initialCellState, penalties)
 
 anim = @animate for t in 1:2000
 
-    plotObject = contourf(normSpecies,
+    plt = contourf(species,
     c=:temperaturemap,
     levels=50,
     alpha=0.2,
     linewidth=0,
-    grid=false,
-    axis=nothing,
-    legend=:none,
-    framestyle=:box,
-    aspect_ratio=:equal,
-    size = (600,600),
-    xlims=(0.5, xdim+0.5),
-    ylims=(0.5, ydim+0.5))
-
-
-    heatmap!(plotObject,
-    cpm.space.nodeIDs&#39;,
-    c = cgrad([RGBA(1,1,1,0), RGBA(0,0,0,0.3)], [0.5/numCells], categorical=true),
-    clim = (0,numCells)
-    )
-
-    cellborders!(plotObject, cpm.space)
+    legend=false)
 
     ModelStep!(cpm)
 
-    plotObject
+    visualize!(plt, cpm; cellcolors = RGBA(0,0,0,0.3))
 
 end every 10
 
 
 gif(anim, &quot;OverHere.gif&quot;, fps = 60)</code></pre><p style="text-align:center;">
     <img title="" src="https://github.com/RobertGregg/CellularPotts.jl/blob/master/docs/src/ExampleGallery/OverHere/OverHere.gif?raw=true" width="445">
-</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../TightSpaces/TightSpaces/">« Tight Spaces</a><a class="docs-footer-nextpage" href="../../TravelTime/TravelTime/">Travel Time »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Saturday 20 July 2024 03:33">Saturday 20 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../TightSpaces/TightSpaces/">« Tight Spaces</a><a class="docs-footer-nextpage" href="../../TravelTime/TravelTime/">Travel Time »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Tuesday 13 August 2024 16:59">Tuesday 13 August 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

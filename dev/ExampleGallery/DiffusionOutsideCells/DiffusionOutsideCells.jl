@@ -15,7 +15,7 @@ const p0 = 50.0;
 # Next we generate a `CellPotts()` model with 3 cells approximately 1000 pixels in size with adhesion and volume constraints.
 cpm = CellPotts(
     CellSpace(N,N), 
-    CellState(:Epithelial, 1000, 3),
+    CellState(:Epithelial, 1000, 8),
     [AdhesionPenalty([0 30;30 30]), VolumePenalty([5])]
     );
 
@@ -73,21 +73,14 @@ anim = @animate for t in range(1, cpm.step.counter, step=10)
     currTime = @sprintf "Time: %.2f" t/timeScale
 
     plotObject = heatmap(
-        reshape(sol(t/timeScale), N,N)',
-        axis=nothing,
-        legend=false,
-        framestyle = :box,
-        size=(600,600),
+        reshape(sol(t/timeScale), N,N),
         clim = (0,50),
         c = :twilight,
         title=currTime,
-        titlefontsize = 36,
-        xlims=(0.5, N+0.5),
-        ylims=(0.5, N+0.5),)
+        titlelocation=:left,
+        titlefontsize = 32)
 
-    cellborders!(plotObject, cpm(t))
-
-    plotObject
+    visualize!(cpm(t); colorby=:none)
 end
 
 gif(anim, "DiffusionOutsideCells.gif", fps = 30)
