@@ -6,7 +6,7 @@ using Random
 using BenchmarkTools
 
 #Setting global random seed for tests
-Random.seed!(314)
+Random.seed!(314159)
 
 ####################################################
 # CellSpace
