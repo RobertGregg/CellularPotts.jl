@@ -10,8 +10,8 @@ function isfragmented(cpm::CellPotts)
     target = cpm.step.target
     F = cpm.fragment
 
-    #TODO Not checking Medium mean cells can enclose bits of medium
-    #No need to check Medium for articulation points  
+    #TODO Not checking Medium means cells can enclose bits of medium
+    #However checking medium is generally very slow 
     if iszero(target.id)
         return false
     end

@@ -75,22 +75,22 @@ end
 
 
 #Plot trajectories
-p1 = plotcpm(cpm)
+p1 = visualize(cpm)
 
 trajectoryRandom = zeros(2,cpm.step.counter)
 trajectoryDirected = zeros(2,cpm.step.counter)
 
 for i in 1:cpm.step.counter
-    trajectoryRandom[:,i] .= meanPosition(cpm(i).nodeIDs, 1)
-    trajectoryDirected[:,i] .= meanPosition(cpm(i).nodeIDs, 2)
+    trajectoryRandom[:,i] .= meanPosition(cpm(i).space.nodeIDs, 1)
+    trajectoryDirected[:,i] .= meanPosition(cpm(i).space.nodeIDs, 2)
 end
 
-plot!(p1, trajectoryRandom[1,:], trajectoryRandom[2,:])
-plot!(p1, trajectoryDirected[1,:], trajectoryDirected[2,:])
+plot!(p1, trajectoryRandom[1,:], trajectoryRandom[2,:]; color=:grey20)
+plot!(p1, trajectoryDirected[1,:], trajectoryDirected[2,:]; color=:grey20)
 
 # # Plot Mean Squared Displacement
 
-MeanSqDis(cpm, τ, id) = mean([sum(abs2, meanPosition(cpm(i+τ).nodeIDs, id) - meanPosition(cpm(i).nodeIDs, id)) for i in 1:τ:cpm.step.counter-τ])
+MeanSqDis(cpm, τ, id) = mean([sum(abs2, meanPosition(cpm(i+τ).space.nodeIDs, id) - meanPosition(cpm(i).space.nodeIDs, id)) for i in 1:τ:cpm.step.counter-τ])
 
 # Here we choose a lag time of 50 steps (arbitrary)
 

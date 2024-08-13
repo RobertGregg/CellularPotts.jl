@@ -70,11 +70,10 @@ for i=1:50
 end
 ````
 
-Record the simulation
+Record the simulation. Here we also show how to customize the cell colors, run the recording for more time steps, and skip frames.
 
 ````julia
-recordCPM("OnPatrol.gif", cpm;
-    property = :nodeTypes, frameskip=10, c=:RdBu_3)
+record(cpm; file="OnPatrol.gif", cellcolors=[:grey90, :lightblue], steps=1500, skip=10)
 ````
 
 ```@raw html

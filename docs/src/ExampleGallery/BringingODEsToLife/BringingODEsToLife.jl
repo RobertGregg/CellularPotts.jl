@@ -88,7 +88,7 @@ sol = solve(prob, Tsit5(), callback=callbacks);
 # ## Visualization
 
 # We can replicate the plots from the original example   
-using Plots, Printf, ColorSchemes
+using Plots, Printf
 
 # Plot the total cell count over time
 plot(sol.t,map((x)->length(x),sol[:]),lw=3,
@@ -99,35 +99,29 @@ ts = range(0, stop=20, length=100)
 plot(ts,map((x)->x[2],sol.(ts)),lw=3, ylabel="Amount of X in Cell 1",xlabel="Time",legend=nothing)
 
 # Finally, we can create an animation of the CPM to see the cells dividing. I've dropped the first few frames because the first cell takes a while to divide.
-proteinXConc = zeros(200,200)
+proteinXConc = zeros(size(space)...)
 
 anim = @animate for t in Iterators.drop(1:cpm.step.counter,5*timeScale)
     currTime = @sprintf "Time: %.2f" t/timeScale
 
-    space = cpm(t)
+    cpmt = cpm(t)
     currSol = sol((t+1)/timeScale )
 
     #Map protein concentrations to space
-    for i in CartesianIndices(space.nodeIDs)
-        proteinXConc[i] = currSol[space.nodeIDs[i]+1]
+    for i in CartesianIndices(proteinXConc)
+        proteinXConc[i] = currSol[cpmt.space.nodeIDs[i]+1]
     end
     
-    plotObject = heatmap(
-        proteinXConc',
-        axis=nothing,
-        framestyle = :box,
-        aspect_ratio=:equal,
-        size=(600,600),
+    plt = heatmap(
+        proteinXConc,
         c = cgrad([:grey90, :grey, :gold], [0.1, 0.6, 0.9]),
         clims = (0,1),
         title=currTime,
-        titlefontsize = 36,
-        xlims=(0.5, size(space.nodeIDs,1)+0.5),
-        ylims=(0.5, size(space.nodeIDs,2)+0.5))
+        titlelocation=:left,
+        titlefontsize = 32)
 
-    cellborders!(plotObject,space)
+    visualize!(plt,cpmt; colorby=:none)
 
-    plotObject
 end
 
 gif(anim, "BringingODEsToLife.gif", fps = 30) 

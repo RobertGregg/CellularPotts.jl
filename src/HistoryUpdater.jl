@@ -33,10 +33,21 @@ function (cpm::CellPotts)(t::Integer)
     space.nodeIDs .= cpm.initialSpace.nodeIDs
     space.nodeTypes .= cpm.initialSpace.nodeTypes
     
-    lastMatch = 1:searchsortedlast(cpm.history.counter, t)
+    lastMatch = 1:searchsortedlast(cpm.history.counter, t-1)
 
     space.nodeIDs[cpm.history.node[lastMatch]] .= cpm.history.id[lastMatch]
     space.nodeTypes[cpm.history.node[lastMatch]] .= cpm.history.type[lastMatch]
 
-    return space #could also return nothing
+    return CellPotts(
+        cpm.initialSpace,
+        space,
+        cpm.initialState,
+        cpm.state,
+        cpm.penalties,
+        MHStep(),
+        Articulation(nv(space)),
+        20.0,
+        History(space),
+        false,
+        true)
 end

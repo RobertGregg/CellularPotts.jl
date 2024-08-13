@@ -35,27 +35,12 @@ cpm = CellPotts(space, initialCellState, penalties)
 
 anim = @animate for t in 0:1000
 
-    plotObject = heatmap(
-        cpm.space.nodeIDs',
-        c = cgrad(:tol_light, rev=true),
-        grid=false,
-        axis=nothing,
-        legend=:none,
-        framestyle=:box,
-        aspect_ratio=:equal,
-        size = (600,600),
-        xlims=(0.5, rows+0.5),
-        ylims=(0.5, columns+0.5)
-        )
+    plotObject = visualize(cpm)
 
     plot!(plotObject,[9.5, 9.5],[9.5, 90.5], color=:black)
     plot!(plotObject,[90.5, 90.5],[9.5, 90.5], color=:black)
     plot!(plotObject,[9.5, 90.5],[9.5, 9.5], color=:black)
     plot!(plotObject,[9.5, 90.5],[90.5, 90.5], color=:black)
-
-    cellborders!(plotObject, cpm.space)
-
-    cellmovement!(plotObject,cpm)
 
     ModelStep!(cpm)
 

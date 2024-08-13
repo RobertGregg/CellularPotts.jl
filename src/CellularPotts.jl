@@ -138,8 +138,8 @@ export
        CellDivision!,
        CellDeath!,
 #Visualization.jl
-      recordCPM,
-      cellborders!,
-      cellmovement!,
-      plotcpm
+      cellborders,
+      visualize,
+      visualize!,
+      record
 end

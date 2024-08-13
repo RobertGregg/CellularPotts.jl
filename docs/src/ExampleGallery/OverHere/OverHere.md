@@ -66,56 +66,19 @@ Now we can take these three objects and create a Cellular Potts Model object.
 
 ````julia
 cpm = CellPotts(space, initialCellState, penalties)
-````
-
-````
-Cell Potts Model:
-Grid: 200×200
-Cell Counts: [TCells → 10]
-Model Penalties: Adhesion Volume ChemoTaxis
-Temperature: 20.0
-Steps: 0
-````
-
-To scale the color gradients properly, we need to know the number of cells in the model
-
-````julia
-numCells = countcells(cpm);
-````
-
-Normalize the concentration gradient to the number of cells for visualization
-
-````julia
-normSpecies = (numCells/maximum(species)) .* species
 
 anim = @animate for t in 1:2000
 
-    plotObject = contourf(normSpecies,
+    plt = contourf(species,
     c=:temperaturemap,
     levels=50,
     alpha=0.2,
     linewidth=0,
-    grid=false,
-    axis=nothing,
-    legend=:none,
-    framestyle=:box,
-    aspect_ratio=:equal,
-    size = (600,600),
-    xlims=(0.5, xdim+0.5),
-    ylims=(0.5, ydim+0.5))
-
-
-    heatmap!(plotObject,
-    cpm.space.nodeIDs',
-    c = cgrad([RGBA(1,1,1,0), RGBA(0,0,0,0.3)], [0.5/numCells], categorical=true),
-    clim = (0,numCells)
-    )
-
-    cellborders!(plotObject, cpm.space)
+    legend=false)
 
     ModelStep!(cpm)
 
-    plotObject
+    visualize!(plt, cpm; cellcolors = RGBA(0,0,0,0.3))
 
 end every 10
 

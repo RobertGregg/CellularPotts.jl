@@ -233,14 +233,6 @@ function removecell(df::CellState, cellID::T) where T<:Integer
     end
 end
 
-
-####################################################
-# Misc functions
-####################################################
-
-countcells(df::CellState) = length(df.cellIDs) - 1
-countcelltypes(df::CellState) = length(unique(df.typeIDs)) - 1
-
 ####################################################
 # Override Base.show
 ####################################################
