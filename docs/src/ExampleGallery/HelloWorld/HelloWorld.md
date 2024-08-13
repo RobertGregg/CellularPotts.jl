@@ -89,10 +89,10 @@ Calling this object gives a quick summary of the model's current state. Note tha
 !!! note
     Because we added the `positions` property to our CellState, the CellPotts initializer placed the cells in the grid centered at those positions. If we did not specify a positions property, cells would be randomly placed in the space.
 
-Our model is more ready for simulation! This can be done using the using the `ModelStep!` function or recorded as a gif using `recordCPM`
+Our model is more ready for simulation! This can be done using the using the `ModelStep!` function or recorded as a gif using `record`
 
 ````julia
-recordCPM("HelloWorld.gif", cpm)
+record(cpm, file="HelloWorld.gif")
 ````
 
 ```@raw html

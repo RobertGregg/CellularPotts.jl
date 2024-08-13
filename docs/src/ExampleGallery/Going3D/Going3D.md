@@ -11,18 +11,18 @@ using CellularPotts
 space = CellSpace(30,30,30; periodic=false)
 
 
-initialCellState = CellState(:Epithelial, 1000, 1; positions = size(space).÷2)
+initialCellState = CellState(:Epithelial, 1000, 2; positions = [(12,12,12),(18,18,18)])
 
 penalties = [
-    AdhesionPenalty([0 30;
-                     30 0]),
-    VolumePenalty([5])
+    AdhesionPenalty([0 20;
+                     20 20]),
+    VolumePenalty([1])
     ]
 
 
 cpm = CellPotts(space, initialCellState, penalties)
 
-recordCPM("Going3D.gif", cpm)
+record(cpm; file="Going3D.gif", colorby=:id, cellcolors = [:dodgerblue, :red], size=(800,800))
 ````
 
 ```@raw html

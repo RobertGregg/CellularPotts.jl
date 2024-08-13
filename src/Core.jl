@@ -23,39 +23,39 @@ mutable struct CellPotts{T<:Integer, C, N, S<:NamedTuple, U}
     history::History{T,C,N}
     recordHistory::Bool
     checkArticulation::Bool
+end
 
-    function CellPotts(space::CellSpace{T,C,N}, state::CellState{S}, penalties::Vector{P}) where {T,C,N,S,P}
+function CellPotts(space::CellSpace{T,C,N}, state::CellState{S}, penalties::Vector{P}) where {T,C,N,S,P}
 
-        #See https://github.com/JuliaLang/julia/pull/44131 for why Unions are used
-        U = Union{typeof.(penalties)...}
+    #See https://github.com/JuliaLang/julia/pull/44131 for why Unions are used
+    U = Union{typeof.(penalties)...}
 
-        cpm =  new{T,C,N,S,U}(
-            space,
-            space,
-            state,
-            state,
-            U[p for p in penalties],
-            MHStep(),
-            Articulation(nv(space)),
-            20.0,
-            History(space),
-            false,
-            true)
+    cpm = CellPotts(
+        space,
+        space,
+        state,
+        state,
+        U[p for p in penalties],
+        MHStep(),
+        Articulation(nv(space)),
+        20.0,
+        History(space),
+        false,
+        true)
 
-        #Position the cells in the model
-        #TODO need a better way to position cells
-        if :positions ∈ keys(state)
-            positionCells!(cpm)
-        else
-            positionCellsRandom!(cpm)
-        end
-
-        #Now that the cells are added in, reset the initial states/Spaces
-        cpm.initialSpace = deepcopy(cpm.space)
-        cpm.initialState = deepcopy(cpm.state)
-
-        return cpm
+    #Position the cells in the model
+    #TODO need a better way to position cells
+    if :positions ∈ keys(state)
+        positionCells!(cpm)
+    else
+        positionCellsRandom!(cpm)
     end
+
+    #Now that the cells are added in, reset the initial states/Spaces
+    cpm.initialSpace = deepcopy(cpm.space)
+    cpm.initialState = deepcopy(cpm.state)
+
+    return cpm
 end
 
 ####################################################
@@ -66,12 +66,16 @@ end
     countcells(cpm::CellPotts)
 Count the number of cells in the model 
 """
+countcells(space::CellSpace) = maxmimum(nodeIDs(space))
+countcells(df::CellState) = length(df.cellIDs) - 1
 countcells(cpm::CellPotts) = countcells(cpm.state)
 
 """
-    countcelltypes(cpm::CellPotts)
+countcelltypes(cpm::CellPotts)
 Count the number of cell types in the model 
 """
+countcelltypes(space::CellSpace) = maxmimum(nodeTypes(space))
+countcelltypes(df::CellState) = length(unique(df.typeIDs)) - 1
 countcelltypes(cpm::CellPotts) = countcelltypes(cpm.state)
 
 nodeIDs(cpm::CellPotts) = nodeIDs(cpm.space)

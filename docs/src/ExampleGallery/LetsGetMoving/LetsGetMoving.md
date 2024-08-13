@@ -68,7 +68,7 @@ cpm.temperature = 25.0
 Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`. Any options to the GLMakie `record` function can be passed through.
 
 ````julia
-recordCPM("LetsGetMoving.gif", cpm)
+record(cpm, file="LetsGetMoving.gif")
 ````
 
 ```@raw html

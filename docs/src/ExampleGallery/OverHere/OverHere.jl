@@ -29,41 +29,19 @@ penalties = [
 
 cpm = CellPotts(space, initialCellState, penalties)
 
-# To scale the color gradients properly, we need to know the number of cells in the model
-numCells = countcells(cpm);
-
-# Normalize the concentration gradient to the number of cells for visualization
-normSpecies = (numCells/maximum(species)) .* species
-
 anim = @animate for t in 1:2000
 
-    plotObject = contourf(normSpecies,
+    plt = contourf(species,
     c=:temperaturemap,
     levels=50,
     alpha=0.2,
     linewidth=0,
-    grid=false,
-    axis=nothing,
-    legend=:none,
-    framestyle=:box,
-    aspect_ratio=:equal,
-    size = (600,600),
-    xlims=(0.5, xdim+0.5),
-    ylims=(0.5, ydim+0.5))
-
-
-    heatmap!(plotObject,
-    cpm.space.nodeIDs',
-    c = cgrad([RGBA(1,1,1,0), RGBA(0,0,0,0.3)], [0.5/numCells], categorical=true),
-    clim = (0,numCells)
-    )
-
-    cellborders!(plotObject, cpm.space)
-
+    legend=false)
+    
     ModelStep!(cpm)
 
-    plotObject
-
+    visualize!(plt, cpm; cellcolors = RGBA(0,0,0,0.3))
+    
 end every 10
 
 
