@@ -30,10 +30,10 @@ end
 
 #Loop through all the examples, execute them, save markdown file
 
-examplesToUpdate = ["BringingODEsToLife.jl"]
+examplesToUpdate = ["DiffusionOutsideCells.jl","TightSpaces.jl"]
 for (root, dirs, files) in walkdir("./docs/src/ExampleGallery")
     for file in files
-        if endswith(file,".jl") #&& file ∈ examplesToUpdate
+        if endswith(file,".jl") && file ∈ examplesToUpdate
             Literate.markdown(joinpath(root, file), root; execute=true, postprocess=str->gifReplace(str,root,file))
         end
     end

@@ -12,21 +12,21 @@ space = CellSpace(50,50; periodic=true, diagonal=true)
 
 # Next we need to initialize a table of cell information to put into this space.
 
-initialCellState = CellState(:Epithelial, 500, 1; positions = (25,25))
+initialCellState = CellState(names=:Epithelial, volumes=500, counts=1, positions = (25,25))
 
 # The `CellState()` function populates a table detailing the current cell state. The 3 required inputs are:
 
-# 1. A list of cell types    
+# 1. A list of cell types (names)
 # 2. A list of desired cell sizes (volumes)
-# 3. A list of cell counts for each cell type
+# 3. A list of cell counts for each cell type (counts)
     
 # The inputs are simple in this case. We want one cell type called "Epithelial" with a size of 500 pixels and we want only one of them.
 
 # In addition to the 3 required inputs, we can use the optional keyword `positions` to place the cell at a given location. Because the space we specified is 2D, we provide an x and y coordinate to position the cell in the center. 
     
-# The table `CellState()` generates has each row representing a cell and each column listing a property given to that cell. Other information, like the column's type, is also provided. Custom properties can be added with the `addcellproperty()` function.
+# The table `CellState()` generates has each row representing a cell and each column listing a property given to that cell. Other information, like the column's type, is also provided. Custom properties can be defined with additional keywords.
     
-# The first row will always show properties for "Medium", the name given to grid locations without a cell type. Most values related to Medium are either default or missing altogether. Here we see our one epithelial cell has a desired volume of 500 and perimeter of 264 which is the minimal perimeter penalty calculated from the desired volume. 
+# The first row will always show properties for "Medium", the name given to grid locations without a cell type. Most values related to Medium are either default or missing altogether (adding this Medium solves a lot of off-by-one issues). Below Medium, we see our one epithelial cell has a desired volume of 500 and perimeter of 264 which is the minimal perimeter penalty calculated from the desired volume. 
 
 # Now that we have a space and a cell to fill it with, we need to provide a list of model penalties. A number of default penalties exist and you can even create your own custom penalties. Here we only include an `AdhesionPenalty` which encourages grid locations with the same cell type to stick together and a `VolumePenalty` which penalizes cells that deviate from their desired volume.
 

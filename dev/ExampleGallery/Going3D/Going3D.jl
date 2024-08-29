@@ -5,7 +5,7 @@ using CellularPotts
 space = CellSpace(30,30,30; periodic=false)
 
 
-initialCellState = CellState(:Epithelial, 1000, 2; positions = [(12,12,12),(18,18,18)])
+initialCellState = CellState(names=:Epithelial, volumes=1000, counts=2, positions = [(12,12,12),(18,18,18)])
 
 penalties = [
     AdhesionPenalty([0 20;

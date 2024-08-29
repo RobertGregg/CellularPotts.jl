@@ -9,9 +9,9 @@ space = CellSpace(200,200; diagonal=true)
 # Initialize a new `CellState` with 75 epithelial cells and 5 T-Cells
 
 initialCellState = CellState(
-    [:Epithelial, :TCell],
-    [250, 200],
-    [160, 10]);
+    names = [:Epithelial, :TCell],
+    volumes = [250, 200],
+    counts = [160, 10]);
 
 # Note that for the `MigrationPenalty` we set the epithelial cell's scaling factor to zero. This effectively removes this penalty from the cell type.
 
