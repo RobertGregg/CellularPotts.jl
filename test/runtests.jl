@@ -48,49 +48,55 @@ end
 
     table1 = CellState(:hello, 1,1)
     table2 = CellState([:hello], [1],[1])
+    table3 = CellState(names=:hello, volumes=1, counts=1)
 
-    @test parent(table1) == parent(table2)
+    @test parent(table1) == parent(table2) == parent(table3)
 end
 
 @testset "Testing positions keyword" begin
 
-    table1 = CellState(:hello, 1,1; positions=(25,25))
-    table2 = CellState([:hello], [1],[1]; positions=[(25,25)])
+    table1 = CellState(:hello, 1, 1; positions=(25,25))
+    table2 = CellState([:hello], [1], [1]; positions=[(25,25)])
+    table3 = CellState(names=:hello, volumes=1, counts=1, positions=(25,25))
 
-    table3 = CellState([:hello], [10], [3]; positions=[(1,1),(2,2),(3,3)])
-    table4 = CellState(:hello, 10, 3; positions=[(1,1),(2,2),(3,3)])
+    table4 = CellState([:hello], [10], [3]; positions=[(1,1),(2,2),(3,3)])
+    table5 = CellState(:hello, 10, 3; positions=[(1,1),(2,2),(3,3)])
+    table6 = CellState(names=:hello, volumes=10, counts=3, positions=[(1,1),(2,2),(3,3)])
 
-    @test parent(table1) == parent(table2)
-    @test parent(table3) == parent(table4)
+    @test parent(table1) == parent(table2) == parent(table3)
+    @test parent(table4) == parent(table5) == parent(table6)
 end
 
 @testset "Adding Cell Properties" begin
 
     df = CellState(
-    [:Epithelial, :TCell, :BCell],
-    [500, 100, 100],
-    [1, 1, 1])
-
-    df = addcellproperty(df, :P1, 0)
-    df = addcellproperty(df, :P2, [0, 0, 0])
-    df = addcellproperty(df, :P3, 0, :Epithelial)
-    df = addcellproperty(df, :P4, [0], :Epithelial)
-    df = addcellproperty(df, :P5, 0, [:Epithelial])
-    df = addcellproperty(df, :P6, 1, [:TCell, :BCell])
-    df = addcellproperty(df, :P7, [1,2], [:TCell, :BCell])
-    df = addcellproperty(df, :P8, Dict([1,2] .=> [:TCell, :BCell]))
+    names = [:Epithelial, :TCell, :BCell],
+    volumes = [500, 100, 100],
+    counts = [1, 2, 3],
+    P1 = [0,0,0],
+    P2 = [0, missing, missing],
+    P3 = collect(1:6)
+    )
 
 
-    for i in 1:8
-        @test hasproperty(parent(df), Symbol("P$(i)"))
-        @test length(getproperty(parent(df), Symbol("P$(i)"))) == length(df)
+    for i in 1:3
+        Pi = Symbol("P$(i)")
+        @test hasproperty(df, Pi)
+        @test length(getproperty(df, Pi)) == first(size(df))
     end
-
-    @test_throws DimensionMismatch addcellproperty(df, :Pbad, [1,2], [:Epithelial, :TCell, :BCell])
-    @test_throws DimensionMismatch addcellproperty(df, :Pbad, [1,2,3], [:TCell, :BCell])
-    @test_throws TypeError addcellproperty(df, :P1, [1,2,3], :TCell)
 end
 
+@testset "Add/Delete Cells" begin
+    table = CellState(names=:hello, volumes=1, counts=1)
+
+    push!(table,table[1])
+
+    @test countcells(table) == 2
+
+    deleteat!(table,1)
+
+    @test countcells(table) == 1
+end
 
 ####################################################
 # Penalties

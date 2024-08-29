@@ -19,7 +19,7 @@ spaceImage[10:90,10:90] .= 0
 
 space = CellSpace(spaceImage; periodic=false, diagonal=true)
 
-initialCellState = CellState(:Epithelial, 500, 1; positions = (5,5));
+initialCellState = CellState(names=:Epithelial, volumes=500, counts=1, positions = (5,5));
 
 penalties = [
     AdhesionPenalty([0 30;

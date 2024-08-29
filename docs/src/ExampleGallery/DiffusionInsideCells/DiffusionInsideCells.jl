@@ -3,7 +3,7 @@
 # This is a more complex demonstration to showcase one way we can simulate diffusion inside a cell. There are many ways to couple Cellular Potts Models with PDEs, but here we take a simple approach similar to the "BringingODEsToLife.jl" example. The basic strategy is:
 # 1. Discretize the diffusion PDE into a system of ODEs.
 # 2. At each ODE time-point, calculate how each species diffuses and add that to the ODE dynamics.
-# 3. Periodically stop the ODE solver and manually perform a `ModelStep()`.
+# 3. Periodically stop the ODE solver and update the CellularPotts Model.
 # 4. If a cell becomes larger/smaller, re-normalize the total amount of species in the cell to conserve mass.
 # 5. Continue until the final ODE solver time-point is reached.
 
@@ -25,7 +25,7 @@ const ΔX = zeros(N,N);
 # The `CellPotts()` model requires three inputs (space, cell table, and penalties). Here we create an N×N space with one 500 pixel cell that has penalities for adhesion and volume. See the HelloWorld example for more explanation. 
 cpm = CellPotts(
     CellSpace(N,N), 
-    CellState(:Epithelial, 500, 1, positions = (N,N) .÷ 2),
+    CellState(names=:Epithelial, volumes=500, counts=1, positions = (N,N) .÷ 2),
     [AdhesionPenalty([0 30; 30 30]), VolumePenalty([5])]
     );
 

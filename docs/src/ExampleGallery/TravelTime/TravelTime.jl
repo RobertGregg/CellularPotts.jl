@@ -24,9 +24,9 @@ space = CellSpace(100,100)
 
 #Cells will have same volume, the moving cell will be in the center and the stationary cell will be placed in the corner
 initialCellState = CellState(
-    [:StationaryCell, :MovingCell],
-    [200, 200],
-    [1,1];
+    names = [:StationaryCell, :MovingCell],
+    volumes = [200, 200],
+    counts = [1,1],
     positions = [(20,20),(50,50)])
 
 #Add a migration penalty to one cell encourage cell movement

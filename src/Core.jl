@@ -45,7 +45,7 @@ function CellPotts(space::CellSpace{T,C,N}, state::CellState{S}, penalties::Vect
 
     #Position the cells in the model
     #TODO need a better way to position cells
-    if :positions ∈ keys(state)
+    if hasproperty(state, :positions)
         positionCells!(cpm)
     else
         positionCellsRandom!(cpm)
@@ -103,7 +103,7 @@ function show(io::IO, cpm::CellPotts)
     end
 
     #Cells and types
-    cellCounts = countmap(cpm.state.names)
+    cellCounts = encode(cpm.state.names)
     print(io,"Cell Counts:")
     for (key, value) in cellCounts #remove medium
         if key ≠ :Medium

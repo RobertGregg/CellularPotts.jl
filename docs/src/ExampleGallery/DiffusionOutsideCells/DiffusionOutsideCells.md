@@ -21,12 +21,12 @@ const N = 200
 const p0 = 50.0;
 ````
 
-Next we generate a `CellPotts()` model with 3 cells approximately 1000 pixels in size with adhesion and volume constraints.
+Next we generate a `CellPotts()` model with 8 cells approximately 1000 pixels in size with adhesion and volume constraints.
 
 ````julia
 cpm = CellPotts(
     CellSpace(N,N),
-    CellState(:Epithelial, 1000, 8),
+    CellState(names=:Epithelial, volumes=1000, counts=8),
     [AdhesionPenalty([0 30;30 30]), VolumePenalty([5])]
     );
 ````
@@ -37,7 +37,7 @@ Record the model.
 cpm.recordHistory = true;
 ````
 
-Because cell space is represented as a graph, we can use the `laplacian_matrix()` function from the Graphs.jl package to estimate the continuous Laplacian operator that describes diffusion (see these two wikipedia articles for more information: [Graph Laplacians](https://en.wikipedia.org/wiki/Discrete_Laplace_operator#Graph_Laplacians), [Laplacian matrix](https://en.wikipedia.org/wiki/Laplacian_matrix#Laplacian_matrix)). This graphical Laplacian matrix can be easily calculated as the difference between the degree matrix and the adjacency matrix. For our purposes, `laplacian_matrix()` generates a sparse $N^2 \times N^2$ matrix which we can multiply by our state vector to simulate diffusion. We also need to specify that our graph is bi-directional (i.e. undirected).
+Because cell space is represented as a graph, we can use the `laplacian_matrix()` function from the Graphs.jl package to estimate the continuous Laplacian operator that describes diffusion (see these two wikipedia articles for more information: [Graph Laplacians](https://en.wikipedia.org/wiki/Discrete_Laplace_operator#Graph_Laplacians), [Laplacian matrix](https://en.wikipedia.org/wiki/Laplacian_matrix#Laplacian_matrix)). This graphical Laplacian matrix can be easily calculated as the difference between the degree matrix and the adjacency matrix. For our purposes, `laplacian_matrix()` generates a sparse $N^2 \times N^2$ matrix which we can multiply by our state vector to simulate diffusion. We also need to specify that our graph is bi-directional (i.e., undirected).
 
 ````julia
 const 𝓛 = laplacian_matrix(cpm.space, dir=:both);
@@ -51,7 +51,7 @@ function cpmUpdate!(integrator, cpm)
 
     u = integrator.u
 
-    for i in 1:nv(cpm.space)
+    for i in vertices(cpm.space) # 1:N²
         if !iszero(cpm.space.nodeIDs[i])
             u[i] = p0
         end
@@ -68,7 +68,7 @@ cb = PeriodicCallback(integrator -> cpmUpdate!(integrator, cpm), 1/timeScale);
 
 ## Defining the PDE Model
 
-Here there are two parameters that control the rate a species degradation (k) and the rate of diffusion (D). Note that the graphical Laplacian corresponds to the **negative** continuous Laplacian which is why we negate this term.
+Here we have parameters that control the rate a species degrades (k) and the rate of diffusion (D). Note that the graphical Laplacian corresponds to the **negative** continuous Laplacian which is why we negate this term.
 
 ````julia
 function f(du,u,p,t)

@@ -5,76 +5,88 @@
 #This is basically a fancy table that has a zero based index
 #We want the first (0th) row to correspond with :Medium, this lets cell 1 have index 1 etc.
 
-#Subtyping Tables to 
-    #(1) integrate with other like CSV.jl
-    #(2) enable fast row/column iteration
-
 """
     CellState
 An concrete type that stores a table where each row is a cell and each column is a cell property.
 """
-mutable struct CellState{T<:NamedTuple} <: Tables.AbstractColumns
+struct CellState{T<:NamedTuple}
     data::T
 end
 
+####################################################
+# Create a row structure for iteration
+####################################################
 
 """
-    CellRow
-An concrete type that stores one row of a CellState.
+    Cell
+An concrete type that points to a row in a referenced CellState table.
 """
-struct CellRow{T} <: AbstractRow
+struct Cell{T}
     row::Int
-    source::CellState{T}
+    cs::CellState{T}
 end
 
-####################################################
-# Tables.jl specific methods
-####################################################
+getrow(cell::Cell) = getfield(cell,:row)
 
-# declare that CellState is a table
-istable(::Type{<:CellState}) = true
+Base.parent(cell::Cell) = parent(getfield(cell,:cs))
+Base.getproperty(cell::Cell, property::Symbol) = getproperty(parent(cell), property)[getrow(cell)]
+Base.propertynames(cell::Cell) = propertynames(parent(cell)) # for tab autocomplete
 
+function Base.show(io::IO, cell::Cell)
+    print(io, map(x->x[getrow(cell)], parent(cell)))
+end
 
-#From Base, used for stuff like view(Array) to get the Array back
-parent(df::CellState) = getfield(df,:data)
-
-
-# schema is column names and types
-schema(df::CellState{T}) where T = Schema(keys(parent(df)), eltype.(values(parent(df))) )
-
-# column interface
-columnaccess(::Type{<:CellState}) = true
-columns(df::CellState) = df
-# required AbstractColumns object methods
-getcolumn(df::CellState, ::Type{T}, col::Int, nm::Symbol) where {T} = parent(df)[col]
-getcolumn(df::CellState, nm::Symbol) = getfield(parent(df), nm)
-getcolumn(df::CellState, i::Int) = parent(df)[i]
-columnnames(df::CellState) = keys(parent(df))
-
-
-# required `AbstractRow` interface methods (same as for `AbstractColumns` object before)
-# but this time, on our custom row type
-getcolumn(r::CellRow, ::Type, col::Int, nm::Symbol) = parent(getfield(r, :source))[col][getfield(r, :row)]
-getcolumn(r::CellRow, i::Int) = parent(getfield(r, :source))[i][getfield(r, :row)]
-getcolumn(r::CellRow, nm::Symbol) = getfield(parent(getfield(r, :source)), nm)[getfield(r, :row)]
-columnnames(df::CellRow) = keys(parent(getfield(df, :source)))
-
-
-# declare that any CellState defines its own `rows` method
-rowaccess(::Type{<:CellState}) = true
-# just return itself, which means CellState must iterate `AbstractRow`-compatible objects
-rows(df::CellState) = df
 
 ####################################################
-# Overloading Base Methods
+# Overloading Base Methods for CellState
 ####################################################
 
-eltype(df::CellState{T}) where {T} = CellRow{T}
-length(df::CellState) = length(first(parent(df)))
-size(df::CellState) = (length(df),length(parent(df)))
-iterate(df::CellState, st=0) = st > length(df)-1 ? nothing : (CellRow(st, df), st + 1)
-getindex(df::CellState,i::Int) = CellRow(i, df)
-merge(df::CellState, newColumn) = CellState( merge(parent(df), newColumn) )
+Base.parent(cs::CellState) = getfield(cs,:data)
+Base.getproperty(cs::CellState, property::Symbol) = getproperty(parent(cs), property)
+Base.length(cs::CellState) = length(parent(cs)) #length will be number of columns
+Base.size(cs::CellState) = (length(first(parent(cs))), length(cs))
+Base.size(cs::CellState, d::Integer) = size(cs)[d]
+Base.propertynames(cs::CellState) = propertynames(parent(cs)) # for tab autocomplete
+
+Base.getindex(cs::CellState, i::Int) = Cell(i, cs)
+Base.iterate(cs::CellState, row=1) = row > first(size(cs))-1 ? nothing : (Cell(row, cs), row + 1)
+
+#For adding/removing cells
+function Base.push!(cs::CellState, cell::Cell)
+
+    for property in propertynames(cs)
+        push!(getproperty(cs, property), getproperty(cell, property))
+    end
+
+    cs.cellIDs[end] = maximum(cs.cellIDs) + 1
+
+    return nothing
+end
+
+function Base.deleteat!(cs::CellState, i)
+
+     map(x->deleteat!(x,i), parent(cs))
+
+     return nothing
+end
+
+function Base.show(io::IO, cs::CellState) 
+
+    #pretty_table doesn't like offset vectors in a NamedTuple
+    #convert data into an offset array
+    data = map(OffsetArrays.no_offset_view, parent(cs))
+    mat = offset(reshape(reduce(vcat,values(data)), size(cs)))
+
+    #gray out medium row
+    hl = Highlighter(f = (data, i, j) -> i == 0,
+        crayon = Crayon(background = :dark_gray))
+
+
+    pretty_table(io, mat; 
+        highlighters = hl,
+        show_row_number=true,
+        header=(collect(keys(data)), eltype.(values(data))))     
+end
 
 
 ####################################################
@@ -82,7 +94,14 @@ merge(df::CellState, newColumn) = CellState( merge(parent(df), newColumn) )
 ####################################################
 
 """
-    CellState(names::Vector{Symbol}, volumes::Vector{T}, counts::Vector{T}) where T<:Integer
+    CellState(
+    names::AbstractVector{S},
+    volumes::AbstractVector{T},
+    counts::AbstractVector{T};
+    options...) where {S<:Symbol, T<:Integer}
+
+
+    CellState(;names::AbstractVector{Symbol}, volumes::AbstractVector{T}, counts::AbstractVector{T}, options...) where T<:Integer
 Create a new `CellState` where each row corresponds to a cell.
 
 By default, this function generates a table with the following columns:
@@ -90,166 +109,72 @@ By default, this function generates a table with the following columns:
  - cellIDs`::Vector{<:Integer}` -- A unqiue number given to a cell
  - typeIDs`::Vector{<:Integer}` -- A number corresponding to the cell's name
  - volumes`::Vector{<:Integer}` -- Number of grid squares occupied 
- - desiredVolumes`::Vector{<:Integer}`-- Desired number of grid square
+ - desiredVolumes`::Vector{<:Integer}`-- Desired number of grid squares
  - perimeters`::Vector{<:Integer}`-- Cell border penality
  - desiredPerimeters`::Vector{<:Integer}`-- Desired cell border penality
 
 The first row in the table is reserved for `:Medium` which is the name given to grid locations not belonging to any cell and is given an index of 0 (The first cell is given an index of 1).
-    
-Of note, `desiredPerimeters` are calculated as the minimal perimeter given the cell's volume. 
+
+Additional cell properties can be supplied as keyword arguements. The length of the keyword arguement needs to match the number of cell types or the total cell count.      
 """
 function CellState(
     names::AbstractVector{S},
     volumes::AbstractVector{T},
     counts::AbstractVector{T};
-    positions = nothing) where {S<:Union{Symbol, String}, T<:Integer} 
+    options...) where {S<:Symbol, T<:Integer} 
 
-    #Does not include Medium
     totalCells = sum(counts)
+    totalTypes = length(names)
+
+    #Check if all options are correct length
+    for (key, value) in options
+        if length(value) ≠ totalTypes && length(value) ≠ totalCells
+            error("$key is not the correct length, should match number of cells ($totalCells) or cell types ($totalTypes). Got length $(length(value))")
+        end
+    end
 
     #Add Medium
-    pushfirst!(names, first(names) isa Symbol ? :Medium : "Medium")
+    pushfirst!(names, :Medium)
     pushfirst!(counts, one(T))
     pushfirst!(volumes, zero(T))
 
+    #add medium and decode options if needed
+    map(values(options)) do option
+
+        pushfirst!(option, first(option))
+
+        if length(option) == length(counts)
+            extendedOption = decode(option,counts)
+            empty!(option)
+            append!(option, extendedOption)
+        end
+    end
+
     data =  (;
-        names = inverse_rle(names, counts),  #inverse_rle(["a","b"], [2,3]) = ["a","a","b","b","b"] 
+        names = decode(names, counts),   
         cellIDs = collect(0:totalCells),
-        typeIDs = inverse_rle(0:length(names)-1, counts),
-        volumes = zeros(T,totalCells + 1),
-        desiredVolumes = inverse_rle(volumes, counts),
-        perimeters = zeros(T,totalCells + 1),
-        desiredPerimeters = estPerimeter.(inverse_rle(volumes, counts))
+        typeIDs = decode(0:totalTypes, counts),
+        volumes = zeros(T, totalCells + 1),
+        desiredVolumes = decode(volumes, counts),
+        perimeters = zeros(T, totalCells + 1),
+        desiredPerimeters = estPerimeter.(decode(volumes, counts)),
+        options...
     )
 
-    state = CellState(map(offset, data))
-
-    #Add the cell positions if provided
-    if !isnothing(positions) 
-        state = addcellproperty(state,:positions,positions)
-    end
+    state = CellState(map(offset,data))
 
     return state
 end
 
 #Alternative method when only creating one cell
-function CellState(names::Union{Symbol, String}, volumes::T, counts::T; positions=nothing) where T<:Integer
+#options can be one value like :color="red" or a vector with length equal to counts
+function CellState(names::Symbol, volumes::T, counts::T; options...) where T<:Integer
 
-    if isnothing(positions) || length(positions) == counts
-        return CellState([names], [volumes], [counts]; positions)
-    end
+    #options is type Base.Pairs and values(options) is a NamedTuple
+    optionsVectorized = (; zip( keys(options), vcat.(values(values(options))) )...)
 
-    return CellState([names], [volumes], [counts]; positions = [positions])
+    return CellState([names], [volumes], [counts]; optionsVectorized...)
 end
 
-####################################################
-# Add/remove cells and properties
-####################################################
-
-"""
-    addcellproperty(df::CellState, propertyName, propertyValue)
-    addcellproperty(df::CellState, propertyName, propertyValue, validCells)
-    addcellproperty(df::CellState, propertyName, cellPropertyPairs::Dict{Symbol, T})
-
-Given a `CellState`, add a new column called `propertyName` with values from `propertyValue`.
-
-There are several ways to add a new property to a `CellState`, with the simplest method requiring only a `propertyName` and a single `propertyValue`. A vector of `propertyValue`s can also be provided if a unique value for each cell is desired.
-
-Sometimes a property may only apply to certain cell types. A single cell type or vector of cell types can be passed to `validCells`. All non-valid cells will be given a `missing` value for that property.
-
-Finally, a dictionary of cell=>value pairs can be passed for a given property. Cells not in this dictionary will be given a property value of `missing`.
-"""
-function addcellproperty(df::CellState, propertyName::Symbol, propertyValue::Vector{T}) where T
-    
-    #Check if :Medium is accounted for
-    if length(propertyValue) ≠ length(df)
-        pushfirst!(propertyValue, first(propertyValue))
-    end
-    propertyValue = offset(propertyValue)
-
-    return merge(df, [propertyName => propertyValue])
-end
-
-#Just given and name and value, direct to default method above
-addcellproperty(df::CellState, propertyName::Symbol, propertyValue) = addcellproperty(df, propertyName, fill(propertyValue, length(df)))
-
-
-function addcellproperty(df::CellState, propertyName::Symbol, cellPropertyDict::Dict{Symbol, T}) where T
-
-    newColumn = Union{Missing, T}[]
-
-    for cellName in df.names
-        if !haskey(cellPropertyDict, cellName)
-            push!(newColumn, missing)
-        else
-            push!(newColumn, cellPropertyDict[cellName])
-        end
-    end
-
-    if all(!ismissing, newColumn)
-        newColumn = convert(Vector{T}, newColumn)
-    end
-    
-    # direct to default method above
-    return addcellproperty(df, propertyName, newColumn)
-end
-
-addcellproperty(df::CellState, propertyName::Symbol, propertyValue, validCells) = addcellproperty(df, propertyName, Dict(validCells .=> propertyValue))
-
-function addcellproperty(df::CellState, propertyName::Symbol, propertyValue::Vector{T}, validCells::Symbol) where T
-    if length(propertyValue) > 1
-        throw(TypeError(Symbol("propertyValue because multiple values cannot apply to one cell"), T, propertyValue))
-    end
-
-    return addcellproperty(df, propertyName, Dict(validCells .=> propertyValue))
-end
-
-
-
-"""
-    addnewcell(df::CellState, cell<:NamedTuple)
-
-Given a `CellState`, add a new row corresponding to a new cell in the model. Property names for the cell need to match column names in the CellState
-"""
-function addnewcell(df::CellState, cell::CellRow)
-    
-    if propertynames(df) ≠ propertynames(cell)
-        error("Mismatch between CellState and new cell properties, check propertynames()")
-    end
-
-    for property in keys(df)
-        push!(df[property], cell[property])
-    end
-end
-
-"""
-    removecell(df::CellState, cellID)
-
-Given a `CellState`, remove the cell with provided `cellID`.
-"""
-function removecell(df::CellState, cellID::T) where T<:Integer
-    for property in keys(df)
-        deleteat!(df[property], cellID)
-    end
-end
-
-####################################################
-# Override Base.show
-####################################################
-
-#TODO: Add a compact mode
-
-function show(io::IO, intState::CellState) 
-
-    data = map(OffsetArrays.no_offset_view, parent(intState))
-
-    hl = Highlighter(f = (data, i, j) -> i == 1,
-                         crayon = Crayon(background = :dark_gray))
-
-    pretty_table(io,
-        data,
-        header_crayon = crayon"yellow bold",
-        highlighters = hl,
-        #display_size = (20,0),
-        vcrop_mode = :middle)
-end
+#This is what the user should be calling
+CellState(; names, volumes, counts, options...) = CellState(names, volumes, counts; options...)
