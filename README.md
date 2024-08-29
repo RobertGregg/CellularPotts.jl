@@ -96,7 +96,7 @@ https://doi.org/10.1093/bioinformatics/btad773
 
 - [ ] `CellDivision!()` currently cannot update custom cell state properties
 
-- [ ] Keyword options for cell state (to add cell properties)
+- [x] Keyword options for cell state (to add cell properties)
 
 - [ ] Use automatic differentiation to calculate [cellular forces](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007459) from the Hamiltonian
 
@@ -110,10 +110,12 @@ https://doi.org/10.1093/bioinformatics/btad773
 
 - [x] Reduce heavy package dependencies using package extensions
 
-- [ ] recordCPM is very slow, can it be made faster?
-  
   - [ ] Not using package extensions yet but some heavy dependencies were removed
-
+    
+- [x] recordCPM is very slow, can it be made faster?
+      
+    - Now used Plot recipes
+  
 - [ ] Separate tutorials from examples
 
 - [ ] Tutorial on how to create your own penalty
