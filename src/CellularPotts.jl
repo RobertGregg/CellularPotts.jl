@@ -1,6 +1,7 @@
 module CellularPotts
 
 using OffsetArrays, #Allow some arrays to be zero indexed to include medium
+      StatsBase, #Sampling weighted vectors, rle_inverse, countmap
       Plots, #Visualization 
       Colors, #More color options for the cells (e.g. :Purples)
       ColorSchemes, #For custom cell colors

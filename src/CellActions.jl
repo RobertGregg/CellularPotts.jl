@@ -2,7 +2,6 @@
 # Cell Division
 ####################################################
 
-#TODO User needs to specify what happens to custom properties
 function CellDivision!(cpm::CellPotts, oldID::Int)
 
     #Find all the nodes with the same ID (σ) as input
@@ -54,6 +53,7 @@ end
 
 
 #Just set the desired volume to zero?
+#TODO different types of cell death
 function CellDeath!(cpm::CellPotts, σ::Int)
     cpm.state.desiredVolumes[σ] = 0
     return nothing

@@ -30,6 +30,11 @@ end
     @test ne(g2) == 18
     @test ne(g3) == 20
     @test ne(g4) == 36
+
+    @test repr(g1) == "3×3 nonPeriodic 4-Neighbor CellSpace{Int64,2}"    
+    @test repr(g2) == "3×3 Periodic 4-Neighbor CellSpace{Int64,2}"    
+    @test repr(g3) == "3×3 nonPeriodic 8-Neighbor CellSpace{Int64,2}"    
+    @test repr(g4) == "3×3 Periodic 8-Neighbor CellSpace{Int64,2}"    
 end
 
 @testset "Neighborhoods" begin
@@ -51,6 +56,16 @@ end
     table3 = CellState(names=:hello, volumes=1, counts=1)
 
     @test parent(table1) == parent(table2) == parent(table3)
+    
+    @test repr(table1) == """
+    ┌─────┬────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┐
+    │ Row │  names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │
+    │     │ Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │
+    ├─────┼────────┼─────────┼─────────┼─────────┼────────────────┼────────────┼───────────────────┤
+    │   0 │ Medium │       0 │       0 │       0 │              0 │          0 │                 0 │
+    │   1 │  hello │       1 │       1 │       0 │              1 │          0 │                 8 │
+    └─────┴────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴───────────────────┘
+    """
 end
 
 @testset "Testing positions keyword" begin
@@ -77,7 +92,6 @@ end
     P2 = [0, missing, missing],
     P3 = collect(1:6)
     )
-
 
     for i in 1:3
         Pi = Symbol("P$(i)")
@@ -184,6 +198,21 @@ end
 
     @test isfragmented(cpm) == false
 
+end
+
+####################################################
+# Show method for CPM
+####################################################
+
+@testset "Show me the CPM" begin
+    
+    cpm = CellPotts(
+        CellSpace(5,5),
+        CellState(names=[:A,:B], volumes=[8,10], counts=[1,1]),
+        [AdhesionPenalty([0 20; 20 0]), VolumePenalty([5])]
+    )
+
+    @test repr(cpm) == "Cell Potts Model:\nGrid: 5×5\nCell Counts: [A → 1] [B → 1] [Total → 2]\nModel Penalties: Adhesion Volume\nTemperature: 20.0\nSteps: 0"
 end
 
 ####################################################
@@ -342,10 +371,27 @@ end
 # Benchmarks
 ####################################################
 
-@testset "Allocations" begin
+@testset "Allocations (no diagonal)" begin
 
     cpm = CellPotts(
         CellSpace(50,50),
+        CellState(:Epithelial, 25, 10),
+        [
+            AdhesionPenalty([0 30; 30 0]),
+            VolumePenalty([5]),
+            PerimeterPenalty([0,10]),
+            MigrationPenalty(50, [50], (50,50))
+            ]
+        )
+    
+    @test (@ballocated ModelStep!(cpm)) == 0
+end
+
+
+@testset "Allocations (diagonal)" begin
+
+    cpm = CellPotts(
+        CellSpace(50,50; diagonal=true),
         CellState(:Epithelial, 25, 10),
         [
             AdhesionPenalty([0 30; 30 0]),

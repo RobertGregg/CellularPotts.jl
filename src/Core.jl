@@ -44,7 +44,6 @@ function CellPotts(space::CellSpace{T,C,N}, state::CellState{S}, penalties::Vect
         true)
 
     #Position the cells in the model
-    #TODO need a better way to position cells
     if hasproperty(state, :positions)
         positionCells!(cpm)
     else

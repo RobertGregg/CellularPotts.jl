@@ -26,7 +26,7 @@ function MHStep!(cpm::CellPotts)
     target = cpm.step.target
 
     #Pick a random location on the graph
-    source.node = rand(1:nv(cpm.space))
+    source.node = rand(vertices(cpm.space))
     #What cell does it belong to?
     source.id = cpm.space.nodeIDs[source.node]
     source.type = cpm.space.nodeTypes[source.node]

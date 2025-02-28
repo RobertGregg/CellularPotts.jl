@@ -1,7 +1,7 @@
 name = "CellularPotts"
 uuid = "11b7dee7-cd95-48a5-a457-717aae94d0bd"
 authors = ["Robert <robwgregg@gmail.com> and contributors"]
-version = "0.3.5"
+version = "0.3.6"
 
 [deps]
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
@@ -16,10 +16,11 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 ColorSchemes = "3"
-Colors = "0.12"
+Colors = "0.13"
 Documenter = "1"
 Graphs = "1"
 Literate = "2"
@@ -27,6 +28,7 @@ Metis = "1"
 OffsetArrays = "1"
 Plots = "1"
 PrettyTables = "2"
+StatsBase = "0.34"
 julia = "1"
 
 [extras]
