@@ -158,8 +158,8 @@ visualize!(plt::RecipesBase.AbstractPlot, args...; kw...) = RecipesBase.plot!(pl
     legend := :none
     aspect_ratio := :equal
     framestyle := :box
-    xlims := (0.5, rows+0.5)
-    ylims := (0.5, columns+0.5)
+    xlims := (0.5, columns+0.5)
+    ylims := (0.5, rows+0.5)
         
 
     #Use heatmap to color the cell (if desired)
