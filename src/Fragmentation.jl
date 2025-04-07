@@ -20,11 +20,6 @@ function isfragmented(cpm::CellPotts)
     
     #find a neighbor to the target node that has the same ID as the target
     startID = findfirst(isequal(target.id), g.nodeIDs[i] for i in target.neighbors)
-
-    #TODO Temporary fix, why would no neighbors be same id?
-    if isnothing(startID)
-        return true
-    end
     startNode = target.neighbors[startID]
 
     #Mark the target and neighbor node as visited
