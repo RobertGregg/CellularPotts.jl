@@ -119,3 +119,5 @@ https://doi.org/10.1093/bioinformatics/btad773
 - [ ] Separate tutorials from examples
 
 - [ ] Tutorial on how to create your own penalty
+
+- [ ] Make adding cells easier

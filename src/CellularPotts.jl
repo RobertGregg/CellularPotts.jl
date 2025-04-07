@@ -100,7 +100,7 @@ export
       updateModelStep!,
 #CellActions.jl
        CellDivision!,
-       CellDeath!,
+       CellRemove!,
 #Visualization.jl
       cellborders,
       visualize,

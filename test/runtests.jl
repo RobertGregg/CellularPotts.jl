@@ -9,6 +9,19 @@ using BenchmarkTools
 Random.seed!(314159)
 
 ####################################################
+# Adding/Removing cells
+####################################################
+
+
+cpm = CellPotts(
+        CellSpace(10,10; periodic=false),
+        CellState(names=[:A,:B,:C], volumes=[8,10,15], counts=[1,1,1]),
+        [AdhesionPenalty(fill(20,3,3)), VolumePenalty([5,5])]
+    )
+
+
+
+####################################################
 # CellSpace
 ####################################################
 
@@ -403,3 +416,66 @@ end
     
     @test (@ballocated ModelStep!(cpm)) == 0
 end
+
+
+
+
+##################################
+# Delete me
+##################################
+# using Plots
+
+
+# function square(xy)
+#     x,y=xy
+#     [(NaN, NaN),
+#     (x - 0.5, y - 0.5),
+#     (x - 0.5, y + 0.5),
+#     (x + 0.5, y + 0.5),
+#     (x + 0.5, y - 0.5)]
+# end
+
+# xdim,ydim = (100,100)
+# z1 = [100exp(-((x-xdim/2)^2+(y-ydim/2)^2)/10000) for x in 1:xdim, y in 1:ydim]
+# z2 = zeros(xdim,ydim)
+
+# for x in 1:xdim, y in 1:ydim
+#     if (x-10)^2 + (y-15)^2 < 25
+#         z2[x,y] = 1
+#     end
+
+
+#     if (x-40)^2 + (y-15)^2 < 40
+#         z2[x,y] = 1
+#     end
+
+
+#     if (x-60)^2 + (y-60)^2 < 100
+#         z2[x,y] = 2
+#     end
+# end
+
+
+# plt = contourf(z1,
+#     c=:temperaturemap,
+#     levels=50,
+#     alpha=0.9,
+#     linewidth=0,
+#     size=(600,600),
+#     axis=nothing,
+#     aspect_ratio=:equal,
+#     framestyle = :box,
+#     xlims = (1, xdim),
+#     ylims = (1, ydim))
+
+
+# cellColors = [(:darkblue, 0.5), (:darkgreen,0.5)]
+
+# for (i,fillcolor) in enumerate(cellColors)
+#     squares = Shape(vcat((square(I) for I in Iterators.product(1:xdim,1:ydim) if z2[I...] == i)...))
+#     plot!(plt,squares, legend=true, fill=fillcolor, linealpha=0, label="cell type $i")
+# end
+
+
+# plt
+

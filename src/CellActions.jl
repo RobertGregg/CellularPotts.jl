@@ -48,13 +48,13 @@ end
 
 
 ####################################################
-# Cell Death
+# Remove and Add Cells
 ####################################################
 
 
+#TODO different types of cell death and adding cells
 #Just set the desired volume to zero?
-#TODO different types of cell death
-function CellDeath!(cpm::CellPotts, σ::Int)
+function CellRemove!(cpm::CellPotts, σ::Int)
     cpm.state.desiredVolumes[σ] = 0
     return nothing
 end
