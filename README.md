@@ -114,5 +114,3 @@ https://doi.org/10.1093/bioinformatics/btad773
 - [ ] Make adding cells easier
 
 - [ ] Make it easier to integrate PDE models (maybe Enzyme.jl?)
-- [ ] 
-- [ ] 
