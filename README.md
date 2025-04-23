@@ -69,9 +69,7 @@ recordCPM("ReadMeExample.gif", cpm)
 
 ## Want to Contribute?
 
-Careful attention has been taken to ensure this package is as performant as I can possibly make it, however, if you spot something egregious in the package, feel free to raise an issue or pull request.
-
-Also of note, **this package is still in development and is not currently recommended for general use**. However, still feel free to try it and give suggestions if you're curious. 
+If you want to suggest new features or improvements to make CellularPotts.jl better, feel free to submit an issue or pull request. Please also report any bugs you may stumble upon and I will try my best to fix them. I've tried to ensure that this package is as performant as possible, but I welcome any improvements you might have!
 
 ## How to Cite
 
@@ -96,28 +94,25 @@ https://doi.org/10.1093/bioinformatics/btad773
 
 - [ ] `CellDivision!()` currently cannot update custom cell state properties
 
-- [x] Keyword options for cell state (to add cell properties)
+- [ ] Use `Shape()` to plots cells instead of heatmap (will this be slower?)
 
 - [ ] Use automatic differentiation to calculate [cellular forces](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007459) from the Hamiltonian
-
-- [x] Create more unit tests for reproducibility (low code coverage)
 
 - [ ] Use SVectors to store graph edges? 🤔
   
   - Only useful for spaces where all nodes are identical (e.g., periodic boundaries)
 
-- [x] Add CI and CodeCov badge
-
 - [x] Reduce heavy package dependencies using package extensions
 
   - [ ] Not using package extensions yet but some heavy dependencies were removed
+  - [ ] Package extensions for DifferentialEquations.jl and Plots.jl
     
-- [x] recordCPM is very slow, can it be made faster?
-      
-    - Now used Plot recipes
-  
 - [ ] Separate tutorials from examples
 
-- [ ] Tutorial on how to create your own penalty
+- [ ] Tutorial on how to create your own penalty (e.g. cell length to control cell shape)
 
 - [ ] Make adding cells easier
+
+- [ ] Make it easier to integrate PDE models (maybe Enzyme.jl?)
+- [ ] 
+- [ ] 
