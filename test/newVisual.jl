@@ -1,6 +1,121 @@
 using Plots
 using CellularPotts
 
+
+#############################################
+# Version 2
+#############################################
+
+#= Notes
+ - When plotting a matrix, the y-axis is flipped b/c rows are counted down and the y axis goes up
+ - check out yflip=true when plotting
+ - Okay now matrix coordinates and 
+ - Lets start with ignoring boundaries b/c they are hard
+=#
+
+
+M = [
+    0 0 0 1 1;
+    0 1 1 1 1;
+    0 0 0 0 0;
+    0 0 0 0 0;
+    0 0 0 1 1
+]
+
+
+#Reverse b/c CartesianIndex(ycoord, xcoord) when plotting
+getCorner(I) = reverse(Tuple(I) .- 0.5)
+checkNode(M,cell,I) = I ∈ CartesianIndices(M) && isequal(M[I],cell)
+
+function createShape(M,cell)
+
+    #These could be const or put into some struct
+    #Save a vector where indexes are cases and entries are directions to go
+    up = CartesianIndex(-1,0)
+    left = CartesianIndex(0,-1)
+    down = CartesianIndex(1,0)
+    right = CartesianIndex(0,1)
+
+    #Looking like the konami code
+    direction = Dict(
+    (false, false, false, true) => down,  #1  bottom right corner 
+    (false, true, false, false) => right, #2  top right corner
+    (false, true, false, true) => down,   #3  right edge
+    (false, false, true, false) => left,  #4  bottom left corner
+    (false, false, true, true) => left,   #5  bottom edge
+    (false, true, true, false) => left,   #6  diagonal flipped
+    (false, true, true, true) => left,    #7  bottom right wedge
+    (true, false, false, false) => up,    #8  top left corner
+    (true, false, false, true) => up,     #9  diagonal
+    (true, true, false, false) => right,  #10 top edge
+    (true, true, false, true) => down,    #11 top right wedge
+    (true, false, true, false) => up,     #12 left edge
+    (true, false, true, true) => up,      #13 bottom left wedge
+    (true, true, true, false) => right    #14 top left wedge
+    )
+   
+    corners = Tuple{Float64,Float64}[]
+    I = findfirst(isequal(cell),M)
+    J = I
+    shapeConnected = false
+
+    while !shapeConnected
+        #add corner to list
+        push!(corners, getCorner(J))
+    
+        #Go to the next corner by calculating which case you have
+        case = (
+            checkNode(M, cell, J + up + left),
+            checkNode(M, cell, J + up),
+            checkNode(M, cell, J + left),
+            checkNode(M, cell, J)
+        )
+
+        J += direction[case]
+    
+        if I == J
+            push!(corners,getCorner(I))
+            shapeConnected = true
+        end
+    end
+
+    return corners
+end
+
+corners = createShape(M,1)
+
+s = Shape(corners)
+
+plot(;
+    yflip=true,
+    c=:berlin,
+    size = (500,500),
+    axis = nothing,
+    framestyle=:none,
+    xlims = (0.5, size(M,2)+0.5),
+    ylims = (0.5, size(M,1)+0.5),
+    aspect_ratio = :equal,
+    legend = false)
+
+    
+    
+plot!(s; fillcolor = :steelblue, linewidth = 1.5, yflip=true)
+    
+plot!(Shape([(0.5,0.5),(size(M,2)+0.5,0.5),(size(M,2)+0.5,size(M,1)+0.5),(0.5,size(M,1)+0.5)]),
+            fillcolor = nothing,     # Fill color of the shape
+            linecolor = :black,      # Border color of the shape
+            linewidth = 4,           # Border thickness
+            )
+
+scatter!(corners, markersize=1.5)
+annotate!([(coord..., text(string(coord),6)) for coord in corners])
+
+
+
+#############################################
+# Version 1
+#############################################
+
 #TODO periodic boundaries, diagonals not getting catched 
 
 #For diagonals you can start on a bit sticking out and it will just loop around and halt
@@ -137,3 +252,14 @@ annotate!([(coord..., text(string(coord),4)) for coord in corners])
 
  
 
+
+x = [0, 1, 1, 0]
+y = [0, 0, 1, 1]
+myshape = Shape(x, y)
+
+plot(myshape,
+            fillcolor = :orange,     # Fill color of the shape
+            linecolor = :blue,      # Border color of the shape
+            linewidth = 3,           # Border thickness
+                 legend = false,
+                      aspect_ratio = :equal)
