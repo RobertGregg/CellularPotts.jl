@@ -1,5 +1,46 @@
 using Luxor
 using CellularPotts
+using Colors, ColorSchemes
+
+
+
+#Trying to draw a legend
+
+function drawLegend(labels,colors, width, height)
+    
+    nrows = length(labels)
+    ncols = 1
+    margin=height÷10
+    tiles = Tiler(width, height, nrows, ncols; margin)
+
+
+    #height = 2*margins + nrows*tileheight
+    r = tiles.tileheight / 4
+
+    # box(BoundingBox(tiles), action = :stroke)
+    translate(Point(-tiles.tilewidth/2,0))
+    for (pos, n) in tiles
+            sethue(colors[n])
+            circle(pos,r, action = :fill)
+            sethue("black")
+            circle(pos,r, action = :stroke)
+            label(labels[n],:E,pos,offset=2*r)
+    end
+end
+
+width = 100
+height = 100
+@drawsvg begin
+    background("grey90")
+    fontsize(12)
+    setline(1)
+    drawLegend(
+        ["Macrophage","Tcells","Epithelial"],
+        ["steelblue","goldenrod1","coral"],
+        width,
+        height
+        )
+end width height
 
 Base.mod1(I::CartesianIndex{N}, i::NTuple{N, Int64}) where N = CartesianIndex(mod1.(Tuple(I),i))
 
@@ -38,7 +79,6 @@ end
 function drawCells(cpm::CellPotts{T,C,2,S,U};
     colorby=:type,
     colormap=nothing,
-    migrationcolors=range(colorant"#ffffff00", colorant"#3c0468cc"),
     cellsize=(10,10)) where {T,C,S,U}
     
     #Pick a default color map depending on inputs
@@ -46,10 +86,14 @@ function drawCells(cpm::CellPotts{T,C,2,S,U};
         if colorby == :type && countcelltypes(cpm) ≤ 6
             cellcolors = colorschemes[:tol_light]
         else
-            cellcolors = get(colorschemes[:darkrainbow], range(0, 1, length=countcells(cpm)))
+            cellcolors = get(colorschemes[:darkrainbow], range(0, 1, countcells(cpm)))
         end
     else
-        cellcolors = get(colorschemes[colormap], range(0, 1, length=countcells(cpm)))
+        if colorby == :type && countcelltypes(cpm) ≤ 6
+            cellcolors = colorschemes[colormap]
+        else
+            cellcolors = get(colorschemes[colormap], range(0, 1, countcells(cpm)))
+        end
     end
 
     #Choose a matrix for coloring and its size
@@ -113,20 +157,15 @@ cpm = CellPotts(
 
 ModelStep!(cpm)
 
+w,h = (600,600)
+
+cellSize = (w,h) ./ size(cpm.space) .* (5.5/6)
+
 @drawsvg begin
     background("grey90")
     setline(1.0)
-    drawCells(cpm; colorby=:type, cellsize = (5,5))
-end
-
-
-X = sort(rand(100,100), dims=2)
-@drawsvg begin
-    background("grey90")
-    sethue("steelblue")
-    circle(O,100, action=:fill)
-    drawHeatmap(X; colormap=:Purples, cellsize=(5,5))
-end
+    drawCells(cpm; colorby=:type, cellsize = cellSize, colormap=:tableau_colorblind)
+end w h
 
 
 
@@ -159,32 +198,7 @@ nodeMemory = cpm.penalties[migrationIndex].nodeMemory
 end
 
 
-
-
-
-mymovie = Movie(400, 400, "mymovie")
-
-function frame(scene::Scene, framenumber::Int64)
-    background("white")
-    norm_framenumber = rescale(framenumber,
-        scene.framerange.start,
-        scene.framerange.stop,
-        0, 1)
-    rotate(norm_framenumber * 2π)
-    juliacircles(100)
-end
-
-animate(mymovie,
-        [
-            Scene(mymovie, frame, 1:60)
-        ],
-    creategif=true,
-    pathname="juliaspinner.gif")
-
-
-
-
-mymovie = Movie(400, 400, "mymovie", 1:300)
+mymovie = Movie(600, 600, "mymovie", 1:1200)
 
 function frame(scene::Scene, framenumber::Int64, cpm::CellPotts)
     
@@ -202,7 +216,7 @@ end
 
 animate(mymovie,
         [
-            Scene(mymovie, (scene,framenumber) -> frame(scene,framenumber,cpm), 1:300)
+            Scene(mymovie, (scene,framenumber) -> frame(scene,framenumber,cpm), 1:1200)
         ],
     creategif=true,
     pathname="migration2.gif")

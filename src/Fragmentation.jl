@@ -1,11 +1,11 @@
-#Returns true is deleting the target node would disconnect the graph
+#Returns true if deleting the target node would disconnect the graph
 #Uses a breadth first search to determine if all vertices can be reached after node removal
 #Not faster than Tajan's algorithm but much simplier
 
 #TODO Need to limit the allocations
 function isfragmented(cpm::CellPotts)
 
-    #Unpack cpm and reset state (no allocations right?)
+    #Unpack cpm and reset state
     g = cpm.space
     target = cpm.step.target
     F = cpm.fragment
