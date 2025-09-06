@@ -35,6 +35,6 @@ cpm = CellPotts(space, initialCellState, penalties);
 
 cpm.temperature = 25.0
 
-# Our model is more ready for simulation! This can be done using the using the `ModelStep!` function, interactively through the `CellGUI` function, or recorded as a gif using `recordCPM`. Any options to the GLMakie `record` function can be passed through.
+# Our model is more ready for simulation! This can be done using the using the `ModelStep!` function or recorded as a gif using `record`. Check out the documentation for `record` and `visualize` for options to customize the simulation's output. 
 
 record(cpm, file="LetsGetMoving.gif")

@@ -2,8 +2,8 @@
 
 # This simulation actually extends [an example](https://diffeq.sciml.ai/latest/features/callback_functions/#Example-3:-Growing-Cell-Population) from the DifferentialEquations.jl documentation describing a growing cell population. Here we take those underlying model dynamics and combine them with CellularPotts.jl
 
-# We begin by loading in both CellularPotts and DifferentialEquations
-using CellularPotts, DifferentialEquations
+# We begin by loading in both CellularPotts and packages from DifferentialEquations.jl
+using CellularPotts, OrdinaryDiffEq, DiffEqCallbacks 
 
 # On the CellularPotts side, we need to create a new CellPotts model which requires a CellSpace, a CellState, and a list of penalties
 

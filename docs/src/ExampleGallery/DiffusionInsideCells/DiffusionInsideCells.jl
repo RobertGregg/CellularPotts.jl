@@ -8,7 +8,7 @@
 # 5. Continue until the final ODE solver time-point is reached.
 
 # As usual, load in the required packages:
-using CellularPotts, DifferentialEquations
+using CellularPotts, OrdinaryDiffEq, DiffEqCallbacks 
 using Graphs
 using Plots, Printf, Statistics
 

@@ -2,7 +2,7 @@
 
 # In this example we take a simple approach to allow cells to continuously secrete a species into extracellular space. We assume the concentration of this species is constant within the cell and that it degrades over time after leaving the cell. 
 
-using CellularPotts, DifferentialEquations
+using CellularPotts, OrdinaryDiffEq, DiffEqCallbacks 
 using Graphs
 using Plots, Printf
 
