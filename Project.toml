@@ -33,7 +33,7 @@ OrdinaryDiffEq = "6"
 Plots = "1"
 PrettyTables = "3"
 StatsBase = "0.34"
-julia = "1"
+julia = "1.10"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"

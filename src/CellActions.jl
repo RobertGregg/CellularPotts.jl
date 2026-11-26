@@ -31,8 +31,8 @@ function CellDivision!(cpm::CellPotts, oldID::Int)
     cpm.space.nodeIDs[newCellNodeIDs] .= cpm.state.cellIDs[newID]
 
     #Recalculate the perimeters as well
-    cpm.state.perimeters[oldID] = calcuatePerimeter(cpm, oldID)
-    cpm.state.perimeters[newID] = calcuatePerimeter(cpm, newID)
+    cpm.state.perimeters[oldID] = calculatePerimeter(cpm, oldID)
+    cpm.state.perimeters[newID] = calculatePerimeter(cpm, newID)
 
 
 

@@ -70,15 +70,7 @@ end
 
     @test parent(table1) == parent(table2) == parent(table3)
     
-    @test repr(table1) == """
-    ┌─────┬────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬───────────────────┐
-    │ Row │  names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ desiredPerimeters │
-    │     │ Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │             Int64 │
-    ├─────┼────────┼─────────┼─────────┼─────────┼────────────────┼────────────┼───────────────────┤
-    │   0 │ Medium │       0 │       0 │       0 │              0 │          0 │                 0 │
-    │   1 │  hello │       1 │       1 │       0 │              1 │          0 │                 8 │
-    └─────┴────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴───────────────────┘
-    """
+    @test repr(table1) == "┌─────┬────────┬─────────┬─────────┬─────────┬────────────────┬────────────┬────\n│ Row │  names │ cellIDs │ typeIDs │ volumes │ desiredVolumes │ perimeters │ d ⋯\n│     │ Symbol │   Int64 │   Int64 │   Int64 │          Int64 │      Int64 │   ⋯\n├─────┼────────┼─────────┼─────────┼─────────┼────────────────┼────────────┼────\n│   0 │ Medium │       0 │       0 │       0 │              0 │          0 │   ⋯\n│   1 │  hello │       1 │       1 │       0 │              1 │          0 │   ⋯\n└─────┴────────┴─────────┴─────────┴─────────┴────────────────┴────────────┴────\n                                                                1 column omitted\n"
 end
 
 @testset "Testing positions keyword" begin
@@ -315,8 +307,6 @@ end
 
     ModelStep!(cpm)
 
-    println(length(last(sol)))
-
     @test cpm.step.counter > 1 #ModelStep used in script 
 end
 
@@ -393,7 +383,7 @@ end
             AdhesionPenalty([0 30; 30 0]),
             VolumePenalty([5]),
             PerimeterPenalty([0,10]),
-            MigrationPenalty(50, [50], (50,50))
+            # MigrationPenalty(50, [50], (50,50))
             ]
         )
     

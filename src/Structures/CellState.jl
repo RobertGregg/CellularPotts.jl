@@ -70,7 +70,7 @@ function Base.deleteat!(cs::CellState, i)
      return nothing
 end
 
-function Base.show(io::IO, cs::CellState) 
+function Base.show(io::IO, cs::CellState)
 
     #pretty_table doesn't like offset vectors in a NamedTuple
     #convert data into an offset array
@@ -78,14 +78,20 @@ function Base.show(io::IO, cs::CellState)
     mat = offset(reshape(reduce(vcat,values(data)), size(cs)))
 
     #gray out medium row
-    hl = Highlighter(f = (data, i, j) -> i == 0,
-        crayon = Crayon(background = :dark_gray))
+    hl = TextHighlighter(
+        (data, i, j) -> i == 0,
+        Crayon(background = :dark_gray))
 
+    #Two header rows: the property name and its element type
+    columnLabels = [
+        string.(collect(keys(data))),
+        string.(collect(eltype.(values(data))))
+    ]
 
-    pretty_table(io, mat; 
-        highlighters = hl,
-        show_row_number=true,
-        header=(collect(keys(data)), eltype.(values(data))))     
+    pretty_table(io, mat;
+        highlighters = [hl],
+        show_row_number_column = true,
+        column_labels = columnLabels)
 end
 
 

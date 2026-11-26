@@ -27,7 +27,9 @@ import Graphs:
             add_edge!,
             SimpleGraphs.SimpleEdgeIter,
             SimpleGraphs.fadj,
-            SimpleGraphs.badj
+            SimpleGraphs.badj,
+            inneighbors,
+            outneighbors
 
 import Base: eltype,
              getproperty,

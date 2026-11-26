@@ -145,7 +145,7 @@ function perimeterLocal(space::CellSpace, n₀::T, σ::T) where T<: Integer
 end
 
 #Given a cellID calculate it's perimeter 
-function calcuatePerimeter(cpm::CellPotts, cellID::Int)
+function calculatePerimeter(cpm::CellPotts, cellID::Int)
 
     perimeter = 0
 
