@@ -61,15 +61,18 @@ end
 # Also coming from the differential equations example, this callback is tiggered whenever a cell's ProteinX is greater than 1. Basically the cell will divide when when the ProteinX concentration is too large.
 condition(u,t,integrator) = 1-maximum(u)
 
-function affect!(integrator,cpm)
-    u = integrator.u
-    resize!(integrator,length(u)+1)
-    cellID = findmax(u)[2]
+function affect!(integrator, cpm)
+
+    # choose the cell BEFORE resizing
+    cellID = findmax(integrator.u)[2]          
+    resize!(integrator, length(integrator.u)+1)
+    # re-fetch after the resize
+    u = integrator.u                           
+
     Θ = rand()
     u[cellID] = Θ
     u[end] = 1-Θ
 
-    #Adding a call to divide the cells in the CPM
     CellDivision!(cpm, cellID)
     return nothing
 end

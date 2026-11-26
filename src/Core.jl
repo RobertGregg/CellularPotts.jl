@@ -65,7 +65,7 @@ end
     countcells(cpm::CellPotts)
 Count the number of cells in the model 
 """
-countcells(space::CellSpace) = maxmimum(nodeIDs(space))
+countcells(space::CellSpace) = maximum(nodeIDs(space))
 countcells(df::CellState) = length(df.cellIDs) - 1
 countcells(cpm::CellPotts) = countcells(cpm.state)
 
@@ -73,7 +73,7 @@ countcells(cpm::CellPotts) = countcells(cpm.state)
 countcelltypes(cpm::CellPotts)
 Count the number of cell types in the model 
 """
-countcelltypes(space::CellSpace) = maxmimum(nodeTypes(space))
+countcelltypes(space::CellSpace) = maximum(nodeTypes(space))
 countcelltypes(df::CellState) = length(unique(df.typeIDs)) - 1
 countcelltypes(cpm::CellPotts) = countcelltypes(cpm.state)
 

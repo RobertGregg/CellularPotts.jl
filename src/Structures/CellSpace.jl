@@ -41,6 +41,9 @@ fadj(g::CellSpace, v::Integer) = g.fadjlist[v]
 badj(g::CellSpace) = fadj(g)
 badj(g::CellSpace, v::Integer) = fadj(g, v)
 
+outneighbors(g::CellSpace, v::Integer) = fadj(g, v)
+inneighbors(g::CellSpace, v::Integer) = badj(g, v)
+
 #Get the maximum number of interior node neighbors in the graph
 maxNeighborCount(space::CellSpace{T,C,N}) where {T,C,N} = C
 
