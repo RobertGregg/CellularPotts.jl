@@ -138,7 +138,7 @@ end
 function updateMHStep!(cpm::CellPotts, PP::PerimeterPenalty)
     #Update cell perimeters
     cpm.state.perimeters[cpm.step.source.id] += PP.Δpᵢ
-    cpm.state.perimeters[cpm.step.target.id] -= PP.Δpⱼ
+    cpm.state.perimeters[cpm.step.target.id] += PP.Δpⱼ
 
     return nothing
 end

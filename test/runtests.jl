@@ -220,6 +220,115 @@ end
     @test repr(cpm) == "Cell Potts Model:\nGrid: 5×5\nCell Counts: [A → 1] [B → 1] [Total → 2]\nModel Penalties: Adhesion Volume\nTemperature: 20.0\nSteps: 0"
 end
 
+
+
+####################################################
+# Perimeter penalty bookkeeping
+####################################################
+
+@testset "PerimeterPenalty bookkeeping" begin
+
+    #Point the Metropolis–Hastings step at a (source, target) pair of nodes
+    function pointStep!(cpm, source, target)
+        for (candidate, node) in ((cpm.step.source, source), (cpm.step.target, target))
+            candidate.node = node
+            candidate.id = cpm.space.nodeIDs[node]
+            candidate.type = cpm.space.nodeTypes[node]
+            candidate.neighbors = neighbors(cpm.space, node)
+        end
+        return nothing
+    end
+
+    #The perimeter of a cell counted directly from the grid (slow but obviously correct)
+    recount(cpm, σ) = CellularPotts.calculatePerimeter(cpm, σ)
+
+    for periodic in (true, false), diagonal in (true, false)
+
+        Random.seed!(4242)
+
+        cpm = CellPotts(
+            CellSpace(30,30; periodic, diagonal),
+            CellState(:A, 50, 5),
+            [AdhesionPenalty([0 20; 20 0]), VolumePenalty([5]), PerimeterPenalty([2])]
+        )
+
+        PP = only(filter(p -> p isa PerimeterPenalty, cpm.penalties))
+
+        #Energy of one cell under the perimeter penalty, given a perimeter
+        energy(σ, perimeter) = PP.λₚ[cpm.state.typeIDs[σ]] * (perimeter - cpm.state.desiredPerimeters[σ])^2
+
+        #Give the cells irregular shapes, then start from exact perimeters
+        for _ in 1:30
+            ModelStep!(cpm)
+        end
+
+        resync!() = for σ in 1:countcells(cpm)
+            cpm.state.perimeters[σ] = recount(cpm, σ)
+        end
+        resync!()
+
+        #--- Part 1: one proposed copy at a time ---------------------------------
+        #Every (source, target) pair where the copy would change the target node
+        pairs = [
+            (s, t) for s in vertices(cpm.space) for t in neighbors(cpm.space, s)
+            if cpm.space.nodeIDs[s] ≠ cpm.space.nodeIDs[t]
+        ]
+        shuffle!(MersenneTwister(1), pairs)
+        @test length(pairs) ≥ 150
+
+        for (s, t) in first(pairs, 150)
+            pointStep!(cpm, s, t)
+            σᵢ = cpm.step.source.id #cell that grows
+            σⱼ = cpm.step.target.id #cell that shrinks
+
+            perimetersBefore = (cpm.state.perimeters[σᵢ], cpm.state.perimeters[σⱼ])
+            Pᵢ, Pⱼ = recount(cpm, σᵢ), recount(cpm, σⱼ)
+
+            #What the penalty says the energy change would be
+            reportedΔH = CellularPotts.addPenalty!(cpm, PP)
+
+            #Asking must not change the model
+            @test cpm.space.nodeIDs[t] == σⱼ
+            @test (cpm.state.perimeters[σᵢ], cpm.state.perimeters[σⱼ]) == perimetersBefore
+
+            #Now actually do the copy and count the new perimeters from scratch
+            cpm.space.nodeIDs[t] = σᵢ
+            Pᵢ′, Pⱼ′ = recount(cpm, σᵢ), recount(cpm, σⱼ)
+
+            #The stored changes are the signed changes in each cell's perimeter
+            @test PP.Δpᵢ == Pᵢ′ - Pᵢ
+            @test PP.Δpⱼ == Pⱼ′ - Pⱼ
+
+            #and the energy change matches the true before/after energies
+            expectedΔH = (energy(σᵢ, Pᵢ′) + energy(σⱼ, Pⱼ′)) - (energy(σᵢ, Pᵢ) + energy(σⱼ, Pⱼ))
+            @test reportedΔH ≈ expectedΔH
+
+            #Accepting the copy must leave both stored perimeters exact
+            updateMHStep!(cpm, PP)
+            for σ in (σᵢ, σⱼ)
+                iszero(σ) && continue #the medium's perimeter isn't used
+                @test cpm.state.perimeters[σ] == recount(cpm, σ)
+            end
+
+            #Undo the copy and restore exact perimeters for the next pair
+            cpm.space.nodeIDs[t] = σⱼ
+            for σ in (σᵢ, σⱼ)
+                iszero(σ) || (cpm.state.perimeters[σ] = recount(cpm, σ))
+            end
+        end
+
+        #--- Part 2: a whole simulation ------------------------------------------
+        resync!()
+        for _ in 1:50
+            ModelStep!(cpm)
+        end
+
+        for σ in 1:countcells(cpm)
+            @test cpm.state.perimeters[σ] == recount(cpm, σ)
+        end
+    end
+end
+
 ####################################################
 # Example Gallery
 ####################################################

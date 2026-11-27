@@ -90,13 +90,13 @@ function addPenalty!(cpm::CellPotts, PP::PerimeterPenalty)
    
     #Change the perimeters and recalculate penalty
     cpm.state.perimeters[σᵢ] += PP.Δpᵢ
-    cpm.state.perimeters[σⱼ] -= PP.Δpⱼ
+    cpm.state.perimeters[σⱼ] += PP.Δpⱼ
 
     targetPerimeter = addPenalty!(cpm, PP, σᵢ) + addPenalty!(cpm, PP, σⱼ)
 
     #Reset the perimeters (and space)
     cpm.state.perimeters[σᵢ] -= PP.Δpᵢ
-    cpm.state.perimeters[σⱼ] += PP.Δpⱼ
+    cpm.state.perimeters[σⱼ] -= PP.Δpⱼ
 
     #Change the target node back into the target node
     cpm.space.nodeIDs[node] = σⱼ

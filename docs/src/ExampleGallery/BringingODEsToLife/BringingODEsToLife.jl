@@ -63,10 +63,8 @@ condition(u,t,integrator) = 1-maximum(u)
 
 function affect!(integrator, cpm)
 
-    # choose the cell BEFORE resizing
     cellID = findmax(integrator.u)[2]          
     resize!(integrator, length(integrator.u)+1)
-    # re-fetch after the resize
     u = integrator.u                           
 
     Θ = rand()
